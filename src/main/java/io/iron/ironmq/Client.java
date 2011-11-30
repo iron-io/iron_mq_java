@@ -10,6 +10,9 @@ import java.net.URL;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
+/**
+ * The Client class provides access to the IronMQ service.
+ */
 public class Client {
     static final private String proto = "http";
     static final private String host = "mq-aws-us-east-1.iron.io";
@@ -18,11 +21,25 @@ public class Client {
     private String projectId;
     private String token;
 
+    /**
+     * Constructs a new Client using the specified project ID and token.
+     * The network is not accessed during construction and this call will
+     * succeed even if the credentials are invalid.
+     *
+     * @param projectId A 24-character project ID.
+     * @param token An OAuth token.
+     */
     public Client(String projectId, String token) {
         this.projectId = projectId;
         this.token = token;
     }
 
+    /**
+     * Returns a Queue using the given name.
+     * The network is not accessed during this call.
+     *
+     * @param name The name of the Queue to create.
+     */
     public Queue queue(String name) {
         return new Queue(this, name);
     }
