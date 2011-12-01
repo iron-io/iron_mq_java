@@ -3,6 +3,7 @@ import java.io.IOException;
 import io.iron.ironmq.*;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -13,6 +14,7 @@ public class IronMQTest {
     @Before public void setup() {
         projectId = System.getenv("IRONIO_PROJECT_ID");
         token = System.getenv("IRONIO_TOKEN");
+        Assume.assumeTrue(projectId != null && token != null);
     }
 
     @Test public void client() throws IOException {
