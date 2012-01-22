@@ -1,9 +1,8 @@
-#repositories.remote << 'http://repo1.maven.org/maven2'
-repositories.remote << 'http://www.ibiblio.org/maven2'
+repositories.remote << 'http://repo1.maven.org/maven2'
 
 define 'ironmq' do
   project.version = "0.0.1"
   test.with 'junit:junit:jar:4.10'
-  compile.with transitive('net.sf.json-lib:json-lib:jar:2.4')
+  compile.with transitive('net.sf.json-lib:json-lib:jar:jdk15:2.4')
   package :jar
 end
