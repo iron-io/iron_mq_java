@@ -4,7 +4,8 @@ IronMQ Java Client
 Getting Started
 ===============
 
-Build the JAR with [Apache Buildr](http://buildr.apache.org).
+[Download the IronMQ jar](https://github.com/iron-io/iron_mq_java/downloads). 
+Or build from source with [Apache Buildr](http://buildr.apache.org):
 
     buildr package
 
