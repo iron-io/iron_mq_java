@@ -14,8 +14,9 @@ import net.sf.json.JSONSerializer;
  * The Client class provides access to the IronMQ service.
  */
 public class Client {
-    static final private String proto = "http";
+    static final private String proto = "https";
     static final private String host = "mq-aws-us-east-1.iron.io";
+    static final private int port = 443;
     static final private String apiVersion = "1";
 
     private String projectId;
@@ -57,14 +58,19 @@ public class Client {
     }
 
     private JSONObject request(String method, String endpoint, String body) throws IOException {
-        String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint + "?oauth=" + token;
-        URL url = new URL(proto, host, path);
+        String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
+        URL url = new URL(proto, host, port, path);
+
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod(method);
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestProperty("Authorization", "OAuth " + token);
+        conn.setRequestProperty("User-Agent", "IronMQ Java Client");
+
         if (body != null) {
-            conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
         }
+
         conn.connect();
 
         if (body != null) {
