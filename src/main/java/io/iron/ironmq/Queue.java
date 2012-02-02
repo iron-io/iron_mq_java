@@ -2,6 +2,8 @@ package io.iron.ironmq;
 
 import java.io.IOException;
 
+import net.sf.json.JSON;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
@@ -26,11 +28,14 @@ public class Queue {
     */
     public Message get() throws IOException {
         JSONObject jsonObj = client.get("queues/" + name + "/messages");
+        JSONArray array = jsonObj.getJSONArray("messages");
+        JSONObject jsonMsg = array.getJSONObject(0);
+
         Message msg = new Message();
-        msg.setId((String)jsonObj.get("id"));
-        msg.setBody(jsonObj.getString("body"));
-        if (jsonObj.has("timeout")) {
-            msg.setTimeout(jsonObj.getLong("timeout"));
+        msg.setId(jsonMsg.getString("id"));
+        msg.setBody(jsonMsg.getString("body"));
+        if (jsonMsg.has("timeout")) {
+            msg.setTimeout(jsonMsg.getLong("timeout"));
         }
         return msg;
     }
@@ -84,7 +89,12 @@ public class Queue {
         Message message = new Message();
         message.setBody(msg);
         message.setTimeout(timeout);
-        String jsonStr = JSONSerializer.toJSON(message).toString();
-        client.post("queues/" + name + "/messages", jsonStr);
+
+        JSON jsonMsg = JSONSerializer.toJSON(message);
+        JSONArray array = new JSONArray();
+        array.add(jsonMsg);
+        JSONObject outer = new JSONObject();
+        outer.element("messages", array);
+        client.post("queues/" + name + "/messages", outer.toString());
     }
 }
