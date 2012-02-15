@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
@@ -21,7 +22,7 @@ public class Queue {
 
     /**
     * Retrieves a Message from the queue. If there are no items on the queue, an
-    * HTTPException is thrown.
+    * EmptyQueueException is thrown.
     *
     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
     * @throws IOException If there is an error accessing the IronMQ server.
@@ -29,7 +30,12 @@ public class Queue {
     public Message get() throws IOException {
         JSONObject jsonObj = client.get("queues/" + name + "/messages");
         JSONArray array = jsonObj.getJSONArray("messages");
-        JSONObject jsonMsg = array.getJSONObject(0);
+        JSONObject jsonMsg;
+        try {
+            jsonMsg = array.getJSONObject(0);
+        } catch (JSONException e) {
+            throw new EmptyQueueException();
+        }
 
         Message msg = new Message();
         msg.setId(jsonMsg.getString("id"));

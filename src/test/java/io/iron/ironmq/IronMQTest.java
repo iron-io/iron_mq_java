@@ -21,6 +21,15 @@ public class IronMQTest {
         Client c = new Client(projectId, token);
         Queue q = c.queue("test-queue");
 
+        // clear out the queue
+        try {
+            while (true) {
+                Message msg = q.get();
+                q.deleteMessage(msg);
+            }
+        } catch (EmptyQueueException e) {
+        }
+
         final String body = "Hello, IronMQ!";
 
         q.push(body);
