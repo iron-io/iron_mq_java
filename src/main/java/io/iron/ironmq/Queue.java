@@ -24,6 +24,7 @@ public class Queue {
     * Retrieves a Message from the queue. If there are no items on the queue, an
     * EmptyQueueException is thrown.
     *
+    * @throws EmptyQueueException If the queue is empty.
     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
     * @throws IOException If there is an error accessing the IronMQ server.
     */
