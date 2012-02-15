@@ -11,7 +11,7 @@ Or build from source with [Apache Buildr](http://buildr.apache.org):
 
 The .jar file will appear under the target directory.
 
-The API is documented [here](http://iron-io.github.com/ironmq_java/).
+The API is documented [here](http://iron-io.github.com/iron_mq_java/).
 
 The Basics
 ==========
