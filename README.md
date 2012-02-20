@@ -30,7 +30,7 @@ The Basics
 
 When you pop/get a message from the queue, it will *not* be deleted. It will
 eventually go back onto the queue after a timeout if you don't delete it. (The
-default timeout is 10 minutes.)
+default timeout is 60 seconds.)
 
 **Delete** a message from the queue:
 
