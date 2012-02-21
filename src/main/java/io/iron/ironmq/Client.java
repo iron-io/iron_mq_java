@@ -14,13 +14,24 @@ import net.sf.json.JSONSerializer;
  * The Client class provides access to the IronMQ service.
  */
 public class Client {
-    static final private String proto = "https";
-    static final private String host = "mq-aws-us-east-1.iron.io";
-    static final private int port = 443;
     static final private String apiVersion = "1";
 
     private String projectId;
     private String token;
+    private Cloud cloud;
+
+    /**
+     * Constructs a new Client using the specified project ID and token.
+     * The network is not accessed during construction and this call will
+     * succeed even if the credentials are invalid.
+     * This constructor uses the AWS cloud with the US East region.
+     *
+     * @param projectId A 24-character project ID.
+     * @param token An OAuth token.
+     */
+    public Client(String projectId, String token) {
+        this(projectId, token, Cloud.ironAWSUSEast);
+    }
 
     /**
      * Constructs a new Client using the specified project ID and token.
@@ -29,10 +40,12 @@ public class Client {
      *
      * @param projectId A 24-character project ID.
      * @param token An OAuth token.
+     * @param cloud The cloud to use.
      */
-    public Client(String projectId, String token) {
+    public Client(String projectId, String token, Cloud cloud) {
         this.projectId = projectId;
         this.token = token;
+        this.cloud = cloud;
     }
 
     /**
@@ -59,7 +72,7 @@ public class Client {
 
     private JSONObject request(String method, String endpoint, String body) throws IOException {
         String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
-        URL url = new URL(proto, host, port, path);
+        URL url = new URL(cloud.scheme, cloud.host, cloud.port, path);
 
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod(method);
