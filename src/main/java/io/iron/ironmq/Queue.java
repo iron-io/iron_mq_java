@@ -36,6 +36,8 @@ public class Queue {
             jsonMsg = array.getJSONObject(0);
         } catch (JSONException e) {
             throw new EmptyQueueException();
+        } catch (IndexOutOfBoundsException e) {
+            throw new EmptyQueueException();
         }
 
         Message msg = new Message();

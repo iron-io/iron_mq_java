@@ -18,7 +18,7 @@ public class IronMQTest {
     }
 
     @Test public void client() throws IOException {
-        Client c = new Client(projectId, token);
+        Client c = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue q = c.queue("test-queue");
 
         // clear out the queue
