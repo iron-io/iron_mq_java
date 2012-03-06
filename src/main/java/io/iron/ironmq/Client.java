@@ -6,7 +6,9 @@ import java.io.OutputStreamWriter;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Random;
 
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
@@ -15,6 +17,8 @@ import net.sf.json.JSONSerializer;
  */
 public class Client {
     static final private String apiVersion = "1";
+
+    static final Random rand = new Random();
 
     private String projectId;
     private String token;
@@ -74,13 +78,38 @@ public class Client {
         String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
         URL url = new URL(cloud.scheme, cloud.host, cloud.port, path);
 
+        final int maxRetries = 5;
+        int retries = 0;
+        while (true) {
+            try {
+                return singleRequest(method, url, body);
+            } catch (HTTPException e) {
+                // ELB sometimes returns this when load is increasing.
+                // We retry with exponential backoff.
+                if (e.getStatusCode() != 503 || retries >= maxRetries) {
+                    throw e;
+                }
+                retries++;
+                // random delay between 0 and 4^tries*100 milliseconds
+                int pow = (1 << (2*retries))*100;
+                int delay = rand.nextInt(pow);
+                try {
+                    Thread.sleep(delay);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    private JSONObject singleRequest(String method, URL url, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod(method);
-        conn.setRequestProperty("Content-Type", "application/json");
         conn.setRequestProperty("Authorization", "OAuth " + token);
         conn.setRequestProperty("User-Agent", "IronMQ Java Client");
 
         if (body != null) {
+            conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
         }
 
@@ -94,8 +123,13 @@ public class Client {
 
         int status = conn.getResponseCode();
         if (status != 200) {
-            JSONObject jsonObj = streamToJSON(conn.getErrorStream());
-            String msg = jsonObj.getString("msg");
+            String msg;
+            try {
+                JSONObject jsonObj = streamToJSON(conn.getErrorStream());
+                msg = jsonObj.getString("msg");
+            } catch (JSONException e) {
+                msg = "IronMQ's response contained invalid JSON";
+            }
             throw new HTTPException(status, msg);
         }
 
