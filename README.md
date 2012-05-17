@@ -3,18 +3,24 @@ IronMQ Java Client
 
 Getting Started
 ===============
+There are three ways to get this package.
 
-[Download the IronMQ jar](https://github.com/iron-io/iron_mq_java/downloads). 
-Or build from source with [Apache Buildr](http://buildr.apache.org):
+1. Add it as a Maven dependency, using the repository
+   `http://iron-io.github.com/maven/repository`.
+
+2. [Download the jar](https://github.com/iron-io/iron_mq_java/downloads).
+
+3. Build from source with [Apache Buildr](http://buildr.apache.org):
 
     buildr package
 
 The .jar file will appear under the target directory.
 
-The API is documented [here](http://iron-io.github.com/iron_mq_java/).
-
 The Basics
 ==========
+The full API is documented [here](http://iron-io.github.com/iron_mq_java/), but
+here are some quick snippets to get you started.
+
 **Initialize** a client and get a queue object:
 
     Client client = new Client("my project", "my token", Cloud.IronAWSUSEast);
