@@ -82,7 +82,15 @@ public class Queue {
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public void push(String msg) throws IOException {
-        push(msg, 0);
+        push(msg, 0, 0, Message.DEFAULT_EXPIRES_IN);
+    }
+
+    public void push(String msg, long timeout) throws IOException {
+        push(msg, timeout, 0, Message.DEFAULT_EXPIRES_IN);
+    }
+
+    public void push(String msg, long timeout, long delay) throws IOException {
+        push(msg, timeout, delay, Message.DEFAULT_EXPIRES_IN);
     }
 
     /**
@@ -94,10 +102,12 @@ public class Queue {
     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
     * @throws IOException If there is an error accessing the IronMQ server.
     */
-    public void push(String msg, long timeout) throws IOException {
+    public void push(String msg, long timeout, long delay, long expiresIn) throws IOException {
         Message message = new Message();
         message.setBody(msg);
         message.setTimeout(timeout);
+        message.setDelay(delay);
+        message.setExpires_in(expiresIn);
 
         JSON jsonMsg = JSONSerializer.toJSON(message);
         JSONArray array = new JSONArray();

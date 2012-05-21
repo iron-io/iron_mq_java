@@ -9,6 +9,10 @@ public class Message implements Serializable {
     private String id;
     private String body;
     private long timeout;
+    private long delay;
+    private long expires_in;
+
+    public static final long DEFAULT_EXPIRES_IN = 604800;
 
     public Message() {}
 
@@ -47,6 +51,38 @@ public class Message implements Serializable {
     * @param timeout The new timeout.
     */
     public void setTimeout(long timeout) { this.timeout = timeout; }
+
+    /**
+     * Returns the Message's delay.
+     */
+    public long getDelay() {
+        return delay;
+    }
+
+    /**
+     * Sets the number of seconds after which the Message will be available
+     *
+     * @param delay The new delay
+     */
+    public void setDelay(long delay) {
+        this.delay = delay;
+    }
+
+    /**
+     * Returns the number of seconds in which this message will be removed from the queue
+     */
+    public long getExpires_in() {
+        return expires_in;
+    }
+
+    /**
+     * Sets the number of seconds after which the message is deleted from the queue.
+     *
+     * @param expires_in The new expiry value
+     */
+    public void setExpires_in(long expires_in) {
+        this.expires_in = expires_in;
+    }
 
     /**
     * Returns a string representation of the Message.
