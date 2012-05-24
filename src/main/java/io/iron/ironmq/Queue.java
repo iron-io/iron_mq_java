@@ -76,6 +76,14 @@ public class Queue {
         push(msg, 0);
     }
 
+    public void push(String msg, long timeout) throws IOException {
+        push(msg, 0, 0);
+    }
+
+    public void push(String msg, long timeout, long delay) throws IOException {
+        push(msg, 0, 0, 0);
+    }
+
     /**
     * Pushes a message onto the queue.
     *
@@ -85,10 +93,12 @@ public class Queue {
     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
     * @throws IOException If there is an error accessing the IronMQ server.
     */
-    public void push(String msg, long timeout) throws IOException {
+    public void push(String msg, long timeout, long delay, long expiresIn) throws IOException {
         Message message = new Message();
         message.setBody(msg);
         message.setTimeout(timeout);
+        message.setDelay(delay);
+        message.setExpiresIn(expiresIn);
 
         Messages msgs = new Messages(message);
         Gson gson = new Gson();
