@@ -12,8 +12,8 @@ public class IronMQTest {
     private String token;
 
     @Before public void setup() {
-        projectId = System.getenv("IRONIO_PROJECT_ID");
-        token = System.getenv("IRONIO_TOKEN");
+        projectId = System.getenv("IRON_PROJECT_ID");
+        token = System.getenv("IRON_TOKEN");
         Assume.assumeTrue(projectId != null && token != null);
     }
 
