@@ -1,16 +1,17 @@
 package io.iron.ironmq;
 
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Random;
 
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * The Client class provides access to the IronMQ service.
@@ -62,19 +63,19 @@ public class Client {
         return new Queue(this, name);
     }
 
-    JSONObject delete(String endpoint) throws IOException {
+    Reader delete(String endpoint) throws IOException {
         return request("DELETE", endpoint, null);
     }
 
-    JSONObject get(String endpoint) throws IOException {
+    Reader get(String endpoint) throws IOException {
         return request("GET", endpoint, null);
     }
 
-    JSONObject post(String endpoint, String body) throws IOException {
+    Reader post(String endpoint, String body) throws IOException {
         return request("POST", endpoint, body);
     }
 
-    private JSONObject request(String method, String endpoint, String body) throws IOException {
+    private Reader request(String method, String endpoint, String body) throws IOException {
         String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
         URL url = new URL(cloud.scheme, cloud.host, cloud.port, path);
 
@@ -102,7 +103,7 @@ public class Client {
         }
     }
 
-    private JSONObject singleRequest(String method, URL url, String body) throws IOException {
+    private Reader singleRequest(String method, URL url, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod(method);
         conn.setRequestProperty("Authorization", "OAuth " + token);
@@ -125,33 +126,16 @@ public class Client {
         if (status != 200) {
             String msg;
             try {
-                JSONObject jsonObj = streamToJSON(conn.getErrorStream());
-                msg = jsonObj.getString("msg");
-            } catch (JSONException e) {
+                InputStreamReader reader = new InputStreamReader(conn.getInputStream());
+                Gson gson = new Gson();
+                msg = gson.fromJson(reader, String.class);
+            } catch (JsonSyntaxException e) {
                 msg = "IronMQ's response contained invalid JSON";
             }
             throw new HTTPException(status, msg);
         }
 
-        JSONObject jsonObj = streamToJSON(conn.getInputStream());
-        return jsonObj;
-    }
-
-    static private JSONObject streamToJSON(InputStream stream) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        byte[] buf = new byte[0x10000];
-
-        int n = 0;
-        do {
-            n = stream.read(buf);
-            if (n > 0) {
-                builder.append(new String(buf));
-            }
-        } while (n >= 0);
-
-        stream.close();
-
-        String jsonStr = builder.toString();
-        return (JSONObject)JSONSerializer.toJSON(jsonStr);
+        return new InputStreamReader(conn.getInputStream());
     }
 }
+

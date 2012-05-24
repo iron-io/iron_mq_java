@@ -1,12 +1,9 @@
 package io.iron.ironmq;
 
 import java.io.IOException;
+import java.io.Reader;
 
-import net.sf.json.JSON;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
-import net.sf.json.JSONSerializer;
+import com.google.gson.Gson;
 
 /**
  * The Queue class represents a specific IronMQ queue bound to a client.
@@ -29,23 +26,17 @@ public class Queue {
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public Message get() throws IOException {
-        JSONObject jsonObj = client.get("queues/" + name + "/messages");
-        JSONArray array = jsonObj.getJSONArray("messages");
-        JSONObject jsonMsg;
+        Reader reader = client.get("queues/" + name + "/messages");
+        Gson gson = new Gson();
+        Messages msgs = gson.fromJson(reader, Messages.class);
+
+        Message msg;
         try {
-            jsonMsg = array.getJSONObject(0);
-        } catch (JSONException e) {
-            throw new EmptyQueueException();
+            msg = msgs.getMessage(0);
         } catch (IndexOutOfBoundsException e) {
             throw new EmptyQueueException();
         }
 
-        Message msg = new Message();
-        msg.setId(jsonMsg.getString("id"));
-        msg.setBody(jsonMsg.getString("body"));
-        if (jsonMsg.has("timeout")) {
-            msg.setTimeout(jsonMsg.getLong("timeout"));
-        }
         return msg;
     }
 
@@ -99,11 +90,10 @@ public class Queue {
         message.setBody(msg);
         message.setTimeout(timeout);
 
-        JSON jsonMsg = JSONSerializer.toJSON(message);
-        JSONArray array = new JSONArray();
-        array.add(jsonMsg);
-        JSONObject outer = new JSONObject();
-        outer.element("messages", array);
-        client.post("queues/" + name + "/messages", outer.toString());
+        Messages msgs = new Messages(message);
+        Gson gson = new Gson();
+        String body = gson.toJson(msgs);
+
+        client.post("queues/" + name + "/messages", body);
     }
 }
