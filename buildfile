@@ -4,7 +4,7 @@ repositories.remote << 'http://iron-io.github.com/maven/repository'
 define 'ironmq' do
   repositories.release_to[:url] = "file://#{base_dir}/../maven/repository"
 
-  project.version = "0.0.6"
+  project.version = "0.0.7"
   test.with 'junit:junit:jar:4.10'
   compile.with transitive('com.google.code.gson:gson:jar:2.1')
   compile.using(:source => '1.6', :target => '1.6')
