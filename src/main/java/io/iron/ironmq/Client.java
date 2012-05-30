@@ -126,7 +126,7 @@ public class Client {
         if (status != 200) {
             String msg;
             try {
-                InputStreamReader reader = new InputStreamReader(conn.getInputStream());
+                InputStreamReader reader = new InputStreamReader(conn.getErrorStream());
                 Gson gson = new Gson();
                 msg = gson.fromJson(reader, String.class);
             } catch (JsonSyntaxException e) {

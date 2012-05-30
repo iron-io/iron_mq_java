@@ -17,7 +17,7 @@ public class IronMQTest {
         Assume.assumeTrue(projectId != null && token != null);
     }
 
-    @Test public void client() throws IOException {
+    @Test public void testClient() throws IOException {
         Client c = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue q = c.queue("test-queue");
 
@@ -37,5 +37,13 @@ public class IronMQTest {
         Message msg = q.get();
         Assert.assertEquals(body, msg.getBody());
         q.deleteMessage(msg);
+    }
+
+    @Test(expected=HTTPException.class) public void testErrorResponse() throws IOException {
+        // intentionally invalid project/token combination
+        Client c = new Client("4444444444444", "aaaaaa", Cloud.ironAWSUSEast);
+        Queue q = c.queue("test-queue");
+
+        q.push("test");
     }
 }
