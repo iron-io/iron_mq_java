@@ -32,10 +32,11 @@ public class IronMQTest {
 
         final String body = "Hello, IronMQ!";
 
-        q.push(body);
+        String id = q.push(body);
 
         Message msg = q.get();
         Assert.assertEquals(body, msg.getBody());
+        Assert.assertEquals(id, msg.getId());
         q.deleteMessage(msg);
     }
 

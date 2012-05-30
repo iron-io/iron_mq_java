@@ -68,32 +68,57 @@ public class Queue {
     * Pushes a message onto the queue.
     *
     * @param msg The body of the message to push.
+    * @return The new message's ID
     *
     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
     * @throws IOException If there is an error accessing the IronMQ server.
     */
-    public void push(String msg) throws IOException {
-        push(msg, 0);
-    }
-
-    public void push(String msg, long timeout) throws IOException {
-        push(msg, 0, 0);
-    }
-
-    public void push(String msg, long timeout, long delay) throws IOException {
-        push(msg, 0, 0, 0);
+    public String push(String msg) throws IOException {
+        return push(msg, 0);
     }
 
     /**
     * Pushes a message onto the queue.
     *
     * @param msg The body of the message to push.
-    * @param timeout The timeout of the message to push.
+    * @param timeout The message's timeout in seconds.
+    * @return The new message's ID
     *
     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
     * @throws IOException If there is an error accessing the IronMQ server.
     */
-    public void push(String msg, long timeout, long delay, long expiresIn) throws IOException {
+    public String push(String msg, long timeout) throws IOException {
+        return push(msg, 0, 0);
+    }
+
+    /**
+    * Pushes a message onto the queue.
+    *
+    * @param msg The body of the message to push.
+    * @param timeout The message's timeout in seconds.
+    * @param delay The message's delay in seconds.
+    * @return The new message's ID
+    *
+    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws IOException If there is an error accessing the IronMQ server.
+    */
+    public String push(String msg, long timeout, long delay) throws IOException {
+        return push(msg, 0, 0, 0);
+    }
+
+    /**
+    * Pushes a message onto the queue.
+    *
+    * @param msg The body of the message to push.
+    * @param timeout The message's timeout in seconds.
+    * @param delay The message's delay in seconds.
+    * @param expiresIn The message's expiration offset in seconds.
+    * @return The new message's ID
+    *
+    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws IOException If there is an error accessing the IronMQ server.
+    */
+    public String push(String msg, long timeout, long delay, long expiresIn) throws IOException {
         Message message = new Message();
         message.setBody(msg);
         message.setTimeout(timeout);
@@ -104,6 +129,8 @@ public class Queue {
         Gson gson = new Gson();
         String body = gson.toJson(msgs);
 
-        client.post("queues/" + name + "/messages", body);
+        Reader reader = client.post("queues/" + name + "/messages", body);
+        Ids ids = gson.fromJson(reader, Ids.class);
+        return ids.getId(0);
     }
 }
