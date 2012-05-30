@@ -119,18 +119,26 @@ public class Client {
         if (body != null) {
             OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
             out.write(body);
-            out.flush();
+            out.close();
         }
 
         int status = conn.getResponseCode();
         if (status != 200) {
             String msg;
-            try {
-                InputStreamReader reader = new InputStreamReader(conn.getErrorStream());
-                Gson gson = new Gson();
-                msg = gson.fromJson(reader, String.class);
-            } catch (JsonSyntaxException e) {
-                msg = "IronMQ's response contained invalid JSON";
+            if (conn.getContentLength() > 0 && conn.getContentType() == "application/json") {
+                InputStreamReader reader = null;
+                try {
+                    reader = new InputStreamReader(conn.getErrorStream());
+                    Gson gson = new Gson();
+                    msg = gson.fromJson(reader, String.class);
+                } catch (JsonSyntaxException e) {
+                    msg = "IronMQ's response contained invalid JSON";
+                } finally {
+                    if (reader != null)
+                        reader.close();
+                }
+            } else {
+                msg = "Empty or non-JSON response";
             }
             throw new HTTPException(status, msg);
         }
