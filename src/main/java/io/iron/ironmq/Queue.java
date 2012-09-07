@@ -162,4 +162,13 @@ public class Queue {
         Ids ids = gson.fromJson(reader, Ids.class);
         return ids.getId(0);
     }
+
+    /**
+     * Clears the queue off all messages
+     * @param queue the name of the queue 
+     * @throws IOException
+     */
+    public void clear() throws IOException {
+        client.post("queues/"+name+"/clear", "");
+    }
 }
