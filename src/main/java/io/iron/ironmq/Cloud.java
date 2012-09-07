@@ -2,7 +2,7 @@ package io.iron.ironmq;
 
 public class Cloud {
     final String scheme;
-    final String host;
+    private String host;
     final int port;
 
     public static final Cloud ironAWSUSEast = new Cloud("https", "mq-aws-us-east-1.iron.io", 443);
@@ -13,4 +13,20 @@ public class Cloud {
         this.host = host;
         this.port = port;
     }
+    
+    public String getScheme() {
+		return scheme;
+	}
+    
+    public void setHost(String host) {
+		this.host = host;
+	}
+    
+    public String getHost() {
+		return host;
+	}
+    
+    public int getPort() {
+		return port;
+	}
 }

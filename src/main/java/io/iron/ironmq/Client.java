@@ -1,11 +1,9 @@
 package io.iron.ironmq;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
-
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Random;
@@ -77,7 +75,7 @@ public class Client {
 
     private Reader request(String method, String endpoint, String body) throws IOException {
         String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
-        URL url = new URL(cloud.scheme, cloud.host, cloud.port, path);
+        URL url = new URL(cloud.scheme, cloud.getHost(), cloud.port, path);
 
         final int maxRetries = 5;
         int retries = 0;
