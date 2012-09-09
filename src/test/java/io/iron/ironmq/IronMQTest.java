@@ -1,6 +1,6 @@
-import java.io.IOException;
+package io.iron.ironmq;
 
-import io.iron.ironmq.*;
+import java.io.IOException;
 
 import org.junit.Assert;
 import org.junit.Assume;

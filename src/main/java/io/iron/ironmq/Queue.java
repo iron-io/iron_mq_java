@@ -12,7 +12,7 @@ public class Queue {
     final private Client client;
     final private String name;
 
-    Queue(Client client, String name) {
+    public Queue(Client client, String name) {
         this.client = client;
         this.name = name;
     }
@@ -26,10 +26,7 @@ public class Queue {
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public Message get() throws IOException {
-        Reader reader = client.get("queues/" + name + "/messages");
-        Gson gson = new Gson();
-        Messages msgs = gson.fromJson(reader, Messages.class);
-
+        Messages msgs = get(1);
         Message msg;
         try {
             msg = msgs.getMessage(0);
@@ -40,6 +37,38 @@ public class Queue {
         return msg;
     }
 
+    /**
+    * Retrieves Messages from the queue. If there are no items on the queue, an
+    * EmptyQueueException is thrown.
+    * @param numberOfMessages The number of messages to receive. Max. is 100.
+    * @throws EmptyQueueException If the queue is empty.
+    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws IOException If there is an error accessing the IronMQ server.
+    */
+    public Messages get(int numberOfMessages) throws IOException {
+        return get(numberOfMessages, 120);
+    }
+
+    
+    /**
+    * Retrieves Messages from the queue. If there are no items on the queue, an
+    * EmptyQueueException is thrown.
+    * @param numberOfMessages The number of messages to receive. Max. is 100.
+    * @param timeout timeout in seconds.
+    * @throws EmptyQueueException If the queue is empty.
+    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws IOException If there is an error accessing the IronMQ server.
+    */
+    public Messages get(int numberOfMessages, int timeout) throws IOException {
+    	if (numberOfMessages < 0 || numberOfMessages > 100) {
+    		throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
+    	}
+        Reader reader = client.get("queues/" + name + "/messages?n="+numberOfMessages+"&timeout=" + timeout);
+        Gson gson = new Gson();
+        return gson.fromJson(reader, Messages.class);
+    }
+
+    
     /**
     * Deletes a Message from the queue.
     *
@@ -88,7 +117,7 @@ public class Queue {
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public String push(String msg, long timeout) throws IOException {
-        return push(msg, 0, 0);
+        return push(msg, timeout, 0);
     }
 
     /**
@@ -103,7 +132,7 @@ public class Queue {
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public String push(String msg, long timeout, long delay) throws IOException {
-        return push(msg, 0, 0, 0);
+        return push(msg, timeout, delay, 0);
     }
 
     /**
@@ -132,5 +161,14 @@ public class Queue {
         Reader reader = client.post("queues/" + name + "/messages", body);
         Ids ids = gson.fromJson(reader, Ids.class);
         return ids.getId(0);
+    }
+    
+    /**
+     * Clears the queue off all messages
+     * @param queue the name of the queue 
+     * @throws IOException
+     */
+    public void clearQueue() throws IOException {
+    	client.post("queues/"+name+"/clear", "");
     }
 }

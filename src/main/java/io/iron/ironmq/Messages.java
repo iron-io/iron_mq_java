@@ -1,13 +1,17 @@
 package io.iron.ironmq;
 
-class Messages {
+public class Messages {
     private Message[] messages;
 
-    Messages(Message... msgs) {
+    public Messages(Message... msgs) {
         messages = msgs;
     }
 
-    Message getMessage(int i) {
+    public Message getMessage(int i) {
         return messages[i];
     }
+    
+    public Message[] getMessages() {
+		return messages;
+	}
 }
