@@ -49,7 +49,6 @@ public class Queue {
         return get(numberOfMessages, 120);
     }
 
-    
     /**
     * Retrieves Messages from the queue. If there are no items on the queue, an
     * EmptyQueueException is thrown.
@@ -68,7 +67,6 @@ public class Queue {
         return gson.fromJson(reader, Messages.class);
     }
 
-    
     /**
     * Deletes a Message from the queue.
     *
