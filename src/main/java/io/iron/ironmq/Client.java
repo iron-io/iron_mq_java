@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Random;
@@ -101,6 +102,10 @@ public class Client {
         }
     }
 
+    static private class Error implements Serializable {
+        String msg;
+    }
+
     private Reader singleRequest(String method, URL url, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod(method);
@@ -123,12 +128,13 @@ public class Client {
         int status = conn.getResponseCode();
         if (status != 200) {
             String msg;
-            if (conn.getContentLength() > 0 && conn.getContentType() == "application/json") {
+            if (conn.getContentLength() > 0 && conn.getContentType().equals("application/json")) {
                 InputStreamReader reader = null;
                 try {
                     reader = new InputStreamReader(conn.getErrorStream());
                     Gson gson = new Gson();
-                    msg = gson.fromJson(reader, String.class);
+                    Error error = gson.fromJson(reader, Error.class);
+                    msg = error.msg;
                 } catch (JsonSyntaxException e) {
                     msg = "IronMQ's response contained invalid JSON";
                 } finally {
