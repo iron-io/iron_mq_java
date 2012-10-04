@@ -21,18 +21,15 @@ public class IronMQTest {
         Client c = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue q = c.queue("test-queue");
 
-        // clear out the queue
-        try {
-            while (true) {
-                Message msg = q.get();
-                q.deleteMessage(msg);
-            }
-        } catch (EmptyQueueException e) {
-        }
+        q.clear();
+
+        Assert.assertEquals(0, q.getSize());
 
         final String body = "Hello, IronMQ!";
 
         String id = q.push(body);
+
+        Assert.assertEquals(1, q.getSize());
 
         Message msg = q.get();
         Assert.assertEquals(body, msg.getBody());

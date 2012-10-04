@@ -2,6 +2,7 @@ package io.iron.ironmq;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Serializable;
 
 import com.google.gson.Gson;
 
@@ -59,12 +60,14 @@ public class Queue {
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public Messages get(int numberOfMessages, int timeout) throws IOException {
-    	if (numberOfMessages < 0 || numberOfMessages > 100) {
-    		throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
-    	}
+        if (numberOfMessages < 0 || numberOfMessages > 100) {
+            throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
+        }
         Reader reader = client.get("queues/" + name + "/messages?n="+numberOfMessages+"&timeout=" + timeout);
         Gson gson = new Gson();
-        return gson.fromJson(reader, Messages.class);
+        Messages messages = gson.fromJson(reader, Messages.class);
+        reader.close();
+        return messages;
     }
 
     /**
@@ -158,6 +161,7 @@ public class Queue {
 
         Reader reader = client.post("queues/" + name + "/messages", body);
         Ids ids = gson.fromJson(reader, Ids.class);
+        reader.close();
         return ids.getId(0);
     }
 
@@ -167,6 +171,19 @@ public class Queue {
      * @throws IOException
      */
     public void clear() throws IOException {
-        client.post("queues/"+name+"/clear", "");
+        client.post("queues/"+name+"/clear", "").close();
+    }
+
+    static class Info implements Serializable {
+        int count;
+        int size;
+    }
+
+    public int getSize() throws IOException {
+        Reader reader = client.get("queues/"+name);
+        Gson gson = new Gson();
+        Info info = gson.fromJson(reader, Info.class);
+        reader.close();
+        return info.size;
     }
 }
