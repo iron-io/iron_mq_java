@@ -24,6 +24,10 @@ public class Client {
     private String token;
     private Cloud cloud;
 
+    static {
+        System.setProperty("https.protocols", "TLSv1");
+    }
+
     /**
      * Constructs a new Client using the specified project ID and token.
      * The network is not accessed during construction and this call will
