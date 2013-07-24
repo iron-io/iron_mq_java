@@ -124,7 +124,7 @@ public class Client {
         conn.connect();
 
         if (body != null) {
-            OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+            OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream(), Charset.forName("UTF-8"));
             out.write(body);
             out.close();
         }
