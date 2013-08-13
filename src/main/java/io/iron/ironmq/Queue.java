@@ -60,7 +60,7 @@ public class Queue {
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public Messages get(int numberOfMessages, int timeout) throws IOException {
-        if (numberOfMessages < 0 || numberOfMessages > 100) {
+        if (numberOfMessages < 1 || numberOfMessages > 100) {
             throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
         }
         Reader reader = client.get("queues/" + name + "/messages?n="+numberOfMessages+"&timeout=" + timeout);
