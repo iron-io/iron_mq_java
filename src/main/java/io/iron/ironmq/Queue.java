@@ -81,6 +81,16 @@ public class Queue {
     public void deleteMessage(String id) throws IOException {
         client.delete("queues/" + name + "/messages/" + id);
     }
+    
+    /**
+     * Destroy the queue.
+     * 
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void destroy() throws IOException {
+    	client.delete("queues/" + name);
+    }
 
     /**
     * Deletes a Message from the queue.
