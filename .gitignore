@@ -3,3 +3,9 @@ target
 /.classpath
 /.project
 /.settings
+
+
+#ignore intelliJ files
+/.idea
+*.iml
+
