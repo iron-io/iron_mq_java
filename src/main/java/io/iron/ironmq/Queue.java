@@ -69,6 +69,46 @@ public class Queue {
         reader.close();
         return messages;
     }
+    
+    /**
+    * Peeking at a queue returns the next messages on the queue, but it does not reserve them. 
+    * If there are no items on the queue, an EmptyQueueException is thrown.
+    *
+    * @throws EmptyQueueException If the queue is empty.
+    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws IOException If there is an error accessing the IronMQ server.
+    */
+    public Message peek() throws IOException {
+        Messages msgs = peek(1);
+        Message msg;
+        try {
+            msg = msgs.getMessage(0);
+        } catch (IndexOutOfBoundsException e) {
+            throw new EmptyQueueException();
+        }
+
+        return msg;
+    }
+
+    /**
+    * Peeking at a queue returns the next messages on the queue, but it does not reserve them.
+    * 
+    * @param numberOfMessages The number of messages to receive. Max. is 100.
+    * @throws EmptyQueueException If the queue is empty.
+    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws IOException If there is an error accessing the IronMQ server.
+    */
+    public Messages peek(int numberOfMessages) throws IOException {
+    	 if (numberOfMessages < 1 || numberOfMessages > 100) {
+             throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
+         }
+         Reader reader = client.get("queues/" + name + "/messages/peek?n="+numberOfMessages);
+         try{
+        	 return new Gson().fromJson(reader, Messages.class);
+         }finally{
+        	 reader.close();
+         }
+    }
 
     /**
     * Deletes a Message from the queue.
@@ -159,6 +199,35 @@ public class Queue {
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public String push(String msg, long timeout, long delay, long expiresIn) throws IOException {
+        Message message = new Message();
+        message.setBody(msg);
+        message.setTimeout(timeout);
+        message.setDelay(delay);
+        message.setExpiresIn(expiresIn);
+
+        Messages msgs = new Messages(message);
+        Gson gson = new Gson();
+        String body = gson.toJson(msgs);
+
+        Reader reader = client.post("queues/" + name + "/messages", body);
+        Ids ids = gson.fromJson(reader, Ids.class);
+        reader.close();
+        return ids.getId(0);
+    }
+    
+    /**
+    * Pushes a message onto the queue.
+    *
+    * @param msg The body of the message to push.
+    * @param timeout The message's timeout in seconds.
+    * @param delay The message's delay in seconds.
+    * @param expiresIn The message's expiration offset in seconds.
+    * @return The new message's ID
+    *
+    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws IOException If there is an error accessing the IronMQ server.
+    */
+    public String peek(String msg, long timeout, long delay, long expiresIn) throws IOException {
         Message message = new Message();
         message.setBody(msg);
         message.setTimeout(timeout);
