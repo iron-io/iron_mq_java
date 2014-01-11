@@ -177,11 +177,17 @@ public class Queue {
 
     /**
      * Clears the queue off all messages
-     * @param queue the name of the queue 
      * @throws IOException
      */
     public void clear() throws IOException {
         client.post("queues/"+name+"/clear", "").close();
+    }
+
+    /**
+     * @return the name of this queue
+     */
+    public String getName() {
+        return name;
     }
 
     static class Info implements Serializable {
