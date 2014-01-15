@@ -18,6 +18,15 @@ public class Client {
 
     static final Random rand = new Random();
 
+    static final private HashMap<String, Object> defaultOptions;
+
+    static {
+        defaultOptions = new HashMap<String, Object>();
+        defaultOptions.put("scheme", Cloud.ironAWSUSEast.getScheme());
+        defaultOptions.put("host", Cloud.ironAWSUSEast.getHost());
+        defaultOptions.put("port", Cloud.ironAWSUSEast.getPort());
+    }
+
     private String projectId;
     private String token;
     private Cloud cloud;
@@ -61,12 +70,7 @@ public class Client {
         user_options.put("project_id", projectId);
         user_options.put("token", token);
 
-        Map<String, Object> default_options = new HashMap<String, Object>();
-        default_options.put("scheme", Cloud.ironAWSUSEast.getScheme());
-        default_options.put("host", Cloud.ironAWSUSEast.getHost());
-        default_options.put("port", Cloud.ironAWSUSEast.getPort());
-
-        loadConfiguration("iron", "mq", user_options, default_options, new String[]{"project_id", "token"});
+        loadConfiguration("iron", "mq", user_options, new String[]{"project_id", "token"});
     }
 
     /**
@@ -179,7 +183,7 @@ public class Client {
         return env;
     }
 
-    private void loadConfiguration(String company, String product, Map<String, Object> user_options, Map<String, Object> default_options, String[] extra_options_list) {
+    private void loadConfiguration(String company, String product, Map<String, Object> user_options, String[] extra_options_list) {
         options_list = ArrayUtils.addAll(new String[]{"scheme", "host", "port", "user_agent"}, extra_options_list);
 
         options = new HashMap<String, Object>();
@@ -195,7 +199,7 @@ public class Client {
         }
 
         if (env == null) {
-            env = (String)default_options.get("env");
+            env = (String)defaultOptions.get("env");
         }
 
         loadFromHash(user_options);
@@ -227,8 +231,8 @@ public class Client {
             }
         }
 
-        loadFromConfig(company, product, (String)default_options.get("config"));
-        loadFromHash(default_options);
+        loadFromConfig(company, product, (String)defaultOptions.get("config"));
+        loadFromHash(defaultOptions);
 
         projectId = (String)getOption("project_id");
         token = (String)getOption("token");
