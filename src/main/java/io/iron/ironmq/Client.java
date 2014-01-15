@@ -38,15 +38,15 @@ public class Client {
         System.setProperty("https.protocols", "TLSv1");
     }
 
+    /**
+     * This constructor is equivalent to {@link #Client(String, String, Cloud) Client(null, null, null)}.
+     */
     public Client() {
         this(null, null, null);
     }
 
     /**
-     * Constructs a new Client using the specified project ID and token.
-     * The network is not accessed during construction and this call will
-     * succeed even if the credentials are invalid.
-     * This constructor uses the AWS cloud with the US East region.
+     * This constructor is equivalent to {@link #Client(String, String, Cloud) Client(projectId, token, null)}.
      *
      * @param projectId A 24-character project ID.
      * @param token An OAuth token.
@@ -57,8 +57,11 @@ public class Client {
 
     /**
      * Constructs a new Client using the specified project ID and token.
-     * The network is not accessed during construction and this call will
-     * succeed even if the credentials are invalid.
+     * A null projectId, token, or cloud will be filled in using the
+     * filesystem and environment for configuration as described
+     * <a href="http://dev.iron.io/worker/reference/configuration/">here</a>.
+     * The network is not accessed during construction and this call
+     * succeeds even if the credentials are invalid.
      *
      * @param projectId A 24-character project ID.
      * @param token An OAuth token.
