@@ -1,7 +1,7 @@
 repositories.remote << 'http://repo1.maven.org/maven2'
 repositories.remote << 'http://iron-io.github.com/maven/repository'
 
-THIS_VERSION = '0.0.11'
+THIS_VERSION = "0.0.12"
 GROUP        = 'ironmq'
 
 JUNIT = 'junit:junit:jar:4.10'
