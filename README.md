@@ -18,7 +18,7 @@ The .jar file will appear under the target directory.
 
 The Basics
 ==========
-The full API is documented [here](http://iron-io.github.com/iron_mq_java/), but
+The full API is documented [here](http://iron-io.github.io/iron_mq_java/), but
 here are some quick snippets to get you started.
 
 **Initialize** a client and get a queue object:
