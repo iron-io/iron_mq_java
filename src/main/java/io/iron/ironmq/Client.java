@@ -31,7 +31,7 @@ public class Client {
     private String token;
     private Cloud cloud;
 
-    private String[] options_list;
+    private String[] optionsList;
     private Map<String, Object> options;
     private String env;
 
@@ -66,11 +66,11 @@ public class Client {
      * @param cloud The cloud to use.
      */
     public Client(String projectId, String token, Cloud cloud) {
-        Map<String, Object> user_options = new HashMap<String, Object>();
-        user_options.put("project_id", projectId);
-        user_options.put("token", token);
+        Map<String, Object> userOptions = new HashMap<String, Object>();
+        userOptions.put("project_id", projectId);
+        userOptions.put("token", token);
 
-        loadConfiguration("iron", "mq", user_options, new String[]{"project_id", "token"});
+        loadConfiguration("iron", "mq", userOptions, new String[]{"project_id", "token"});
     }
 
     /**
@@ -183,12 +183,12 @@ public class Client {
         return env;
     }
 
-    private void loadConfiguration(String company, String product, Map<String, Object> user_options, String[] extra_options_list) {
-        options_list = ArrayUtils.addAll(new String[]{"scheme", "host", "port", "user_agent"}, extra_options_list);
+    private void loadConfiguration(String company, String product, Map<String, Object> userOptions, String[] extraOptionsList) {
+        optionsList = ArrayUtils.addAll(new String[]{"scheme", "host", "port", "user_agent"}, extraOptionsList);
 
         options = new HashMap<String, Object>();
 
-        env = (String)user_options.get("env");
+        env = (String)userOptions.get("env");
 
         if (env == null) {
             env = System.getenv(company.toUpperCase() + "_" + product.toUpperCase() + "_ENV");
@@ -202,8 +202,8 @@ public class Client {
             env = (String)defaultOptions.get("env");
         }
 
-        loadFromHash(user_options);
-        loadFromConfig(company, product, (String)user_options.get("config"));
+        loadFromHash(userOptions);
+        loadFromConfig(company, product, (String)userOptions.get("config"));
 
         loadFromConfig(company, product, System.getenv(company.toUpperCase() + "_" + product.toUpperCase() + "_CONFIG"));
         loadFromConfig(company, product, System.getenv(company.toUpperCase() + "_CONFIG"));
@@ -221,13 +221,13 @@ public class Client {
         suffixes.add("");
 
         for (String suffix : suffixes) {
-            for (String config_base : new String[]{company + "-" + product, company + "_" + product, company}) {
-                loadFromConfig(company, product, System.getProperty("user.dir") + "/" + config_base + suffix + ".json");
-                loadFromConfig(company, product, System.getProperty("user.dir") + "/." + config_base + suffix + ".json");
-                loadFromConfig(company, product, System.getProperty("user.dir") + "/config/" + config_base + suffix + ".json");
-                loadFromConfig(company, product, System.getProperty("user.dir") + "/config/." + config_base + suffix + ".json");
-                loadFromConfig(company, product, System.getProperty("user.home") + "/" + config_base + suffix + ".json");
-                loadFromConfig(company, product, System.getProperty("user.home") + "/." + config_base + suffix + ".json");
+            for (String configBase : new String[]{company + "-" + product, company + "_" + product, company}) {
+                loadFromConfig(company, product, System.getProperty("user.dir") + "/" + configBase + suffix + ".json");
+                loadFromConfig(company, product, System.getProperty("user.dir") + "/." + configBase + suffix + ".json");
+                loadFromConfig(company, product, System.getProperty("user.dir") + "/config/" + configBase + suffix + ".json");
+                loadFromConfig(company, product, System.getProperty("user.dir") + "/config/." + configBase + suffix + ".json");
+                loadFromConfig(company, product, System.getProperty("user.home") + "/" + configBase + suffix + ".json");
+                loadFromConfig(company, product, System.getProperty("user.home") + "/." + configBase + suffix + ".json");
             }
         }
 
@@ -241,7 +241,7 @@ public class Client {
     }
 
     private void setOption(String name, Object value) {
-        if (ArrayUtils.contains(options_list, name)) {
+        if (ArrayUtils.contains(optionsList, name)) {
             if (options.get(name) == null && value != null) {
                 options.put(name, value);
             }
@@ -267,56 +267,56 @@ public class Client {
             return;
         }
 
-        for (String option : options_list) {
+        for (String option : optionsList) {
             setOption(option, hash.get(option));
         }
     }
 
-    private void loadFromConfig(String company, String product, String config_file) {
-        if (config_file == null) {
+    private void loadFromConfig(String company, String product, String configFile) {
+        if (configFile == null) {
             return;
         }
 
-        File config = new File(config_file);
+        File config = new File(configFile);
 
         if (!config.exists()) {
             return;
         }
 
-        String config_data;
+        String configData;
 
         try {
-            config_data = FileUtils.readFileToString(config);
+            configData = FileUtils.readFileToString(config);
         } catch (IOException e) {
             return;
         }
 
         Gson gson = new Gson();
-        Map<String, Object> config_hash = (Map<String, Object>)gson.fromJson(config_data, Map.class);
+        Map<String, Object> configHash = (Map<String, Object>)gson.fromJson(configData, Map.class);
 
         if (env != null) {
-            loadFromHash(getSubHash(config_hash, new String[]{env, company + "_" + product}));
-            loadFromHash(getSubHash(config_hash, new String[]{env, company, product}));
-            loadFromHash(getSubHash(config_hash, new String[]{env, product}));
-            loadFromHash(getSubHash(config_hash, new String[]{env, company}));
+            loadFromHash(getSubHash(configHash, new String[]{env, company + "_" + product}));
+            loadFromHash(getSubHash(configHash, new String[]{env, company, product}));
+            loadFromHash(getSubHash(configHash, new String[]{env, product}));
+            loadFromHash(getSubHash(configHash, new String[]{env, company}));
 
-            loadFromHash(getSubHash(config_hash, new String[]{company + "_" + product, env}));
-            loadFromHash(getSubHash(config_hash, new String[]{company, product, env}));
-            loadFromHash(getSubHash(config_hash, new String[]{product, env}));
-            loadFromHash(getSubHash(config_hash, new String[]{company, env}));
+            loadFromHash(getSubHash(configHash, new String[]{company + "_" + product, env}));
+            loadFromHash(getSubHash(configHash, new String[]{company, product, env}));
+            loadFromHash(getSubHash(configHash, new String[]{product, env}));
+            loadFromHash(getSubHash(configHash, new String[]{company, env}));
 
-            loadFromHash(getSubHash(config_hash, new String[]{env}));
+            loadFromHash(getSubHash(configHash, new String[]{env}));
         }
 
-        loadFromHash(getSubHash(config_hash, new String[]{company + "_" + product}));
-        loadFromHash(getSubHash(config_hash, new String[]{company, product}));
-        loadFromHash(getSubHash(config_hash, new String[]{product}));
-        loadFromHash(getSubHash(config_hash, new String[]{company}));
-        loadFromHash(getSubHash(config_hash, new String[]{}));
+        loadFromHash(getSubHash(configHash, new String[]{company + "_" + product}));
+        loadFromHash(getSubHash(configHash, new String[]{company, product}));
+        loadFromHash(getSubHash(configHash, new String[]{product}));
+        loadFromHash(getSubHash(configHash, new String[]{company}));
+        loadFromHash(getSubHash(configHash, new String[]{}));
     }
 
     private void loadFromEnv(String prefix) {
-        for (String option : options_list) {
+        for (String option : optionsList) {
             setOption(option, System.getenv(prefix + "_" + option.toUpperCase()));
         }
     }
