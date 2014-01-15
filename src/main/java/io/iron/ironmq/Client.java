@@ -7,7 +7,6 @@ import java.util.*;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 /**
@@ -283,16 +282,24 @@ public class Client {
             return;
         }
 
-        String configData;
-
+        Reader configReader;
         try {
-            configData = FileUtils.readFileToString(config);
-        } catch (IOException e) {
+            configReader = new FileReader(config);
+        } catch (FileNotFoundException e) {
             return;
         }
-
+        configReader = new BufferedReader(configReader);
         Gson gson = new Gson();
-        Map<String, Object> configHash = (Map<String, Object>)gson.fromJson(configData, Map.class);
+
+        Map<String, Object> configHash;
+        try {
+             configHash = (Map<String, Object>)gson.fromJson(configReader, Map.class);
+        } finally {
+            try {
+                configReader.close();
+            } catch (IOException e) {
+            }
+        }
 
         if (env != null) {
             loadFromHash(getSubHash(configHash, new String[]{env, company + "_" + product}));
