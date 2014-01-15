@@ -28,7 +28,7 @@ here are some quick snippets to get you started.
 
 **Push** a message on the queue:
 
-    queue.Push("Hello, world!");
+    queue.push("Hello, world!");
 
 **Pop** a message off the queue:
 
