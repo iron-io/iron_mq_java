@@ -47,7 +47,7 @@ public class Queue {
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public Messages get(int numberOfMessages) throws IOException {
-        return get(numberOfMessages, 120);
+        return get(numberOfMessages, -1);
     }
 
     /**
@@ -63,7 +63,12 @@ public class Queue {
         if (numberOfMessages < 1 || numberOfMessages > 100) {
             throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
         }
-        Reader reader = client.get("queues/" + name + "/messages?n="+numberOfMessages+"&timeout=" + timeout);
+
+        String url = "queues/" + name + "/messages?n=" + numberOfMessages;
+        if (timeout > -1) {
+            url += "&timeout=" + timeout;
+        }
+        Reader reader = client.get(url);
         Gson gson = new Gson();
         Messages messages = gson.fromJson(reader, Messages.class);
         reader.close();
