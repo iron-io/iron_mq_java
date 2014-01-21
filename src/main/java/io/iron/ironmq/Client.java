@@ -1,13 +1,26 @@
 package io.iron.ironmq;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * The Client class provides access to the IronMQ service.
@@ -71,8 +84,9 @@ public class Client {
         Map<String, Object> userOptions = new HashMap<String, Object>();
         userOptions.put("project_id", projectId);
         userOptions.put("token", token);
+        userOptions.put("cloud", cloud);
 
-        loadConfiguration("iron", "mq", userOptions, new String[]{"project_id", "token"});
+        loadConfiguration("iron", "mq", userOptions, new String[]{"project_id", "token", "cloud"});
     }
 
     /**
@@ -239,7 +253,14 @@ public class Client {
         projectId = (String)getOption("project_id");
         token = (String)getOption("token");
 
-        cloud = new Cloud((String)getOption("scheme"), (String)getOption("host"), ((Double)getOption("port")).intValue());
+        if(userOptions.containsKey("cloud")){
+        	Object cloudOption = userOptions.get("cloud");
+        	if(cloudOption != null && cloudOption instanceof Cloud){
+        		cloud = (Cloud) cloudOption;
+        	}
+        }else{
+        	cloud = new Cloud((String)getOption("scheme"), (String)getOption("host"), ((Integer)getOption("port")));
+        }
     }
 
     private void setOption(String name, Object value) {
