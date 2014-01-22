@@ -8,17 +8,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class IronMQTest {
-    private String projectId;
-    private String token;
-
-    @Before public void setup() {
-        projectId = System.getenv("IRON_PROJECT_ID");
-        token = System.getenv("IRON_TOKEN");
-        Assume.assumeTrue(projectId != null && token != null);
-    }
-
     @Test public void testClient() throws IOException {
-        Client c = new Client(projectId, token, Cloud.ironAWSUSEast);
+        Client c = new Client();
         Queue q = c.queue("test-queue");
 
         q.clear();
