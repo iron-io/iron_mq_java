@@ -114,6 +114,18 @@ public class Queue {
         	 reader.close();
          }
     }
+    
+    /**
+    * Touching a reserved message extends its timeout to the duration specified when the message was created.
+    *
+    * @param id The ID of the message to delete.
+    *
+    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws IOException If there is an error accessing the IronMQ server.
+    */
+    public void touchMessage(String id) throws IOException {
+        client.post("queues/" + name + "/messages/" + id + "/touch", "");
+    }
 
     /**
     * Deletes a Message from the queue.
