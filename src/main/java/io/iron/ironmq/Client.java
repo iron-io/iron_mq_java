@@ -1,5 +1,9 @@
 package io.iron.ironmq;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -7,7 +11,13 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -20,40 +30,65 @@ public class Client {
 
     static final Random rand = new Random();
 
+    static final private HashMap<String, Object> defaultOptions;
+
+    static {
+        defaultOptions = new HashMap<String, Object>();
+        defaultOptions.put("scheme", Cloud.ironAWSUSEast.getScheme());
+        defaultOptions.put("host", Cloud.ironAWSUSEast.getHost());
+        defaultOptions.put("port", Cloud.ironAWSUSEast.getPort());
+    }
+
     private String projectId;
     private String token;
     private Cloud cloud;
+
+    private String[] optionsList;
+    private Map<String, Object> options;
+    private String env;
 
     static {
         System.setProperty("https.protocols", "TLSv1");
     }
 
     /**
-     * Constructs a new Client using the specified project ID and token.
-     * The network is not accessed during construction and this call will
-     * succeed even if the credentials are invalid.
-     * This constructor uses the AWS cloud with the US East region.
+     * This constructor is equivalent to {@link #Client(String, String, Cloud) Client(null, null, null)}.
+     */
+    public Client() {
+        this(null, null, null);
+    }
+
+    /**
+     * This constructor is equivalent to {@link #Client(String, String, Cloud) Client(projectId, token, null)}.
      *
      * @param projectId A 24-character project ID.
      * @param token An OAuth token.
      */
     public Client(String projectId, String token) {
-        this(projectId, token, Cloud.ironAWSUSEast);
+        this(projectId, token, null);
     }
 
     /**
      * Constructs a new Client using the specified project ID and token.
-     * The network is not accessed during construction and this call will
-     * succeed even if the credentials are invalid.
+     * A null projectId, token, or cloud will be filled in using the
+     * filesystem and environment for configuration as described
+     * <a href="http://dev.iron.io/worker/reference/configuration/">here</a>.
+     * The network is not accessed during construction and this call
+     * succeeds even if the credentials are invalid.
      *
      * @param projectId A 24-character project ID.
      * @param token An OAuth token.
      * @param cloud The cloud to use.
      */
     public Client(String projectId, String token, Cloud cloud) {
-        this.projectId = projectId;
-        this.token = token;
-        this.cloud = cloud;
+        Map<String, Object> userOptions = new HashMap<String, Object>();
+        userOptions.put("project_id", projectId);
+        userOptions.put("token", token);
+        if (cloud != null) {
+            userOptions.put("cloud", cloud);
+        }
+
+        loadConfiguration("iron", "mq", userOptions, new String[]{"project_id", "token", "cloud"});
     }
 
     /**
@@ -153,5 +188,170 @@ public class Client {
 
         return new InputStreamReader(conn.getInputStream());
     }
-}
 
+    public Map<String, Object> getOptions() {
+        return options;
+    }
+
+    public Object getOption(String name) {
+        return options.get(name);
+    }
+
+    public String getEnv() {
+        return env;
+    }
+
+    private void loadConfiguration(String company, String product, Map<String, Object> userOptions, String[] extraOptionsList) {
+        optionsList = ArrayUtils.addAll(new String[]{"scheme", "host", "port", "user_agent"}, extraOptionsList);
+
+        options = new HashMap<String, Object>();
+
+        env = (String)userOptions.get("env");
+
+        if (env == null) {
+            env = System.getenv(company.toUpperCase() + "_" + product.toUpperCase() + "_ENV");
+        }
+
+        if (env == null) {
+            env = System.getenv(company.toUpperCase() + "_ENV");
+        }
+
+        if (env == null) {
+            env = (String)defaultOptions.get("env");
+        }
+
+        loadFromHash(userOptions);
+        loadFromConfig(company, product, (String)userOptions.get("config"));
+
+        loadFromConfig(company, product, System.getenv(company.toUpperCase() + "_" + product.toUpperCase() + "_CONFIG"));
+        loadFromConfig(company, product, System.getenv(company.toUpperCase() + "_CONFIG"));
+
+        loadFromEnv(company.toUpperCase() + "_" + product.toUpperCase());
+        loadFromEnv(company.toUpperCase());
+
+        List<String> suffixes = new ArrayList<String>();
+
+        if (env != null) {
+            suffixes.add("-" + env);
+            suffixes.add("_" + env);
+        }
+
+        suffixes.add("");
+
+        for (String suffix : suffixes) {
+            for (String configBase : new String[]{company + "-" + product, company + "_" + product, company}) {
+                loadFromConfig(company, product, System.getProperty("user.dir") + "/" + configBase + suffix + ".json");
+                loadFromConfig(company, product, System.getProperty("user.dir") + "/." + configBase + suffix + ".json");
+                loadFromConfig(company, product, System.getProperty("user.dir") + "/config/" + configBase + suffix + ".json");
+                loadFromConfig(company, product, System.getProperty("user.dir") + "/config/." + configBase + suffix + ".json");
+                loadFromConfig(company, product, System.getProperty("user.home") + "/" + configBase + suffix + ".json");
+                loadFromConfig(company, product, System.getProperty("user.home") + "/." + configBase + suffix + ".json");
+            }
+        }
+
+        loadFromConfig(company, product, (String)defaultOptions.get("config"));
+        loadFromHash(defaultOptions);
+
+        projectId = (String)getOption("project_id");
+        token = (String)getOption("token");
+
+        if (userOptions.containsKey("cloud")) {
+            Object cloudOption = userOptions.get("cloud");
+            if(cloudOption != null && cloudOption instanceof Cloud){
+                cloud = (Cloud) cloudOption;
+            }
+        } else {
+            cloud = new Cloud((String)getOption("scheme"), (String)getOption("host"), ((Number)getOption("port")).intValue());
+        }
+    }
+
+    private void setOption(String name, Object value) {
+        if (ArrayUtils.contains(optionsList, name)) {
+            if (options.get(name) == null && value != null) {
+                options.put(name, value);
+            }
+        }
+    }
+
+    private Map<String, Object> getSubHash(Map<String, Object> hash, String[] subs) {
+        Map<String, Object> result = hash;
+
+        for (String sub : subs) {
+            if (result.get(sub) == null) {
+                return null;
+            }
+
+            result = (Map<String, Object>)result.get(sub);
+        }
+
+        return result;
+    }
+
+    private void loadFromHash(Map<String, Object> hash) {
+        if (hash == null) {
+            return;
+        }
+
+        for (String option : optionsList) {
+            setOption(option, hash.get(option));
+        }
+    }
+
+    private void loadFromConfig(String company, String product, String configFile) {
+        if (configFile == null) {
+            return;
+        }
+
+        File config = new File(configFile);
+
+        if (!config.exists()) {
+            return;
+        }
+
+        Reader configReader;
+        try {
+            configReader = new FileReader(config);
+        } catch (FileNotFoundException e) {
+            return;
+        }
+        configReader = new BufferedReader(configReader);
+        Gson gson = new Gson();
+
+        Map<String, Object> configHash;
+        try {
+             configHash = (Map<String, Object>)gson.fromJson(configReader, Map.class);
+        } finally {
+            try {
+                configReader.close();
+            } catch (IOException e) {
+            }
+        }
+
+        if (env != null) {
+            loadFromHash(getSubHash(configHash, new String[]{env, company + "_" + product}));
+            loadFromHash(getSubHash(configHash, new String[]{env, company, product}));
+            loadFromHash(getSubHash(configHash, new String[]{env, product}));
+            loadFromHash(getSubHash(configHash, new String[]{env, company}));
+
+            loadFromHash(getSubHash(configHash, new String[]{company + "_" + product, env}));
+            loadFromHash(getSubHash(configHash, new String[]{company, product, env}));
+            loadFromHash(getSubHash(configHash, new String[]{product, env}));
+            loadFromHash(getSubHash(configHash, new String[]{company, env}));
+
+            loadFromHash(getSubHash(configHash, new String[]{env}));
+        }
+
+        loadFromHash(getSubHash(configHash, new String[]{company + "_" + product}));
+        loadFromHash(getSubHash(configHash, new String[]{company, product}));
+        loadFromHash(getSubHash(configHash, new String[]{product}));
+        loadFromHash(getSubHash(configHash, new String[]{company}));
+        loadFromHash(getSubHash(configHash, new String[]{}));
+    }
+
+    private void loadFromEnv(String prefix) {
+        for (String option : optionsList) {
+            setOption(option, System.getenv(prefix + "_" + option.toUpperCase()));
+        }
+    }
+
+}

@@ -7,6 +7,7 @@ public class Cloud {
 
     public static final Cloud ironAWSUSEast = new Cloud("https", "mq-aws-us-east-1.iron.io", 443);
     public static final Cloud ironRackspaceDFW = new Cloud("https", "mq-rackspace-dfw.iron.io", 443);
+    public static final Cloud ironRackspaceORD = new Cloud("https", "mq-rackspace-ord.iron.io", 443);
 
     public Cloud(String scheme, String host, int port) {
         this.scheme = scheme;

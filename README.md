@@ -6,7 +6,28 @@ Getting Started
 There are three ways to get this package.
 
 1. Add it as a Maven dependency, using the repository
-   `http://iron-io.github.com/maven/repository`.
+   `http://iron-io.github.com/maven/repository`. Your pom.xml will look
+   something like:
+
+    ...
+    <repositories>
+        <repository>
+            <id>iron-io-repo</id>
+            <name>Iron.io Maven repository on GitHub</name>
+            <url>http://iron-io.github.com/maven/repository/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!-- IronMQ message queue client -->
+        <dependency>
+            <groupId>ironmq</groupId>
+            <artifactId>ironmq</artifactId>
+            <version>0.0.10</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+    ...
 
 2. [Download the jar](https://github.com/iron-io/iron_mq_java/downloads).
 
@@ -18,7 +39,7 @@ The .jar file will appear under the target directory.
 
 The Basics
 ==========
-The full API is documented [here](http://iron-io.github.com/iron_mq_java/), but
+The full API is documented [here](http://iron-io.github.io/iron_mq_java/), but
 here are some quick snippets to get you started.
 
 **Initialize** a client and get a queue object:
@@ -28,7 +49,7 @@ here are some quick snippets to get you started.
 
 **Push** a message on the queue:
 
-    queue.Push("Hello, world!");
+    queue.push("Hello, world!");
 
 **Pop** a message off the queue:
 
