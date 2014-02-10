@@ -6,4 +6,12 @@ class Ids {
     String getId(int i) {
         return ids[i];
     }
+
+    int getSize(){
+        return ids.length;
+    }
+
+    public String[] getIds() {
+        return ids;
+    }
 }

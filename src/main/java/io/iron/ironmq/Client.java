@@ -105,6 +105,10 @@ public class Client {
         return request("DELETE", endpoint, null);
     }
 
+    Reader delete(String endpoint, String body) throws IOException {
+        return request("DELETE", endpoint, body);
+    }
+
     Reader get(String endpoint) throws IOException {
         return request("GET", endpoint, null);
     }
