@@ -25,7 +25,7 @@ import com.google.gson.JsonSyntaxException;
 /**
  * The Client class provides access to the IronMQ service.
  */
-public class Client {
+public class Client implements IClient {
     static final private String apiVersion = "1";
 
     static final Random rand = new Random();
@@ -97,19 +97,19 @@ public class Client {
      *
      * @param name The name of the Queue to create.
      */
-    public Queue queue(String name) {
+    public IQueue queue(String name) {
         return new Queue(this, name);
     }
 
-    Reader delete(String endpoint) throws IOException {
+    public Reader delete(String endpoint) throws IOException {
         return request("DELETE", endpoint, null);
     }
 
-    Reader get(String endpoint) throws IOException {
+    public Reader get(String endpoint) throws IOException {
         return request("GET", endpoint, null);
     }
 
-    Reader post(String endpoint, String body) throws IOException {
+    public Reader post(String endpoint, String body) throws IOException {
         return request("POST", endpoint, body);
     }
 

@@ -9,11 +9,11 @@ import com.google.gson.Gson;
 /**
  * The Queue class represents a specific IronMQ queue bound to a client.
  */
-public class Queue {
-    final private Client client;
+public class Queue implements IQueue {
+    final private IClient client;
     final private String name;
 
-    public Queue(Client client, String name) {
+    public Queue(IClient client, String name) {
         this.client = client;
         this.name = name;
     }

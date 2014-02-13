@@ -10,7 +10,7 @@ import org.junit.Test;
 public class IronMQTest {
     @Test public void testClient() throws IOException {
         Client c = new Client();
-        Queue q = c.queue("test-queue");
+        IQueue q = c.queue("test-queue");
 
         q.clear();
 
@@ -31,7 +31,7 @@ public class IronMQTest {
     @Test(expected=HTTPException.class) public void testErrorResponse() throws IOException {
         // intentionally invalid project/token combination
         Client c = new Client("4444444444444", "aaaaaa", Cloud.ironAWSUSEast);
-        Queue q = c.queue("test-queue");
+        IQueue q = c.queue("test-queue");
 
         q.push("test");
     }
