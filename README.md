@@ -246,6 +246,32 @@ queue.clear();
 
 --
 
+### Add alerts to a queue. This is for Pull Queue only.
+
+```java
+queue.addAlertsToQueue(alertsArrayList);
+```
+
+### Replace current queue alerts with a given list of alerts. This is for Pull Queue only.
+
+```java
+queue.updateAlertsToQueue(alertsArrayList);
+```
+
+### Remove alerts from a queue. This is for Pull Queue only.
+
+```java
+queue.deleteAlertsFromQueue(alertsArrayList);
+```
+
+### Remove alert from a queue by its ID. This is for Pull Queue only.
+
+```java
+queue.deleteAlertFromQueueById(alertid);
+```
+
+--
+
 
 ## Push Queues
 
