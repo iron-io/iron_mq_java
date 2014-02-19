@@ -117,6 +117,10 @@ public class Client {
         return request("POST", endpoint, body);
     }
 
+    Reader put(String endpoint, String body) throws IOException {
+        return request("PUT", endpoint, body);
+    }
+
     private Reader request(String method, String endpoint, String body) throws IOException {
         String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
         URL url = new URL(cloud.scheme, cloud.host, cloud.port, path);

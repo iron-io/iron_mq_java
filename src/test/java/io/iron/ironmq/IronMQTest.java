@@ -172,4 +172,51 @@ public class IronMQTest {
 
         queue.destroy();
     }
+
+    @Test
+    public void testAlerts() throws IOException {
+        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
+        String queueNameSubscriber = "test_alert_queue";
+        Queue queue = new Queue(client, queueNameSubscriber);
+        queue.postMessage("test-message-alert");
+
+        Alert alert = new Alert();
+        alert.direction = "asc";
+        alert.queue = queueNameSubscriber;
+        alert.snooze = 5;
+        alert.trigger = 101;
+        alert.type = "fixed";
+        Alert alert2 = new Alert();
+        alert2.direction = "desc";
+        alert2.queue = queueNameSubscriber;
+        alert2.snooze = 6;
+        alert2.trigger = 102;
+        alert2.type = "fixed";
+        Alert alert3 = new Alert();
+        alert3.direction = "desc";
+        alert3.queue = queueNameSubscriber;
+        alert3.snooze = 7;
+        alert3.trigger = 103;
+        alert3.type = "fixed";
+
+        ArrayList<Alert> alertArrayList = new ArrayList<Alert>();
+        alertArrayList.add(alert);
+        alertArrayList.add(alert2);
+        alertArrayList.add(alert3);
+
+        queue.addAlertsToQueue(alertArrayList);
+//         queue.updateAlertsToQueue(alertArrayList);
+
+        QueueModel infoAboutQueue = queue.getInfoAboutQueue();
+        Assert.assertEquals(infoAboutQueue.alerts.size(), 3);
+
+        queue.deleteAlertFromQueueById(infoAboutQueue.alerts.get(0).id);
+        infoAboutQueue = queue.getInfoAboutQueue();
+        Assert.assertEquals(infoAboutQueue.alerts.size(), 2);
+
+        queue.deleteAlertsFromQueue(infoAboutQueue.alerts);
+
+        infoAboutQueue = queue.getInfoAboutQueue();
+        Assert.assertNull(infoAboutQueue.alerts);
+    }
 }

@@ -12,4 +12,5 @@ public class QueueModel {
     String pushType;
     int retriesDelay;
     ArrayList<Subscriber> subscribers;
+    ArrayList<Alert> alerts;
 }

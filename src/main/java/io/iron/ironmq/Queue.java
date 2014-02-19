@@ -484,4 +484,60 @@ public class Queue {
         reader.close();
         return message;
     }
+
+    /**
+     * Add alerts to a queue. If there is no queue, an EmptyQueueException is thrown.
+     * @param alerts The array list of alerts.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void addAlertsToQueue(ArrayList<Alert> alerts) throws IOException {
+        String url = "queues/" + name + "/alerts";
+        Alerts alert = new Alerts(alerts);
+        Gson gson = new Gson();
+        String jsonMessages = gson.toJson(alert);
+        Reader reader = client.post(url, jsonMessages);
+        reader.close();
+    }
+
+    /**
+     * Replace current queue alerts with a given list of alerts. If there is no queue, an EmptyQueueException is thrown.
+     * @param alerts The array list of alerts.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void updateAlertsToQueue(ArrayList<Alert> alerts) throws IOException {
+        String url = "queues/" + name + "/alerts";
+        Alerts alert = new Alerts(alerts);
+        Gson gson = new Gson();
+        String jsonMessages = gson.toJson(alert);
+        Reader reader = client.put(url, jsonMessages);
+        reader.close();
+    }
+
+    /**
+     * Delete alerts from a queue. If there is no queue, an EmptyQueueException is thrown.
+     * @param alert_ids The array list of alert ids.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void deleteAlertsFromQueue(ArrayList<Alert> alert_ids) throws IOException {
+        String url = "queues/" + name + "/alerts";
+        Alerts alert = new Alerts(alert_ids);
+        Gson gson = new Gson();
+        String jsonMessages = gson.toJson(alert);
+        Reader reader = client.delete(url, jsonMessages);
+        reader.close();
+    }
+
+    /**
+     * Delete alert from a queue by alert id. If there is no queue, an EmptyQueueException is thrown.
+     * @param alert_id The alert id.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void deleteAlertFromQueueById(String alert_id) throws IOException {
+        String url = "queues/" + name + "/alerts/" + alert_id;
+        client.delete(url);
+    }
 }
