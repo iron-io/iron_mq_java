@@ -9,7 +9,7 @@ There are three ways to get this package.
    `http://iron-io.github.com/maven/repository`. Your pom.xml will look
    something like:
 
-    ...
+```xml
     <repositories>
         <repository>
             <id>iron-io-repo</id>
@@ -27,7 +27,7 @@ There are three ways to get this package.
             <scope>compile</scope>
         </dependency>
     </dependencies>
-    ...
+```
 
 2. [Download the jar](https://github.com/iron-io/iron_mq_java/downloads).
 
