@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -7,7 +8,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.iron.ironmq</groupId>
     <artifactId>ironmq</artifactId>
-    <version>0.0.14</version>
+    <version>0.0.14-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>ironmq</name>
     <description>An easy-to-use highly available message queuing service. Built for distributed
@@ -24,8 +25,9 @@
         </license>
     </licenses>
     <scm>
-        <url>https://github.com/iron-io/iron_mq_java/tags/ironmq-0.0.14</url>
-        <connection>scm:git:https://github.com/iron-io/iron_mq_java/tags/ironmq-0.0.14</connection>
+        <connection>scm:git:git@github.com:iron-io/iron_mq_java.git</connection>
+        <url>scm:git:git@github.com:iron-io/iron_mq_java.git</url>
+        <developerConnection>scm:git:git@github.com:iron-io/iron_mq_java.git</developerConnection>
     </scm>
 
     <developers>
@@ -66,8 +68,17 @@
             </activation>
         </profile>
     </profiles>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <build>
         <plugins>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.0</version>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

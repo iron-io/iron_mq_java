@@ -3,7 +3,7 @@ target
 /.classpath
 /.project
 /.settings
-
+config.properties
 
 #ignore intelliJ files
 /.idea
