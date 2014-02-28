@@ -44,7 +44,7 @@ here are some quick snippets to get you started.
 
 **Initialize** a client and get a queue object:
 
-    Client client = new Client("my project", "my token", Cloud.IronAWSUSEast);
+    Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
     Queue queue = client.queue("my_queue");
 
 **Push** a message on the queue:

@@ -1,6 +1,9 @@
 package io.iron.ironmq;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 import org.junit.Assert;
 import org.junit.Assume;
@@ -8,8 +11,20 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class IronMQTest {
+    private String token = "";
+    private String projectId = "";
+
+    Properties prop = new Properties();
+    InputStream input = null;
+
     @Test public void testClient() throws IOException {
-        Client c = new Client();
+        input = new FileInputStream("config.properties");
+        prop.load(input);
+        token = prop.getProperty("token");
+        projectId = prop.getProperty("project_id");
+
+        Client c = new Client(projectId, token, Cloud.ironAWSUSEast);
+
         Queue q = c.queue("test-queue");
 
         q.clear();

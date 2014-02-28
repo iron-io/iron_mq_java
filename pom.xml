@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>org.sonatype.oss</groupId>
         <artifactId>oss-parent</artifactId>
@@ -8,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.iron.ironmq</groupId>
     <artifactId>ironmq</artifactId>
-    <version>0.0.14-SNAPSHOT</version>
+    <version>0.0.14</version>
     <packaging>jar</packaging>
     <name>ironmq</name>
     <description>An easy-to-use highly available message queuing service. Built for distributed
@@ -25,8 +24,8 @@
         </license>
     </licenses>
     <scm>
-        <url>https://github.com/iron-io/iron_mq_java</url>
-        <connection>scm:git:https://github.com/iron-io/iron_mq_java</connection>
+        <url>https://github.com/iron-io/iron_mq_java/tags/ironmq-0.0.14</url>
+        <connection>scm:git:https://github.com/iron-io/iron_mq_java/tags/ironmq-0.0.14</connection>
     </scm>
 
     <developers>
@@ -110,6 +109,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.4</version>
+                <configuration>
+                    <passphrase>${gpg.passphrase}</passphrase>
+                </configuration>
                 <executions>
                     <execution>
                         <id>sign-artifacts</id>
