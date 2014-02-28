@@ -7,7 +7,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.iron.ironmq</groupId>
     <artifactId>ironmq</artifactId>
-    <version>0.0.14</version>
+    <version>0.0.15-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>ironmq</name>
     <description>An easy-to-use highly available message queuing service. Built for distributed
