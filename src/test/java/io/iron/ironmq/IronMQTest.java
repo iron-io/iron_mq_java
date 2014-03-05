@@ -3,6 +3,7 @@ package io.iron.ironmq;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import org.junit.Assert;
@@ -12,28 +13,20 @@ public class IronMQTest {
     private String queueName = "testing-queue";
     private String token = "";
     private String projectId = "";
-	Properties prop = new Properties();
-    InputStream input = null;
 
     @Test(expected = HTTPException.class)
     public void testErrorResponse() throws IOException {
         // intentionally invalid project/token combination
-		input = new FileInputStream("config.properties");
-        prop.load(input);
-        token = prop.getProperty("token");
-        projectId = prop.getProperty("project_id");
-
         Client client = new Client("4444444444444", "aaaaaa", Cloud.ironAWSUSEast);
         Queue queue = client.queue("test-queue");
         queue.postMessage("test");
     }
-        
 
     @Test
     public void testCreatingQueueAndMessage() throws IOException {
+        setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueName);
-        Client c = new Client(projectId, token, Cloud.ironAWSUSEast);
 
         String body = "Hello, IronMQ!";
         String id = queue.postMessage(body, 10);
@@ -52,6 +45,7 @@ public class IronMQTest {
 
     @Test
     public void testGettingQueuesList() throws IOException {
+        setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueName);
         final String body = "Hello, IronMQ!";
@@ -64,6 +58,7 @@ public class IronMQTest {
 
     @Test
     public void testGettingMessageById() throws IOException {
+        setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueName);
         String body = "testing get message by id";
@@ -76,6 +71,7 @@ public class IronMQTest {
 
     @Test
     public void testPostMultipleMessagesAndDelete() throws IOException {
+        setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueName);
         QueueModel infoAboutQueue = queue.getInfoAboutQueue();
@@ -96,6 +92,7 @@ public class IronMQTest {
 
     @Test
     public void testPeekAndClearAllMessages() throws IOException {
+        setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         String queueNameMulti = "test-queue-multi";
         Queue queue = new Queue(client, queueNameMulti);
@@ -121,6 +118,7 @@ public class IronMQTest {
 
     @Test
     public void testReleaseMessageAndDestroyQueue() throws IOException {
+        setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queues queues = new Queues(client);
         ArrayList<QueueModel> allQueuesOrig = queues.getAllQueues();
@@ -143,6 +141,7 @@ public class IronMQTest {
 
     @Test
     public void testSubscribers() throws IOException {
+        setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         String queueNameSubscriber = "testing-queue-push";
         Queue queue = new Queue(client, queueNameSubscriber);
@@ -186,6 +185,7 @@ public class IronMQTest {
 
     @Test
     public void testAlerts() throws IOException {
+        setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         String queueNameSubscriber = "test_alert_queue";
         Queue queue = new Queue(client, queueNameSubscriber);
@@ -229,5 +229,13 @@ public class IronMQTest {
 
         infoAboutQueue = queue.getInfoAboutQueue();
         Assert.assertNull(infoAboutQueue.alerts);
+    }
+
+    private void setCredentials() throws IOException {
+        Properties prop = new Properties();
+        InputStream input = new FileInputStream("config.properties");
+        prop.load(input);
+        token = prop.getProperty("token");
+        projectId = prop.getProperty("project_id");
     }
 }
