@@ -105,12 +105,20 @@ public class Client {
         return request("DELETE", endpoint, null);
     }
 
+    Reader delete(String endpoint, String body) throws IOException {
+        return request("DELETE", endpoint, body);
+    }
+
     Reader get(String endpoint) throws IOException {
         return request("GET", endpoint, null);
     }
 
     Reader post(String endpoint, String body) throws IOException {
         return request("POST", endpoint, body);
+    }
+
+    Reader put(String endpoint, String body) throws IOException {
+        return request("PUT", endpoint, body);
     }
 
     private Reader request(String method, String endpoint, String body) throws IOException {
