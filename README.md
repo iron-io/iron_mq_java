@@ -5,31 +5,23 @@ Getting Started
 ===============
 There are three ways to get this package.
 
-1. Add it as a Maven dependency, using the repository
-   `http://iron-io.github.com/maven/repository`. Your pom.xml will look
-   something like:
+1. Add it as a Maven dependency
+   Your pom.xml will look something like:
 
 ```xml
-    <repositories>
-        <repository>
-            <id>iron-io-repo</id>
-            <name>Iron.io Maven repository on GitHub</name>
-            <url>http://iron-io.github.com/maven/repository/</url>
-        </repository>
-    </repositories>
-
     <dependencies>
         <!-- IronMQ message queue client -->
         <dependency>
-            <groupId>ironmq</groupId>
+            <groupId>io.iron.ironmq</groupId>
             <artifactId>ironmq</artifactId>
-            <version>0.0.10</version>
-            <scope>compile</scope>
+            <version>0.0.14</version>
         </dependency>
     </dependencies>
 ```
 
 2. [Download the jar](https://github.com/iron-io/iron_mq_java/downloads).
+
+   [Download the jar from Maven Repo](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.iron.ironmq%22).
 
 3. Build from source with [Apache Buildr](http://buildr.apache.org):
 
@@ -45,7 +37,9 @@ Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
 Queue queue = client.queue("test-queue");
 ```
 
+    Client client = new Client("my project", "my token", Cloud.IronAWSUSEast);
 ## The Basics
+    Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
 
 ### Post a Message to the Queue
 

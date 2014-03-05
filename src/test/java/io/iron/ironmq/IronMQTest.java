@@ -1,7 +1,9 @@
 package io.iron.ironmq;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.io.InputStream;
+import java.util.Properties;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -10,19 +12,28 @@ public class IronMQTest {
     private String queueName = "testing-queue";
     private String token = "";
     private String projectId = "";
+	Properties prop = new Properties();
+    InputStream input = null;
 
     @Test(expected = HTTPException.class)
     public void testErrorResponse() throws IOException {
         // intentionally invalid project/token combination
+		input = new FileInputStream("config.properties");
+        prop.load(input);
+        token = prop.getProperty("token");
+        projectId = prop.getProperty("project_id");
+
         Client client = new Client("4444444444444", "aaaaaa", Cloud.ironAWSUSEast);
         Queue queue = client.queue("test-queue");
         queue.postMessage("test");
     }
+        
 
     @Test
     public void testCreatingQueueAndMessage() throws IOException {
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueName);
+        Client c = new Client(projectId, token, Cloud.ironAWSUSEast);
 
         String body = "Hello, IronMQ!";
         String id = queue.postMessage(body, 10);
