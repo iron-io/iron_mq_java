@@ -2,7 +2,6 @@ package io.iron.ironmq;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.io.Serializable;
 import java.util.ArrayList;
 
 import com.google.gson.Gson;
