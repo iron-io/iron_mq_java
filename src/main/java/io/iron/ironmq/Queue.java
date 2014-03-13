@@ -201,7 +201,7 @@ public class Queue {
      * @throws IOException If there is an error accessing the IronMQ server.
      */
     public Ids pushMessages(String[] msg) throws IOException {
-        return postMessages(msg, 0);
+        return pushMessages(msg, 0);
     }
 
     /**
@@ -228,8 +228,8 @@ public class Queue {
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws IOException If there is an error accessing the IronMQ server.
      */
-    public Ids postMessages(String msg[], long timeout) throws IOException {
-        return postMessages(msg, timeout, 0);
+    public Ids pushMessages(String msg[], long timeout) throws IOException {
+        return pushMessages(msg, timeout, 0);
     }
 
     /**
@@ -258,8 +258,8 @@ public class Queue {
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws IOException If there is an error accessing the IronMQ server.
      */
-    public Ids postMessages(String[] msg, long timeout, long delay) throws IOException {
-        return postMessages(msg, timeout, delay, 0);
+    public Ids pushMessages(String[] msg, long timeout, long delay) throws IOException {
+        return pushMessages(msg, timeout, delay, 0);
     }
 
     /**
@@ -305,7 +305,7 @@ public class Queue {
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws IOException If there is an error accessing the IronMQ server.
      */
-    public Ids postMessages(String[] msg, long timeout, long delay, long expiresIn) throws IOException {
+    public Ids pushMessages(String[] msg, long timeout, long delay, long expiresIn) throws IOException {
         ArrayList<Message> messages = new ArrayList<Message>();
         for (String messageName: msg){
             Message message = new Message();
