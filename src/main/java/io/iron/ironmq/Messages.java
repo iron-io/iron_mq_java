@@ -3,7 +3,6 @@ package io.iron.ironmq;
 import java.util.ArrayList;
 
 public class Messages {
-    //    private Message[] messages;
     private ArrayList<Message> messages;
 
     public Messages(ArrayList<Message> messageArrayList){
