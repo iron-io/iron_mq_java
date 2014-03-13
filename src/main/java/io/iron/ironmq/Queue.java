@@ -341,17 +341,58 @@ public class Queue {
         return name;
     }
 
-    static class Info implements Serializable {
-        int count;
-        int size;
+    /**
+     * Retrieves Info about queue. If there is no queue, an EmptyQueueException is thrown.
+     * @throws EmptyQueueException If there is no queue.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public QueueModel getInfoAboutQueue() throws IOException {
+        Reader reader = client.get("queues/" + name);
+        Gson gson = new Gson();
+        QueueModel message = gson.fromJson(reader, QueueModel.class);
+        reader.close();
+        return message;
     }
 
-    public int getSize() throws IOException {
-        Reader reader = client.get("queues/"+name);
+    /**
+     * Retrieves Message from the queue by message id. If there are no items on the queue, an
+     * EmptyQueueException is thrown.
+     * @param id The ID of the message to get.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public Message getMessageById(String id) throws IOException {
+        String url = "queues/" + name + "/messages/" + id;
+        Reader reader = client.get(url);
         Gson gson = new Gson();
-        Info info = gson.fromJson(reader, Info.class);
+        Message message = gson.fromJson(reader, Message.class);
         reader.close();
-        return info.size;
+        return message;
+    }
+
+    static class Delay {
+        private int delay;
+        public Delay(int delay) {
+            this.delay = delay;
+        }
+    }
+
+    /**
+     * Release locked message after specified time. If there is no message with such id on the queue, an
+     * EmptyQueueException is thrown.
+     * @param id The ID of the message to release.
+     * @param delay The time after which the message will be released.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void releaseMessage(String id, int delay) throws IOException {
+        String url = "queues/" + name + "/messages/" + id + "/release";
+        Gson gson = new Gson();
+        Delay delayClass = new Delay(delay);
+        String jsonMessages = gson.toJson(delayClass);
+        Reader reader = client.post(url, jsonMessages);
+        reader.close();
     }
 
     /**
