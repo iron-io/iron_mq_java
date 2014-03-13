@@ -262,6 +262,100 @@ public class Queue {
     }
 
     /**
+     * Add subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
+     * @param subscribersList The array list of subscribers.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void addSubscribersToQueue(ArrayList<Subscriber> subscribersList) throws IOException {
+        String url = "queues/" + name + "/subscribers";
+        Subscribers subscribers = new Subscribers(subscribersList);
+        Gson gson = new Gson();
+        String jsonMessages = gson.toJson(subscribers);
+        Reader reader = client.post(url, jsonMessages);
+        reader.close();
+    }
+
+    /**
+     * Remove subscribers from Queue. If there is no queue, an EmptyQueueException is thrown.
+     * @param subscribersList The array list of subscribers.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void removeSubscribersFromQueue(ArrayList<Subscriber> subscribersList) throws IOException {
+        String url = "queues/" + name + "/subscribers";
+        Subscribers subscribers = new Subscribers(subscribersList);
+        Gson gson = new Gson();
+        String jsonMessages = gson.toJson(subscribers);
+        Reader reader = client.delete(url, jsonMessages);
+        reader.close();
+    }
+
+    /**
+     * Get push info of message by message id. If there is no message, an EmptyQueueException is thrown.
+     * @param messageId The Message ID.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public SubscribersInfo getPushStatusForMessage(String messageId) throws IOException {
+        String url = "queues/" + name + "/messages/" + messageId + "/subscribers";
+        Reader reader = client.get(url);
+        Gson gson = new Gson();
+        SubscribersInfo subscribersInfo = gson.fromJson(reader, SubscribersInfo.class);
+        reader.close();
+        return subscribersInfo;
+    }
+
+    /**
+     * Delete push message for subscriber by subscriber ID and message ID. If there is no message or subscriber,
+     * an EmptyQueueException is thrown.
+     * @param subscriberId The Subscriber ID.
+     * @param messageId The Message ID.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void deletePushMessageForSubscriber(String messageId, String subscriberId) throws  IOException {
+        client.delete("queues/" + name + "/messages/" + messageId + "/subscribers/" + subscriberId);
+    }
+
+    static class UpdateQueue {
+        private String pushType;
+        private int retries;
+        private int retriesDelay;
+        private ArrayList<Subscriber> subscribers;
+        private ArrayList<Alert> alerts;
+
+        public UpdateQueue(ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts, String pushType, int retries, int retriesDelay) {
+            this.subscribers = subscribers;
+            this.alerts = alerts;
+            this.pushType = pushType;
+            this.retries = retries;
+            this.retriesDelay = retriesDelay;
+        }
+    }
+
+    /**
+     * Update queue. If there is no queue, an EmptyQueueException is thrown.
+     * @param subscribersList The subscribers list.
+     * @param alertsList The alerts list.
+     * @param pushType The push type - multicast or unicast.
+     * @param retries The retries.
+     * @param retriesDelay The retries delay.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public QueueModel updateQueue(ArrayList<Subscriber> subscribersList, ArrayList<Alert> alertsList, String pushType, int retries, int retriesDelay) throws IOException {
+        String url = "queues/" + name;
+        UpdateQueue updateQueue = new UpdateQueue(subscribersList, alertsList, pushType, retries, retriesDelay);
+        Gson gson = new Gson();
+        String jsonMessages = gson.toJson(updateQueue);
+        Reader reader = client.post(url, jsonMessages);
+        QueueModel message = gson.fromJson(reader, QueueModel.class);
+        reader.close();
+        return message;
+    }
+
+    /**
      * Add alerts to a queue. If there is no queue, an EmptyQueueException is thrown.
      * @param alerts The array list of alerts.
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
