@@ -1,23 +1,21 @@
 package io.iron.ironmq;
 
-import java.util.ArrayList;
-
 public class Messages {
-    private ArrayList<Message> messages;
+    private Message[] messages;
 
-    public Messages(ArrayList<Message> messageArrayList){
-        this.messages = messageArrayList;
+    public Messages(Message... msgs) {
+        messages = msgs;
     }
 
     public Message getMessage(int i) {
-        return messages.get(i);
+        return messages[i];
     }
 
-    public ArrayList<Message> getMessages() {
+    public Message[] getMessages() {
         return messages;
     }
 
     public int getSize() {
-        return messages.size();
+        return messages.length;
     }
 }

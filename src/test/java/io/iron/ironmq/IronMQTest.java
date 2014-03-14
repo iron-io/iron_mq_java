@@ -150,15 +150,12 @@ public class IronMQTest {
         String subscriberUrl2 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_2";
         String subscriberUrl3 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_3";
 
-        Subscriber subscriber = new Subscriber();
-        subscriber.url = subscriberUrl1;
+        Subscriber subscriber = new Subscriber(subscriberUrl1);
         ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
         subscriberArrayList.add(subscriber);
-        Subscriber subscriber2 = new Subscriber();
-        subscriber2.url = subscriberUrl2;
+        Subscriber subscriber2 = new Subscriber(subscriberUrl2);
         subscriberArrayList.add(subscriber2);
-        Subscriber subscriber3 = new Subscriber();
-        subscriber3.url = subscriberUrl3;
+        Subscriber subscriber3 = new Subscriber(subscriberUrl3);
         subscriberArrayList.add(subscriber3);
         queue.addSubscribersToQueue(subscriberArrayList);
 

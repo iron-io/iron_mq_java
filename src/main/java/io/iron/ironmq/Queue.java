@@ -274,15 +274,13 @@ public class Queue {
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public String push(String msg, long timeout, long delay, long expiresIn) throws IOException {
-        ArrayList<Message> messages = new ArrayList<Message>();
         Message message = new Message();
         message.setBody(msg);
         message.setTimeout(timeout);
         message.setDelay(delay);
         message.setExpiresIn(expiresIn);
-        messages.add(message);
 
-        Messages msgs = new Messages(messages);
+        Messages msgs = new Messages(message);
         Gson gson = new Gson();
         String body = gson.toJson(msgs);
 
@@ -315,7 +313,7 @@ public class Queue {
             messages.add(message);
         }
 
-        Messages msgs = new Messages(messages);
+        MessagesArrayList msgs = new MessagesArrayList(messages);
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(msgs);
 
