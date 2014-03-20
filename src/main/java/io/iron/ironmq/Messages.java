@@ -14,4 +14,8 @@ public class Messages {
     public Message[] getMessages() {
         return messages;
     }
+
+    public int getSize() {
+        return messages.length;
+    }
 }
