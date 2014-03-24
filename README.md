@@ -37,7 +37,7 @@ Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
 Queue queue = client.queue("test-queue");
 ```
 
-    Client client = new Client("my project", "my token", Cloud.IronAWSUSEast);
+    Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
 ## The Basics
     Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
 
