@@ -64,6 +64,12 @@ public class IronMQTest {
         Queue queue = new Queue(client, queueName);
         String body = "testing get message by id";
         String id = queue.push(body, 10);
+	try {
+	    Thread.sleep(1000);
+	} catch (InterruptedException e) {
+	    e.printStackTrace();
+	}
+
         Message msg = queue.getMessageById(id);
 
         Assert.assertEquals(body, msg.getBody());
