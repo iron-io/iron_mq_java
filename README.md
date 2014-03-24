@@ -44,7 +44,7 @@ Queue queue = client.queue("test-queue");
 ### Post a Message to the Queue
 
 ```java
-queue.postMessage("Hello, IronMQ!");
+queue.push("Hello, IronMQ!");
 ```
 
 More complex example:
@@ -54,14 +54,14 @@ String body = "Hello, IronMQ!";
 int timeout = 30;
 int delay = 0;
 int expiresIn = 0;
-String messageId = queue.postMessage(body, timeout, delay, expiresIn);
+String messageId = queue.push(body, timeout, delay, expiresIn);
 ```
 
 Post multiple messages in one API call:
 
 ```java
 String[] messages = {"c", "d"};
-Ids ids = queue.postMessages(messages);
+Ids ids = queue.pushMessages(messages);
 ```
 
 --
@@ -95,7 +95,7 @@ Delete multiple messages in one API call:
 
 ```java
 String[] messages = {"c", "d"};
-Ids ids = queue.postMessages(messages);
+Ids ids = queue.pushMessages(messages);
 queue.deleteMessages();
 ```
 Delete multiple messages specified by messages id array.
@@ -134,14 +134,14 @@ queue.destroy();
 **Single message:**
 
 ```java
-queue.postMessage(body);
+queue.pushMessage(body);
 ```
 
 **Multiple messages:**
 
 ```java
 String[] messages = {"c", "d"};
-Ids ids = queue.postMessages(messages);
+Ids ids = queue.pushMessages(messages);
 ```
 
 **Optional parameters (3rd, `array` of key-value pairs):**
@@ -318,7 +318,7 @@ queue.removeSubscribersFromQueue(subscribersToRemove);
 
 ```java
 String[] messages = {"test1", "test2"};
-Ids ids = queue.postMessages(messages);
+Ids ids = queue.pushMessages(messages);
 SubscribersInfo subscribersInfo = queue.getPushStatusForMessage(ids.getId(0));
 ```
 
@@ -330,7 +330,7 @@ Returns an array of subscribers with status.
 
 ```java
 String[] messages = {"test1", "test2"};
-Ids ids = queue.postMessages(messages);
+Ids ids = queue.pushMssages(messages);
 SubscribersInfo subscribersInfo = queue.getPushStatusForMessage(ids.getId(0));
 queue.deletePushMessageForSubscriber(ids.getId(0), subscribersInfo.getSubscribers().get(0).id);
 ```
