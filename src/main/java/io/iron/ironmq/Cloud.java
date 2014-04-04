@@ -6,8 +6,7 @@ public class Cloud {
     final int port;
 
     public static final Cloud ironAWSUSEast = new Cloud("https", "mq-aws-us-east-1.iron.io", 443);
-    public static final Cloud ironAWSUSWest = new Cloud("https", "mq-aws-eu-west-1.iron.io", 443);
-    public static final Cloud ironRackspaceDFW = new Cloud("https", "mq-rackspace-dfw.iron.io", 443);
+    public static final Cloud ironAWSEUWest = new Cloud("https", "mq-aws-eu-west-1.iron.io", 443);
     public static final Cloud ironRackspaceORD = new Cloud("https", "mq-rackspace-ord.iron.io", 443);
     public static final Cloud ironRackspaceLON = new Cloud("https", "mq-rackspace-lon.iron.io", 443);
 
