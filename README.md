@@ -39,19 +39,14 @@ Queue queue = client.queue("test-queue");
 
     Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
     
-Supports multiple clouds:
+IronMQ supports multiple clouds/regions:
 - Cloud.ironAWSEUWest
 - Cloud.ironRackspaceORD
 - Cloud.ironRackspaceLON
-- and more. 
+- and more...
 
 For full list, view /src/main/java/io/iron/ironmq/Cloud.java 
 
-
-public static final Cloud ironAWSUSEast = new Cloud("https", "mq-aws-us-east-1.iron.io", 443);
-    public static final Cloud ironAWSEUWest = new Cloud("https", "mq-aws-eu-west-1.iron.io", 443);
-    public static final Cloud ironRackspaceORD = new Cloud("https", "mq-rackspace-ord.iron.io", 443);
-    public static final Cloud ironRackspaceLON = new Cloud("https", "mq-rackspace-lon.iron.io", 443);
     
 ## The Basics
     Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
