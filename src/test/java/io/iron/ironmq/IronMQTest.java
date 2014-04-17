@@ -11,7 +11,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class IronMQTest {
-    private String queueName = "testing-queue";
+    private String queueName = "java-testing-queue";
     private String token = "";
     private String projectId = "";
 
@@ -26,22 +26,24 @@ public class IronMQTest {
     @Test
     public void testCreatingQueueAndMessage() throws IOException {
         setCredentials();
+        String queueNameNew = queueName + "-new";
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        Queue queue = new Queue(client, queueName);
+        Queue queue = new Queue(client, queueNameNew);
 
         String body = "Hello, IronMQ!";
         String id = queue.push(body, 10);
 
         QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(1, infoAboutQueue.size);
-        Assert.assertEquals(queueName, infoAboutQueue.name);
+        Assert.assertEquals(1, infoAboutQueue.getSize());
+        Assert.assertEquals(queueNameNew, infoAboutQueue.getName());
 
         Message msg = queue.get();
         Assert.assertEquals(body, msg.getBody());
         Assert.assertEquals(id, msg.getId());
         queue.deleteMessage(msg);
         infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(0, infoAboutQueue.size);
+        Assert.assertEquals(0, infoAboutQueue.getSize());
+        queue.destroy();
     }
 
     @Test
@@ -49,7 +51,7 @@ public class IronMQTest {
         setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueName);
-        final String body = "Hello, IronMQ!";
+        String body = "Hello, IronMQ!";
         queue.push(body, 10);
         Queues queues = new Queues(client);
         ArrayList<QueueModel> allQueues = queues.getAllQueues();
@@ -64,12 +66,6 @@ public class IronMQTest {
         Queue queue = new Queue(client, queueName);
         String body = "testing get message by id";
         String id = queue.push(body, 10);
-	try {
-	    Thread.sleep(1000);
-	} catch (InterruptedException e) {
-	    e.printStackTrace();
-	}
-
         Message msg = queue.getMessageById(id);
 
         Assert.assertEquals(body, msg.getBody());
@@ -81,31 +77,33 @@ public class IronMQTest {
         setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueName);
+        String body = "Hello, IronMQ!";
+        queue.push(body, 10);
         QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        int queueSize = infoAboutQueue.size;
+        int queueSize = infoAboutQueue.getSize();
 
         String[] messages = {"c", "d"};
         Ids ids = queue.pushMessages(messages);
 
         infoAboutQueue = queue.getInfoAboutQueue();
         Assert.assertEquals(messages.length, ids.getSize());
-        Assert.assertEquals(queueSize + 2, infoAboutQueue.size);
+        Assert.assertEquals(queueSize + 2, infoAboutQueue.getSize());
 
         queue.deleteMessages(ids);
 
         infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(queueSize, infoAboutQueue.size);
+        Assert.assertEquals(queueSize, infoAboutQueue.getSize());
     }
 
     @Test
     public void testPeekAndClearAllMessages() throws IOException {
         setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        String queueNameMulti = "test-queue-multi";
+        String queueNameMulti = "java-test-queue-multi";
         Queue queue = new Queue(client, queueNameMulti);
         queue.push("first-test-msg");
         QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        int queueSize = infoAboutQueue.size;
+        int queueSize = infoAboutQueue.getSize();
 
         String[] messages = {"c", "d"};
         Ids ids = queue.pushMessages(messages);
@@ -115,12 +113,12 @@ public class IronMQTest {
 
         infoAboutQueue = queue.getInfoAboutQueue();
         Assert.assertEquals(messages.length, ids.getSize());
-        Assert.assertEquals(queueSize + 2, infoAboutQueue.size);
+        Assert.assertEquals(queueSize + 2, infoAboutQueue.getSize());
 
         queue.clear();
 
         infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertFalse(queueSize == infoAboutQueue.size);
+        Assert.assertFalse(queueSize == infoAboutQueue.getSize());
     }
 
     @Test
@@ -130,7 +128,7 @@ public class IronMQTest {
         Queues queues = new Queues(client);
         ArrayList<QueueModel> allQueuesOrig = queues.getAllQueues();
 
-        String queueNewName = "release-testing";
+        String queueNewName = "java-release-testing";
         Queue queue = new Queue(client, queueNewName);
         String msgBody = "release-test-message";
         String id = queue.push(msgBody);
@@ -150,7 +148,7 @@ public class IronMQTest {
     public void testSubscribers() throws IOException {
         setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        String queueNameSubscriber = "testing-queue-push";
+        String queueNameSubscriber = "java-testing-queue-push";
         Queue queue = new Queue(client, queueNameSubscriber);
         String subscriberUrl1 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_1";
         String subscriberUrl2 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_2";
@@ -169,13 +167,13 @@ public class IronMQTest {
         Ids ids = queue.pushMessages(messages);
 
         QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.subscribers.size(), 3);
+        Assert.assertEquals(infoAboutQueue.getSubscribers().size(), 3);
 
         ArrayList<Subscriber> subscribersToRemove = new ArrayList<Subscriber>();
         subscribersToRemove.add(subscriber3);
         queue.removeSubscribersFromQueue(subscribersToRemove);
         infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.subscribers.size(), 2);
+        Assert.assertEquals(infoAboutQueue.getSubscribers().size(), 2);
 
         SubscribersInfo subscribersInfo = queue.getPushStatusForMessage(ids.getId(0));
         Assert.assertEquals(subscribersInfo.getSubscribers().size(), 3);
@@ -191,28 +189,13 @@ public class IronMQTest {
     public void testAlerts() throws IOException {
         setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        String queueNameSubscriber = "test_alert_queue";
+        String queueNameSubscriber = "java-test_alert_queue";
         Queue queue = new Queue(client, queueNameSubscriber);
         queue.push("test-message-alert");
 
-        Alert alert = new Alert();
-        alert.direction = "asc";
-        alert.queue = queueNameSubscriber;
-        alert.snooze = 5;
-        alert.trigger = 101;
-        alert.type = "fixed";
-        Alert alert2 = new Alert();
-        alert2.direction = "desc";
-        alert2.queue = queueNameSubscriber;
-        alert2.snooze = 6;
-        alert2.trigger = 102;
-        alert2.type = "fixed";
-        Alert alert3 = new Alert();
-        alert3.direction = "desc";
-        alert3.queue = queueNameSubscriber;
-        alert3.snooze = 7;
-        alert3.trigger = 103;
-        alert3.type = "fixed";
+        Alert alert = new Alert("fixed", "asc", 101, 5, queueNameSubscriber);
+        Alert alert2 = new Alert("fixed", "desc", 102, 6, queueNameSubscriber);
+        Alert alert3 = new Alert("fixed", "desc", 103, 7, queueNameSubscriber);
 
         ArrayList<Alert> alertArrayList = new ArrayList<Alert>();
         alertArrayList.add(alert);
@@ -223,16 +206,16 @@ public class IronMQTest {
 //         queue.updateAlertsToQueue(alertArrayList);
 
         QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.alerts.size(), 3);
+        Assert.assertEquals(infoAboutQueue.getAlerts().size(), 3);
 
-        queue.deleteAlertFromQueueById(infoAboutQueue.alerts.get(0).id);
+        queue.deleteAlertFromQueueById(infoAboutQueue.getAlerts().get(0).getId());
         infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.alerts.size(), 2);
+        Assert.assertEquals(infoAboutQueue.getAlerts().size(), 2);
 
-        queue.deleteAlertsFromQueue(infoAboutQueue.alerts);
+        queue.deleteAlertsFromQueue(infoAboutQueue.getAlerts());
 
         infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertNull(infoAboutQueue.alerts);
+        Assert.assertNull(infoAboutQueue.getAlerts());
     }
 
     private void setCredentials() throws IOException {
