@@ -14,7 +14,7 @@ There are three ways to get this package.
         <dependency>
             <groupId>io.iron.ironmq</groupId>
             <artifactId>ironmq</artifactId>
-            <version>0.0.15</version>
+            <version>0.0.16</version>
         </dependency>
     </dependencies>
 ```
