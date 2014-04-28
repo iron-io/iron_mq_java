@@ -19,9 +19,7 @@ There are three ways to get this package.
     </dependencies>
 ```
 
-2. [Download the jar](https://github.com/iron-io/iron_mq_java/downloads).
-
-   [Download the jar from Maven Repo](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.iron.ironmq%22).
+2. [Download the jar from Maven Repo](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.iron.ironmq%22).
 
 3. Build from source with [Apache Buildr](http://buildr.apache.org):
 
