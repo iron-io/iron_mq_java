@@ -14,6 +14,8 @@ public class Queue {
     final private String name;
 
     public Queue(Client client, String name) {
+        if (name == null)
+            throw new NullPointerException("Queue name cannot be null");
         this.client = client;
         this.name = name;
     }
