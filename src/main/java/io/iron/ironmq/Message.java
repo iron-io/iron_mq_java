@@ -16,6 +16,7 @@ public class Message implements Serializable {
     // so we can use the default on the server and not have to know about
     // it.
     @SerializedName("expires_in") private Long expiresIn;
+    @SerializedName("reserved_count") private long reservedCount;
 
     public Message() {}
 
@@ -66,6 +67,11 @@ public class Message implements Serializable {
     * @param delay The new delay.
     */
     public void setDelay(long delay) { this.delay = delay; }
+    
+    /**
+    * Returns the number of times the message has been reserved.
+    */
+    public long getReservedCount() { return reservedCount; }
 
     /**
     * Returns the number of seconds in which the Message will be removed from the
