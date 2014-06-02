@@ -424,6 +424,7 @@ public class Queue {
         reader.close();
     }
 
+
     /**
      * Get push info of message by message id. If there is no message, an EmptyQueueException is thrown.
      * @param messageId The Message ID.
@@ -455,13 +456,15 @@ public class Queue {
         private String pushType;
         private int retries;
         private int retriesDelay;
+        private String error_queue;
         private ArrayList<Subscriber> subscribers;
         private ArrayList<Alert> alerts;
 
-        public UpdateQueue(ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts, String pushType, int retries, int retriesDelay) {
+        public UpdateQueue(ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts, String pushType, String errorQueue, int retries, int retriesDelay) {
             this.subscribers = subscribers;
             this.alerts = alerts;
             this.pushType = pushType;
+            this.error_queue = errorQueue;
             this.retries = retries;
             this.retriesDelay = retriesDelay;
         }
@@ -477,9 +480,9 @@ public class Queue {
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws IOException If there is an error accessing the IronMQ server.
      */
-    public QueueModel updateQueue(ArrayList<Subscriber> subscribersList, ArrayList<Alert> alertsList, String pushType, int retries, int retriesDelay) throws IOException {
+    public QueueModel updateQueue(ArrayList<Subscriber> subscribersList, ArrayList<Alert> alertsList, String pushType, String errorQueue, int retries, int retriesDelay) throws IOException {
         String url = "queues/" + name;
-        UpdateQueue updateQueue = new UpdateQueue(subscribersList, alertsList, pushType, retries, retriesDelay);
+        UpdateQueue updateQueue = new UpdateQueue(subscribersList, alertsList, pushType, errorQueue, retries, retriesDelay);
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(updateQueue);
         Reader reader = client.post(url, jsonMessages);
