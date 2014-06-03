@@ -65,13 +65,15 @@ public class IronMQTest {
         // Validate retries
         infoAboutQueue = queue.getInfoAboutQueue();
         Assert.assertEquals(60, infoAboutQueue.getRetries());
+        Assert.assertEquals(10, infoAboutQueue.getRetriesDelay());
 
 
         // Update the queue
-        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(),"multicast",100,10);
+        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(),"multicast",100,100);
 
         // Validate the error queue has been set
         Assert.assertEquals(100, newInfoAboutQueue.getRetries());
+        Assert.assertEquals(100, newInfoAboutQueue.getRetriesDelay());
 
         // Clean up
         queue.destroy();
