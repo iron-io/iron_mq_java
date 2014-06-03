@@ -491,6 +491,10 @@ public class Queue {
         return message;
     }
 
+    public QueueModel updateQueue(ArrayList<Subscriber> subscribersList, ArrayList<Alert> alertsList, String pushType, int retries, int retriesDelay) throws IOException {
+        return updateQueue(subscribersList,alertsList,pushType,"",retries,retriesDelay);
+    }
+
     /**
      * Add alerts to a queue. If there is no queue, an EmptyQueueException is thrown.
      * @param alerts The array list of alerts.
