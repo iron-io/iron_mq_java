@@ -455,7 +455,7 @@ public class Queue {
     static class UpdateQueue {
         private String pushType;
         private int retries;
-        private int retriesDelay;
+        private int retries_delay;
         private String error_queue;
         private ArrayList<Subscriber> subscribers;
         private ArrayList<Alert> alerts;
@@ -466,7 +466,7 @@ public class Queue {
             this.pushType = pushType;
             this.error_queue = errorQueue;
             this.retries = retries;
-            this.retriesDelay = retriesDelay;
+            this.retries_delay = retriesDelay;
         }
     }
 
