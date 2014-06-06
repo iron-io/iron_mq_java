@@ -10,11 +10,12 @@ public class QueueModel {
     private String project_id;
     private int retries;
     private String pushType;
-    private int retriesDelay;
+    private int retries_delay;
+    private String error_queue;
     private ArrayList<Subscriber> subscribers;
     private ArrayList<Alert> alerts;
 
-    public QueueModel(String id, String name, int size, int total_messages, String project_id, int retries, String pushType, int retriesDelay, ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts) {
+    public QueueModel(String id, String name, int size, int total_messages, String project_id, int retries, String pushType, int retriesDelay, String errorQueue, ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts) {
         this.id = id;
         this.name = name;
         this.size = size;
@@ -22,7 +23,8 @@ public class QueueModel {
         this.project_id = project_id;
         this.retries = retries;
         this.pushType = pushType;
-        this.retriesDelay = retriesDelay;
+        this.retries_delay = retriesDelay;
+        this.error_queue = errorQueue;
         this.subscribers = subscribers;
         this.alerts = alerts;
     }
@@ -84,11 +86,19 @@ public class QueueModel {
     }
 
     public int getRetriesDelay() {
-        return retriesDelay;
+        return retries_delay;
     }
 
     public void setRetriesDelay(int retriesDelay) {
-        this.retriesDelay = retriesDelay;
+        this.retries_delay = retriesDelay;
+    }
+
+    public String getErrorQueue() {
+        return error_queue;
+    }
+
+    public void setErrorQueue(String errorQueue) {
+        this.error_queue = errorQueue;
     }
 
     public ArrayList<Subscriber> getSubscribers() {

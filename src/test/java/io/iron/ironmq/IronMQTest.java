@@ -47,6 +47,78 @@ public class IronMQTest {
     }
 
     @Test
+    public void testUpdatingQueue() throws IOException {
+
+        setCredentials();
+
+        // Create the main push queue
+        String queueNameNew = queueName + "-update";
+        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
+        Queue queue = new Queue(client, queueNameNew);
+
+        Subscriber subscriber = new Subscriber("http://test.com");
+        ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
+        subscriberArrayList.add(subscriber);
+
+        QueueModel infoAboutQueue = queue.updateQueue(subscriberArrayList, null,"multicast",60,10);
+
+        // Validate retries
+        infoAboutQueue = queue.getInfoAboutQueue();
+        Assert.assertEquals(60, infoAboutQueue.getRetries());
+        Assert.assertEquals(10, infoAboutQueue.getRetriesDelay());
+
+
+        // Update the queue
+        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(),"multicast",100,100);
+
+        // Validate the error queue has been set
+        Assert.assertEquals(100, newInfoAboutQueue.getRetries());
+        Assert.assertEquals(100, newInfoAboutQueue.getRetriesDelay());
+
+        // Clean up
+        queue.destroy();
+    }
+
+
+    @Test
+    public void testCreatingQueueAndErrorQueue() throws IOException {
+
+        setCredentials();
+
+        // Create the main push queue
+        String queueNameNew = queueName + "-new";
+        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
+        Queue queue = new Queue(client, queueNameNew);
+
+        Subscriber subscriber = new Subscriber("http://test.com");
+        ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
+        subscriberArrayList.add(subscriber);
+
+        QueueModel infoAboutQueue = queue.updateQueue(subscriberArrayList, null,"multicast", "",60,10);
+
+        // Validate no error queue is set
+        infoAboutQueue = queue.getInfoAboutQueue();
+        Assert.assertEquals(null, infoAboutQueue.getErrorQueue());
+
+        // Create the error queue
+        String queueNameError = queueName + "-error";
+        Queue errorQueue = new Queue(client, queueNameError);
+        String body = "Hello, IronMQ!";
+        errorQueue.push(body, 10);
+
+        // Set the Error Queue on the main queue
+        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(),"multicast", queueNameError,60,10);
+
+        // Validate the error queue has been set
+        Assert.assertEquals(queueNameError, newInfoAboutQueue.getErrorQueue());
+        Assert.assertEquals(queueNameError, queue.getInfoAboutQueue().getErrorQueue());
+
+        // Clean up
+        queue.destroy();
+        errorQueue.destroy();
+    }
+
+    @Test
     public void testGettingQueuesList() throws IOException {
         setCredentials();
         Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
