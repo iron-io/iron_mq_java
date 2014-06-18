@@ -1,19 +1,26 @@
 package io.iron.ironmq;
 
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Properties;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 public class IronMQTest {
     private String queueName = "java-testing-queue";
-    private String token = "";
-    private String projectId = "";
+    private Client client;
+
+    @Before
+    public void setUp() throws Exception {
+        client = setCredentials();
+    }
 
     @Test(expected = HTTPException.class)
     public void testErrorResponse() throws IOException {
@@ -24,10 +31,9 @@ public class IronMQTest {
     }
 
     @Test
+    @Ignore
     public void testCreatingQueueAndMessage() throws IOException {
-        setCredentials();
         String queueNameNew = queueName + "-new";
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueNameNew);
 
         String body = "Hello, IronMQ!";
@@ -47,20 +53,17 @@ public class IronMQTest {
     }
 
     @Test
+    @Ignore
     public void testUpdatingQueue() throws IOException {
-
-        setCredentials();
-
         // Create the main push queue
         String queueNameNew = queueName + "-update";
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueNameNew);
 
         Subscriber subscriber = new Subscriber("http://test.com");
         ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
         subscriberArrayList.add(subscriber);
 
-        QueueModel infoAboutQueue = queue.updateQueue(subscriberArrayList, null,"multicast",60,10);
+        QueueModel infoAboutQueue = queue.updateQueue(subscriberArrayList, null, "multicast", 60, 10);
 
         // Validate retries
         infoAboutQueue = queue.getInfoAboutQueue();
@@ -69,7 +72,7 @@ public class IronMQTest {
 
 
         // Update the queue
-        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(),"multicast",100,100);
+        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(), "multicast", 100, 100);
 
         // Validate the error queue has been set
         Assert.assertEquals(100, newInfoAboutQueue.getRetries());
@@ -81,20 +84,17 @@ public class IronMQTest {
 
 
     @Test
+    @Ignore
     public void testCreatingQueueAndErrorQueue() throws IOException {
-
-        setCredentials();
-
         // Create the main push queue
         String queueNameNew = queueName + "-new";
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueNameNew);
 
         Subscriber subscriber = new Subscriber("http://test.com");
         ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
         subscriberArrayList.add(subscriber);
 
-        QueueModel infoAboutQueue = queue.updateQueue(subscriberArrayList, null,"multicast", "",60,10);
+        QueueModel infoAboutQueue = queue.updateQueue(subscriberArrayList, null, "multicast", "", 60, 10);
 
         // Validate no error queue is set
         infoAboutQueue = queue.getInfoAboutQueue();
@@ -107,7 +107,7 @@ public class IronMQTest {
         errorQueue.push(body, 10);
 
         // Set the Error Queue on the main queue
-        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(),"multicast", queueNameError,60,10);
+        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(), "multicast", queueNameError, 60, 10);
 
         // Validate the error queue has been set
         Assert.assertEquals(queueNameError, newInfoAboutQueue.getErrorQueue());
@@ -119,9 +119,8 @@ public class IronMQTest {
     }
 
     @Test
+    @Ignore
     public void testGettingQueuesList() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueName);
         String body = "Hello, IronMQ!";
         queue.push(body, 10);
@@ -132,9 +131,8 @@ public class IronMQTest {
     }
 
     @Test
+    @Ignore
     public void testGettingMessageById() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueName);
         String body = "testing get message by id";
         String id = queue.push(body, 10);
@@ -145,9 +143,8 @@ public class IronMQTest {
     }
 
     @Test
+    @Ignore
     public void testPostMultipleMessagesAndDelete() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueName);
         String body = "Hello, IronMQ!";
         queue.push(body, 10);
@@ -168,9 +165,8 @@ public class IronMQTest {
     }
 
     @Test
+    @Ignore
     public void testPeekAndClearAllMessages() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         String queueNameMulti = "java-test-queue-multi";
         Queue queue = new Queue(client, queueNameMulti);
         queue.push("first-test-msg");
@@ -194,12 +190,8 @@ public class IronMQTest {
     }
 
     @Test
-    public void testReleaseMessageAndDestroyQueue() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        Queues queues = new Queues(client);
-        ArrayList<QueueModel> allQueuesOrig = queues.getAllQueues();
-
+    @Ignore
+    public void testReleaseMessage() throws IOException {
         String queueNewName = "java-release-testing";
         Queue queue = new Queue(client, queueNewName);
         String msgBody = "release-test-message";
@@ -207,19 +199,11 @@ public class IronMQTest {
         queue.releaseMessage(id, 0);
         Message message = queue.get();
         Assert.assertEquals(message.getBody(), msgBody);
-
-        ArrayList<QueueModel> allQueues = queues.getAllQueues();
-        Assert.assertFalse(allQueuesOrig.size() == allQueues.size());
-        queue.destroy();
-
-        allQueues = queues.getAllQueues();
-        Assert.assertTrue(allQueuesOrig.size() == allQueues.size());
     }
 
     @Test
+    @Ignore
     public void testSubscribers() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         String queueNameSubscriber = "java-testing-queue-push";
         Queue queue = new Queue(client, queueNameSubscriber);
         String subscriberUrl1 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_1";
@@ -258,9 +242,8 @@ public class IronMQTest {
     }
 
     @Test
+    @Ignore
     public void testAlerts() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         String queueNameSubscriber = "java-test_alert_queue";
         Queue queue = new Queue(client, queueNameSubscriber);
         queue.push("test-message-alert");
@@ -290,17 +273,51 @@ public class IronMQTest {
         Assert.assertNull(infoAboutQueue.getAlerts());
     }
 
-    private void setCredentials() throws IOException {
+    @Test
+    public void testPostMessage() throws IOException {
+        Queue queue = new Queue(client, "my_queue");
+        String messageId = queue.push("Test message");
+        Assert.assertTrue(messageId.length() > 0);
+    }
+
+    @Test
+    public void testReserveMessage() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        String messageText = "Test message " + ts();
+        String messageId = queue.push(messageText);
+        Message message = queue.get();
+
+        Assert.assertTrue(message.getReservationId().length() > 0);
+        Assert.assertEquals(messageId, message.getId());
+        Assert.assertEquals(messageText, message.getBody());
+        Assert.assertEquals(1, message.getReservedCount());
+    }
+
+    @Test
+    public void testClearQueue() throws IOException {
+        Queue queue = new Queue(client, "my_queue");
+        queue.push("Some message");
+        Assert.assertTrue(queue.getInfoAboutQueue().getSize() > 0);
+        queue.clear();
+        Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
+    }
+
+    private Client setCredentials() throws IOException {
         Properties prop = new Properties();
-        InputStream input = null;
+        InputStream input;
         try {
             input = new FileInputStream("config.properties");
-        } catch(FileNotFoundException fnfe) {
+        } catch (FileNotFoundException fnfe) {
             System.out.println("config.properties not found");
             input = new FileInputStream("../../config.properties"); //maven release hack
         }
         prop.load(input);
-        token = prop.getProperty("token");
-        projectId = prop.getProperty("project_id");
+        String token = prop.getProperty("token");
+        String projectId = prop.getProperty("project_id");
+        return new Client(projectId, token, new Cloud("http", "localhost", 8080), 3);
+    }
+
+    private long ts() {
+        return new Date().getTime();
     }
 }
