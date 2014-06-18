@@ -21,15 +21,29 @@ public class Queue {
     }
 
     /**
-    * Retrieves a Message from the queue. If there are no items on the queue, an
+    * Retrieves a Message from the queue and reserves it. If there are no items on the queue, an
     * EmptyQueueException is thrown.
     *
-    * @throws io.iron.ironmq.EmptyQueueException If the queue is empty.
-    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws java.io.IOException If there is an error accessing the IronMQ server.
+    * @throws EmptyQueueException If the queue is empty.
+    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws IOException If there is an error accessing the IronMQ server.
+    * @deprecated Use Queue.reserve() instead
     */
+    @Deprecated
     public Message get() throws IOException {
-        Messages msgs = get(1);
+        return reserve();
+    }
+
+    /**
+     * Retrieves a Message from the queue and reserves it. If there are no items on the queue, an
+     * EmptyQueueException is thrown.
+     *
+     * @throws EmptyQueueException If the queue is empty.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public Message reserve() throws IOException {
+        Messages msgs = reserve(1);
         Message msg;
         try {
             msg = msgs.getMessage(0);
@@ -41,28 +55,27 @@ public class Queue {
     }
 
     /**
-    * Retrieves Messages from the queue. If there are no items on the queue, an
-    * EmptyQueueException is thrown.
-    * @param numberOfMessages The number of messages to receive. Max. is 100.
-    * @throws io.iron.ironmq.EmptyQueueException If the queue is empty.
-    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws java.io.IOException If there is an error accessing the IronMQ server.
-    */
+     * Retrieves Messages from the queue and reserves it. If there are no items on the queue, an
+     * EmptyQueueException is thrown.
+     * @param numberOfMessages The number of messages to receive. Max. is 100.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     * @deprecated Use Queue.reserve(int) instead
+     */
+    @Deprecated
     public Messages get(int numberOfMessages) throws IOException {
-        return get(numberOfMessages, -1);
+        return reserve(numberOfMessages);
     }
 
     /**
-    * Retrieves Messages from the queue. If there are no items on the queue, an
-    * EmptyQueueException is thrown.
-    * @param numberOfMessages The number of messages to receive. Max. is 100.
-    * @param timeout timeout in seconds.
-    * @throws io.iron.ironmq.EmptyQueueException If the queue is empty.
-    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws java.io.IOException If there is an error accessing the IronMQ server.
-    */
-    public Messages get(int numberOfMessages, int timeout) throws IOException {
-        return get(numberOfMessages, timeout, 0);
+     * Retrieves Messages from the queue and reserves it. If there are no items on the queue, an
+     * EmptyQueueException is thrown.
+     * @param numberOfMessages The number of messages to receive. Max. is 100.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public Messages reserve(int numberOfMessages) throws IOException {
+        return reserve(numberOfMessages, -1);
     }
 
     /**
@@ -70,11 +83,24 @@ public class Queue {
      * EmptyQueueException is thrown.
      * @param numberOfMessages The number of messages to receive. Max. is 100.
      * @param timeout timeout in seconds.
-     * @param wait Time to long poll for messages, in seconds. Max is 30 seconds. Default 0.
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     * @deprecated Use Queue.reserve(int, int) instead
      */
-    public Messages get(int numberOfMessages, int timeout, int wait) throws IOException {
+    @Deprecated
+    public Messages get(int numberOfMessages, int timeout) throws IOException {
+        return reserve(numberOfMessages, timeout);
+    }
+
+    /**
+     * Retrieves Messages from the queue and reserves it. If there are no items on the queue, an
+     * EmptyQueueException is thrown.
+     * @param numberOfMessages The number of messages to receive. Max. is 100.
+     * @param timeout timeout in seconds.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public Messages reserve(int numberOfMessages, int timeout) throws IOException {
         if (numberOfMessages < 1 || numberOfMessages > 100) {
             throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
         }
