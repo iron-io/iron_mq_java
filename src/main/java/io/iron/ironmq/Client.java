@@ -171,7 +171,12 @@ public class Client {
 
     private Reader singleRequest(String method, URL url, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod(method);
+        if (method.equals("DELETE")) {
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("X-HTTP-Method-Override", "DELETE");
+        } else {
+            conn.setRequestMethod(method);
+        }
         conn.setRequestProperty("Authorization", "OAuth " + token);
         conn.setRequestProperty("User-Agent", "IronMQ Java Client");
 
