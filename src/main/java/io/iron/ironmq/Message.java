@@ -17,6 +17,7 @@ public class Message implements Serializable {
     // it.
     @SerializedName("expires_in") private Long expiresIn;
     @SerializedName("reserved_count") private long reservedCount;
+    @SerializedName("reservation_id") private String reservationId;
 
     public Message() {}
 
@@ -67,11 +68,16 @@ public class Message implements Serializable {
     * @param delay The new delay.
     */
     public void setDelay(long delay) { this.delay = delay; }
-    
+
     /**
-    * Returns the number of times the message has been reserved.
-    */
+     * Returns the number of times the message has been reserved.
+     */
     public long getReservedCount() { return reservedCount; }
+
+    /**
+     * Returns the reservation id if the message has been reserved.
+     */
+    public String getReservationId() { return reservationId; }
 
     /**
     * Returns the number of seconds in which the Message will be removed from the
