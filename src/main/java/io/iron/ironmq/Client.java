@@ -26,7 +26,8 @@ import com.google.gson.JsonSyntaxException;
  * The Client class provides access to the IronMQ service.
  */
 public class Client {
-    static final private String apiVersion = "1";
+    static final private String defaultApiVersion = "3";
+    private String apiVersion;
 
     static final Random rand = new Random();
 
@@ -52,20 +53,31 @@ public class Client {
     }
 
     /**
-     * This constructor is equivalent to {@link #Client(String, String, io.iron.ironmq.Cloud) Client(null, null, null)}.
+     * This constructor is equivalent to {@link #Client(String, String, io.iron.ironmq.Cloud, Integer) Client(null, null, null, null)}.
      */
     public Client() {
-        this(null, null, null);
+        this(null, null, null, null);
     }
 
     /**
-     * This constructor is equivalent to {@link #Client(String, String, io.iron.ironmq.Cloud) Client(projectId, token, null)}.
+     * This constructor is equivalent to {@link #Client(String, String, io.iron.ironmq.Cloud, Integer) Client(projectId, token, null, null)}.
      *
      * @param projectId A 24-character project ID.
      * @param token An OAuth token.
      */
     public Client(String projectId, String token) {
-        this(projectId, token, null);
+        this(projectId, token, null, null);
+    }
+
+    /**
+     * This constructor is equivalent to {@link #Client(String, String, Cloud, Integer) Client(projectId, token, cloud, null)}.
+     *
+     * @param projectId A 24-character project ID.
+     * @param token An OAuth token.
+     * @param cloud The cloud to use.
+     */
+    public Client(String projectId, String token, Cloud cloud) {
+        this(projectId, token, cloud, null);
     }
 
     /**
@@ -79,14 +91,16 @@ public class Client {
      * @param projectId A 24-character project ID.
      * @param token An OAuth token.
      * @param cloud The cloud to use.
+     * @param apiVersion Version of ironmq api to use, default is 3.
      */
-    public Client(String projectId, String token, Cloud cloud) {
+    public Client(String projectId, String token, Cloud cloud, Integer apiVersion) {
         Map<String, Object> userOptions = new HashMap<String, Object>();
         userOptions.put("project_id", projectId);
         userOptions.put("token", token);
         if (cloud != null) {
             userOptions.put("cloud", cloud);
         }
+        this.apiVersion = (apiVersion == null || apiVersion < 1) ? defaultApiVersion : apiVersion.toString();
 
         loadConfiguration("iron", "mq", userOptions, new String[]{"project_id", "token", "cloud"});
     }
@@ -124,6 +138,8 @@ public class Client {
     private IronReader request(String method, String endpoint, String body) throws IOException {
         String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
         URL url = new URL(cloud.scheme, cloud.host, cloud.port, cloud.pathPrefix + path);
+
+        System.out.println(method + " " + url + " " + (method != "GET" ? body : ""));
 
         final int maxRetries = 5;
         int retries = 0;
