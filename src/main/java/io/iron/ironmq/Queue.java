@@ -79,16 +79,11 @@ public class Queue {
             throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
         }
 
-        String url = "queues/" + name + "/messages?n=" + numberOfMessages;
-        if (timeout > -1) {
-            url += "&timeout=" + timeout;
-        }
-        if (wait > 0) {
-            url += "&wait=" + wait;
-        }
-        IronReader reader = client.get(url);
         Gson gson = new Gson();
-        Messages messages = gson.fromJson(reader.reader, Messages.class);
+        MessagesReservationModel payload = new MessagesReservationModel(numberOfMessages, timeout);
+        String url = "queues/" + name + "/reservations";
+        Reader reader = client.post(url, gson.toJson(payload));
+        Messages messages = gson.fromJson(reader, Messages.class);
         reader.close();
         return messages;
     }
@@ -240,9 +235,12 @@ public class Queue {
     * @param timeout The message's timeout in seconds.
     * @return The new message's ID
     *
-    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws java.io.IOException If there is an error accessing the IronMQ server.
+    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws IOException If there is an error accessing the IronMQ server.
+    *
+    * @deprecated It's no longer possible to set timeout when posting a message, only when reserving one
     */
+    @Deprecated
     public String push(String msg, long timeout) throws IOException {
         return push(msg, timeout, 0);
     }
@@ -254,9 +252,12 @@ public class Queue {
      * @param timeout The message's timeout in seconds.
      * @return The IDs of new messages
      *
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     *
+     * @deprecated It's no longer possible to set timeout when posting a message, only when reserving one
      */
+    @Deprecated
     public Ids pushMessages(String msg[], long timeout) throws IOException {
         return pushMessages(msg, timeout, 0);
     }
@@ -358,7 +359,7 @@ public class Queue {
      * @throws java.io.IOException
      */
     public void clear() throws IOException {
-        client.post("queues/"+name+"/clear", "").close();
+        client.delete("queues/" + name + "/messages", "{}");
     }
 
     /**
@@ -377,9 +378,9 @@ public class Queue {
     public QueueModel getInfoAboutQueue() throws IOException {
         IronReader reader = client.get("queues/" + name);
         Gson gson = new Gson();
-        QueueModel message = gson.fromJson(reader.reader, QueueModel.class);
+        QueueContainer queueContainer = gson.fromJson(reader, QueueContainer.class);
         reader.close();
-        return message;
+        return queueContainer.getQueue();
     }
 
     /**
