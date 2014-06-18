@@ -281,7 +281,7 @@ public class IronMQTest {
     }
 
     @Test
-    public void testReserveMessage() throws IOException {
+    public void testReserveMessageViaGet() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
         String messageText = "Test message " + ts();
         String messageId = queue.push(messageText);
@@ -291,6 +291,54 @@ public class IronMQTest {
         Assert.assertEquals(messageId, message.getId());
         Assert.assertEquals(messageText, message.getBody());
         Assert.assertEquals(1, message.getReservedCount());
+    }
+
+    @Test(expected = EmptyQueueException.class)
+    public void testReserveMessageFromEmptyQueue() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        queue.push("");
+        queue.clear();
+        Message message = queue.reserve();
+    }
+
+    @Test
+    public void testReserveMessagesFromEmptyQueue() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        queue.push("");
+        queue.clear();
+        Messages messages = queue.reserve(4);
+        Assert.assertEquals(0, messages.getSize());
+        Assert.assertEquals(0, messages.getMessages().length);
+    }
+
+    @Test
+    public void testReserveMessage() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        String messageText = "Test message " + ts();
+        String messageId = queue.push(messageText);
+        Message message = queue.reserve();
+
+        Assert.assertTrue(message.getReservationId().length() > 0);
+        Assert.assertEquals(messageId, message.getId());
+        Assert.assertEquals(messageText, message.getBody());
+        Assert.assertEquals(1, message.getReservedCount());
+    }
+
+    @Test
+    public void testReserveMessages() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        String messageText = "Test message " + ts();
+        Ids ids = queue.pushMessages(new String[]{messageText + "0", messageText + "1", messageText + "2"});
+        Messages messages = queue.reserve(4);
+
+        Assert.assertTrue(messages.getSize() > 0);
+        Assert.assertTrue(messages.getSize() < 4);
+        for (int i = 0; i < messages.getSize(); i++) {
+            Assert.assertTrue(messages.getMessage(i).getReservationId().length() > 0);
+            Assert.assertEquals(ids.getId(i), messages.getMessage(i).getId());
+            Assert.assertEquals(messageText + i, messages.getMessage(i).getBody());
+            Assert.assertEquals(1, messages.getMessage(i).getReservedCount());
+        }
     }
 
     @Test
