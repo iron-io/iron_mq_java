@@ -409,11 +409,22 @@ public class IronMQTest {
 
     @Test
     public void testClearQueue() throws IOException {
-        Queue queue = new Queue(client, "my_queue");
+        Queue queue = new Queue(client, "my_queue_" + ts());
         queue.push("Some message");
         Assert.assertTrue(queue.getInfoAboutQueue().getSize() > 0);
         queue.clear();
         Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
+    }
+
+    @Test(expected = HTTPException.class)
+    public void testDeleteQueue() throws IOException {
+        String queueName = "my_queue_" + ts();
+        Queue queue = new Queue(client, queueName);
+        queue.push("Some message");
+        queue.destroy();
+        Queue sameQueue = new Queue(client, queueName);
+
+        sameQueue.getInfoAboutQueue();
     }
 
     private Client setCredentials() throws IOException {
