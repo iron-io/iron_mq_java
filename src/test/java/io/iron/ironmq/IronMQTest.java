@@ -342,10 +342,21 @@ public class IronMQTest {
     }
 
     @Test
-    public void testListQueues() throws IOException {
+    public void testListQueuesOldWay() throws IOException {
         createQueueWithMessage("my_queue_" + ts());
         Queues queues = new Queues(client);
         ArrayList<QueueModel> allQueues = queues.getAllQueues();
+
+        Assert.assertTrue(allQueues.size() > 0);
+        Assert.assertTrue(allQueues.get(0).getName().length() > 0);
+        Assert.assertNull("Expect json with only names", allQueues.get(0).getProject_id());
+        Assert.assertNull("Expect json with only names", allQueues.get(0).getId());
+    }
+
+    @Test
+    public void testListQueues() throws IOException {
+        createQueueWithMessage("my_queue_" + ts());
+        ArrayList<QueueModel> allQueues = Queues.getQueues(client);
 
         Assert.assertTrue(allQueues.size() > 0);
         Assert.assertTrue(allQueues.get(0).getName().length() > 0);
