@@ -7,8 +7,7 @@ import com.google.gson.annotations.SerializedName;
 /**
  * The Message class represents a message retrieved from an IronMQ queue.
  */
-public class Message implements Serializable {
-    private String id;
+public class Message extends MessageOptions implements Serializable {
     private String body;
     private long timeout;
     private long delay;
@@ -17,7 +16,6 @@ public class Message implements Serializable {
     // it.
     @SerializedName("expires_in") private Long expiresIn;
     @SerializedName("reserved_count") private long reservedCount;
-    @SerializedName("reservation_id") private String reservationId;
 
     public Message() {}
 
@@ -32,18 +30,6 @@ public class Message implements Serializable {
     * @param body The new body contents.
     */
     public void setBody(String body) { this.body = body; }
-
-    /**
-    * Returns the Message's ID.
-    */
-    public String getId() { return id; }
-
-    /**
-    * Sets the Message's ID.
-    *
-    * @param id The new ID.
-    */
-    public void setId(String id) { this.id = id; }
 
     /**
     * Returns the Message's timeout.
@@ -73,11 +59,6 @@ public class Message implements Serializable {
      * Returns the number of times the message has been reserved.
      */
     public long getReservedCount() { return reservedCount; }
-
-    /**
-     * Returns the reservation id if the message has been reserved.
-     */
-    public String getReservationId() { return reservationId; }
 
     /**
     * Returns the number of seconds in which the Message will be removed from the
