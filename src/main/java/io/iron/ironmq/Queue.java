@@ -153,17 +153,44 @@ public class Queue {
         	 reader.close();
          }
     }
-    
+
     /**
-    * Touching a reserved message extends its timeout to the duration specified when the message was created.
-    *
-    * @param id The ID of the message to delete.
-    *
-    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws java.io.IOException If there is an error accessing the IronMQ server.
-    */
+     * Touching a reserved message extends its timeout to the duration specified when the message was created.
+     *
+     * @param id The ID of the message to delete.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     * @deprecated It's not possible to touch a message without reservation id since v3 of IronMQ
+     */
+    @Deprecated
     public void touchMessage(String id) throws IOException {
-        client.post("queues/" + name + "/messages/" + id + "/touch", "");
+        touchMessage(id, null);
+    }
+
+    /**
+     * Touching a reserved message extends its timeout to the duration specified when the message was created.
+     *
+     * @param message The message to delete.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void touchMessage(Message message) throws IOException {
+        touchMessage(message.getId(), message.getReservationId());
+    }
+
+    /**
+     * Touching a reserved message extends its timeout to the duration specified when the message was created.
+     *
+     * @param id The ID of the message to delete.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void touchMessage(String id, String reservationId) throws IOException {
+        String payload = new Gson().toJson(new MessageOptions(reservationId));
+        client.post("queues/" + name + "/messages/" + id + "/touch", payload);
     }
 
     /**

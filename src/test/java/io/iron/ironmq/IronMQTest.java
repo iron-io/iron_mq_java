@@ -275,7 +275,7 @@ public class IronMQTest {
 
     @Test
     public void testPostMessage() throws IOException {
-        Queue queue = new Queue(client, "my_queue");
+        Queue queue = new Queue(client, "my_queue_" + ts());
         String messageId = queue.push("Test message");
         Assert.assertTrue(messageId.length() > 0);
     }
@@ -342,6 +342,22 @@ public class IronMQTest {
     }
 
     @Test
+    public void testTouchMessage() throws IOException, InterruptedException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        queue.push("Test message");
+        Message message = queue.reserve(1, 5).getMessage(0);
+
+        System.out.println(message.getReservationId());
+        System.out.println(message.getId());
+        System.out.println(message.getBody());
+
+        Thread.sleep(3500);
+        queue.touchMessage(message);
+        Thread.sleep(3500);
+        Assert.assertEquals(0, queue.reserve(1).getSize());
+    }
+
+    @Test
     public void testClearQueue() throws IOException {
         Queue queue = new Queue(client, "my_queue");
         queue.push("Some message");
@@ -362,7 +378,9 @@ public class IronMQTest {
         prop.load(input);
         String token = prop.getProperty("token");
         String projectId = prop.getProperty("project_id");
+        //return new Client(projectId, token, new Cloud("http", "mq-v3-beta.iron.io", 80), 3);
         return new Client(projectId, token, new Cloud("http", "localhost", 8080), 3);
+        //return new Client(projectId, token, Cloud.ironAWSUSEast, 1);
     }
 
     private long ts() {
