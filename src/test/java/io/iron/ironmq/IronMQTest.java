@@ -365,14 +365,41 @@ public class IronMQTest {
     }
 
     @Test
+    public void testListQueuesDefaultPagination() throws IOException {
+        int defaultPageSize = 30;
+        for (int i = 0; i < defaultPageSize + 3; i++) {
+            createQueueWithMessage(repeatString("z", i + 1));
+        }
+        ArrayList<QueueModel> queues = Queues.getQueues(client);
+
+        Assert.assertTrue(queues.size() > 0);
+        Assert.assertTrue(queues.size() <= defaultPageSize);
+        Assert.assertTrue(queues.get(queues.size() - 1).getName().compareTo(repeatString("z", defaultPageSize + 2)) < 0);
+    }
+
+    @Test
+    public void testListQueuesPagination() throws IOException {
+        int pageSize = 4;
+        for (int i = 0; i < pageSize * 2; i++) {
+            createQueueWithMessage(repeatString("a", i + 1));
+        }
+        ArrayList<QueueModel> queues = Queues.getQueues(client, "aa", pageSize);
+
+        Assert.assertTrue(queues.size() == pageSize);
+        for (int i = 0; i < queues.size(); i++) {
+            Assert.assertEquals(repeatString("a", i + 3), queues.get(i).getName());
+        }
+
+        Assert.assertEquals(2, Queues.getQueues(client, "aaaaaaa", 2).size());
+        Assert.assertEquals("aaaaaaaa", Queues.getQueues(client, "aaaaaaa").get(0).getName());
+        Assert.assertEquals(3, Queues.getQueues(client, 3).size());
+    }
+
+    @Test
     public void testTouchMessage() throws IOException, InterruptedException {
         Queue queue = new Queue(client, "my_queue_" + ts());
         queue.push("Test message");
         Message message = queue.reserve(1, 5).getMessage(0);
-
-        System.out.println(message.getReservationId());
-        System.out.println(message.getId());
-        System.out.println(message.getBody());
 
         Thread.sleep(3500);
         queue.touchMessage(message);
@@ -413,5 +440,9 @@ public class IronMQTest {
     private void createQueueWithMessage(String queueName) throws IOException {
         Queue queue = new Queue(client, queueName);
         queue.push("Test message");
+    }
+
+    private String repeatString(String s, int times) {
+        return new String(new char[times]).replace("\0", s);
     }
 }
