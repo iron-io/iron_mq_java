@@ -342,6 +342,18 @@ public class IronMQTest {
     }
 
     @Test
+    public void testListQueues() throws IOException {
+        createQueueWithMessage("my_queue_" + ts());
+        Queues queues = new Queues(client);
+        ArrayList<QueueModel> allQueues = queues.getAllQueues();
+
+        Assert.assertTrue(allQueues.size() > 0);
+        Assert.assertTrue(allQueues.get(0).getName().length() > 0);
+        Assert.assertNull("Expect json with only names", allQueues.get(0).getProject_id());
+        Assert.assertNull("Expect json with only names", allQueues.get(0).getId());
+    }
+
+    @Test
     public void testTouchMessage() throws IOException, InterruptedException {
         Queue queue = new Queue(client, "my_queue_" + ts());
         queue.push("Test message");
@@ -385,5 +397,10 @@ public class IronMQTest {
 
     private long ts() {
         return new Date().getTime();
+    }
+
+    private void createQueueWithMessage(String queueName) throws IOException {
+        Queue queue = new Queue(client, queueName);
+        queue.push("Test message");
     }
 }

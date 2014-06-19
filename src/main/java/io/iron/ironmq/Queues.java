@@ -26,9 +26,9 @@ public class Queues {
         String url = "queues";
         IronReader reader = client.get(url);
         Gson gson = new Gson();
-        ArrayList<QueueModel> queues = gson.fromJson(reader.reader, new TypeToken<ArrayList<QueueModel>>(){}.getType());
+        QueuesContainer queues = gson.fromJson(reader, QueuesContainer.class);
         reader.close();
-        return queues;
+        return queues.getQueues();
     }
 
 }
