@@ -202,7 +202,21 @@ public class Queue {
     * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public void deleteMessage(String id) throws IOException {
-        client.delete("queues/" + name + "/messages/" + id);
+        deleteMessage(id, null);
+    }
+
+    /**
+     * Deletes a Message from the queue.
+     *
+     * @param id The ID of the message to delete.
+     * @param reservationId Reservation Id of the message. Reserved message could not be deleted without reservation Id.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void deleteMessage(String id, String reservationId) throws IOException {
+        String payload = new Gson().toJson(new MessageOptions(reservationId));
+        client.delete("queues/" + name + "/messages/" + id, payload);
     }
 
     /**
@@ -252,7 +266,7 @@ public class Queue {
     * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public void deleteMessage(Message msg) throws IOException {
-        deleteMessage(msg.getId());
+        deleteMessage(msg.getId(), msg.getReservationId());
     }
 
     /**

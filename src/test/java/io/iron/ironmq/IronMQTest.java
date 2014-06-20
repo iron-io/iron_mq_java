@@ -342,6 +342,33 @@ public class IronMQTest {
     }
 
     @Test
+    public void testDeleteReservedMessage() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        queue.clear();
+        queue.push("Test message");
+        Message message = queue.reserve();
+
+        Assert.assertEquals(1, queue.getInfoAboutQueue().getSize());
+        queue.deleteMessage(message);
+        // or
+        // queue.deleteMessage(message.getId(), message.getReservationId());
+        Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
+    }
+
+    @Test(expected = HTTPException.class)
+    public void testDeleteReservedMessageWithoutReservationId() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        queue.clear();
+        queue.push("Test message");
+        Message message = queue.reserve();
+
+        // this way of deleting is acceptable for non reserved messages,
+        // for example for messages which was got by id
+        queue.deleteMessage(message.getId());
+        Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
+    }
+
+    @Test
     public void testListQueuesOldWay() throws IOException {
         createQueueWithMessage("my_queue_" + ts());
         Queues queues = new Queues(client);
