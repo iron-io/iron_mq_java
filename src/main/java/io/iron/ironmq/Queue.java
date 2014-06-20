@@ -228,10 +228,24 @@ public class Queue {
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void deleteMessages(Ids ids) throws IOException {
-        Gson gson = new Gson();
-        String jsonMessages = gson.toJson(ids);
+        deleteMessages(ids.toMessageOptions());
+    }
 
-        IronReader reader = client.delete("queues/" + name + "/messages", jsonMessages);
+    /**
+     * Deletes multiple messages from the queue.
+     *
+     * @param messages The list of the messages to delete.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void deleteMessages(Messages messages) throws IOException {
+        deleteMessages(messages.toMessageOptions());
+    }
+
+    private void deleteMessages(MessageOptions[] messages) throws IOException {
+        String payload = new Gson().toJson(new MessagesOptions(messages));
+        Reader reader = client.delete("queues/" + name + "/messages", payload);
         reader.close();
     }
 
@@ -474,19 +488,62 @@ public class Queue {
     }
 
     /**
-     * Release locked message after specified time. If there is no message with such id on the queue, an
+     * Release reserved message after specified time. If there is no message with such id on the queue, an
      * EmptyQueueException is thrown.
+     *
      * @param id The ID of the message to release.
      * @param delay The time after which the message will be released.
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     * @deprecated Reservation Id is required for message releasing since v3
      */
+    @Deprecated
     public void releaseMessage(String id, int delay) throws IOException {
+        releaseMessage(id, null, new Long(delay));
+    }
+
+    /**
+     * Release reserved message after specified time. If there is no message with such id on the queue, an
+     * EmptyQueueException is thrown.
+     *
+     * @param message The message to release.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void releaseMessage(Message message) throws IOException {
+        releaseMessage(message.getId(), message.getReservationId(), null);
+    }
+
+    /**
+     * Release reserved message after specified time. If there is no message with such id on the queue, an
+     * EmptyQueueException is thrown.
+     *
+     * @param message The message to release.
+     * @param delay The time after which the message will be released.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void releaseMessage(Message message, int delay) throws IOException {
+        releaseMessage(message.getId(), message.getReservationId(), new Long(delay));
+    }
+
+    /**
+     * Release reserved message after specified time. If there is no message with such id on the queue, an
+     * EmptyQueueException is thrown.
+     *
+     * @param id The ID of the message to release.
+     * @param delay The time after which the message will be released.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void releaseMessage(String id, String reservationId, Long delay) throws IOException {
         String url = "queues/" + name + "/messages/" + id + "/release";
-        Gson gson = new Gson();
-        Delay delayClass = new Delay(delay);
-        String jsonMessages = gson.toJson(delayClass);
-        IronReader reader = client.post(url, jsonMessages);
+        String payload = new Gson().toJson(new MessageOptions(reservationId, delay));
+        Reader reader = client.post(url, payload);
         reader.close();
     }
 
