@@ -115,13 +115,13 @@ public class Queue {
     }
 
     /**
-    * Peeking at a queue returns the next messages on the queue, but it does not reserve them.
-    * If there are no items on the queue, an EmptyQueueException is thrown.
-    *
-    * @throws io.iron.ironmq.EmptyQueueException If the queue is empty.
-    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws java.io.IOException If there is an error accessing the IronMQ server.
-    */
+     * Peeking at a queue returns the next messages on the queue, but it does not reserve them.
+     * If there are no items on the queue, an EmptyQueueException is thrown.
+     *
+     * @throws EmptyQueueException If the queue is empty.
+     * @throws HTTPException       If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException         If there is an error accessing the IronMQ server.
+     */
     public Message peek() throws IOException {
         Messages msgs = peek(1);
         Message msg;
@@ -135,13 +135,15 @@ public class Queue {
     }
 
     /**
-    * Peeking at a queue returns the next messages on the queue, but it does not reserve them.
-    *
-    * @param numberOfMessages The number of messages to receive. Max. is 100.
-    * @throws io.iron.ironmq.EmptyQueueException If the queue is empty.
-    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws java.io.IOException If there is an error accessing the IronMQ server.
-    */
+     * Peeking at a queue returns the next messages on the queue, but it does not reserve them.
+     *
+     * @param numberOfMessages The maximum number of messages to peek. Default is 1. Maximum is 100. Note: You may not
+     *                         receive all n messages on every request, the more sparse the queue, the less likely
+     *                         you are to receive all n messages.
+     * @throws EmptyQueueException If the queue is empty.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
     public Messages peek(int numberOfMessages) throws IOException {
         if (numberOfMessages < 1 || numberOfMessages > 100) {
             throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
