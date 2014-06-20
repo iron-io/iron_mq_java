@@ -412,6 +412,41 @@ public class IronMQTest {
     }
 
     @Test
+    public void testTouchMessage() throws IOException, InterruptedException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        queue.push("Test message");
+        Message message = queue.reserve(1, 5).getMessage(0);
+
+        Thread.sleep(3500);
+        queue.touchMessage(message);
+        Thread.sleep(3500);
+        Assert.assertEquals(0, queue.reserve(1).getSize());
+    }
+
+    @Test
+    public void testReleaseMessage() throws IOException, InterruptedException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        queue.push("Test message");
+        Message message = queue.reserve(1, 5).getMessage(0);
+
+        Thread.sleep(500);
+        queue.releaseMessage(message);
+
+        Message sameMessage = queue.reserve();
+        Assert.assertEquals(message.getId(), sameMessage.getId());
+    }
+
+    @Test(expected = HTTPException.class)
+    public void testReleaseMessageWithoutReservationId() throws IOException, InterruptedException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        queue.push("Test message");
+        Message message = queue.reserve(1, 5).getMessage(0);
+
+        Thread.sleep(500);
+        queue.releaseMessage(message.getId(), 0);
+    }
+
+    @Test
     public void testListQueuesOldWay() throws IOException {
         createQueueWithMessage("my_queue_" + ts());
         Queues queues = new Queues(client);
@@ -463,41 +498,6 @@ public class IronMQTest {
         Assert.assertEquals(2, Queues.getQueues(client, "aaaaaaa", 2).size());
         Assert.assertEquals("aaaaaaaa", Queues.getQueues(client, "aaaaaaa").get(0).getName());
         Assert.assertEquals(3, Queues.getQueues(client, 3).size());
-    }
-
-    @Test
-    public void testTouchMessage() throws IOException, InterruptedException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
-        queue.push("Test message");
-        Message message = queue.reserve(1, 5).getMessage(0);
-
-        Thread.sleep(3500);
-        queue.touchMessage(message);
-        Thread.sleep(3500);
-        Assert.assertEquals(0, queue.reserve(1).getSize());
-    }
-
-    @Test
-    public void testReleaseMessage() throws IOException, InterruptedException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
-        queue.push("Test message");
-        Message message = queue.reserve(1, 5).getMessage(0);
-
-        Thread.sleep(500);
-        queue.releaseMessage(message);
-
-        Message sameMessage = queue.reserve();
-        Assert.assertEquals(message.getId(), sameMessage.getId());
-    }
-
-    @Test(expected = HTTPException.class)
-    public void testReleaseMessageWithoutReservationId() throws IOException, InterruptedException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
-        queue.push("Test message");
-        Message message = queue.reserve(1, 5).getMessage(0);
-
-        Thread.sleep(500);
-        queue.releaseMessage(message.getId(), 0);
     }
 
     @Test
