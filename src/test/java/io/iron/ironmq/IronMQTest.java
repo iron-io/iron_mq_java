@@ -330,6 +330,22 @@ public class IronMQTest {
     }
 
     @Test
+    public void testPeekMessage() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        String messageText = "Test message " + ts();
+        String messageId = queue.push(messageText);
+        Message message = queue.peek();
+
+        Assert.assertNull(message.getReservationId());
+        Assert.assertEquals(messageId, message.getId());
+        Assert.assertEquals(messageText, message.getBody());
+        Assert.assertEquals(0, message.getReservedCount());
+
+        Message sameMessage = queue.peek();
+        Assert.assertEquals(message.getId(), sameMessage.getId());
+    }
+
+    @Test
     public void testDeleteReservedMessage() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
         queue.clear();

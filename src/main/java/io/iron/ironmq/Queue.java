@@ -115,7 +115,7 @@ public class Queue {
     }
 
     /**
-    * Peeking at a queue returns the next messages on the queue, but it does not reserve them. 
+    * Peeking at a queue returns the next messages on the queue, but it does not reserve them.
     * If there are no items on the queue, an EmptyQueueException is thrown.
     *
     * @throws EmptyQueueException If the queue is empty.
@@ -136,22 +136,22 @@ public class Queue {
 
     /**
     * Peeking at a queue returns the next messages on the queue, but it does not reserve them.
-    * 
+    *
     * @param numberOfMessages The number of messages to receive. Max. is 100.
     * @throws EmptyQueueException If the queue is empty.
     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public Messages peek(int numberOfMessages) throws IOException {
-    	 if (numberOfMessages < 1 || numberOfMessages > 100) {
-             throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
-         }
-         Reader reader = client.get("queues/" + name + "/messages/peek?n="+numberOfMessages);
-         try{
-        	 return new Gson().fromJson(reader, Messages.class);
-         }finally{
-        	 reader.close();
-         }
+        if (numberOfMessages < 1 || numberOfMessages > 100) {
+            throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
+        }
+        Reader reader = client.get("queues/" + name + "/messages?n=" + numberOfMessages);
+        try {
+            return new Gson().fromJson(reader, Messages.class);
+        } finally {
+            reader.close();
+        }
     }
 
     /**
@@ -251,7 +251,7 @@ public class Queue {
 
     /**
      * Destroy the queue.
-     * 
+     *
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws IOException If there is an error accessing the IronMQ server.
      */
