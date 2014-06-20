@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import javax.sound.midi.VoiceStatus;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -343,6 +344,19 @@ public class IronMQTest {
 
         Message sameMessage = queue.peek();
         Assert.assertEquals(message.getId(), sameMessage.getId());
+    }
+
+    @Test
+    public void testGetMessageById() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        String messageText = "Test message " + ts();
+        String messageId = queue.push(messageText);
+        Message message = queue.getMessageById(messageId);
+
+        Assert.assertNull(message.getReservationId());
+        Assert.assertEquals(messageId, message.getId());
+        Assert.assertEquals(messageText, message.getBody());
+        Assert.assertEquals(0, message.getReservedCount());
     }
 
     @Test
