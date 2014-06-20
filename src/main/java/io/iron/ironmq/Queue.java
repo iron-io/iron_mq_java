@@ -465,9 +465,9 @@ public class Queue {
         String url = "queues/" + name + "/messages/" + id;
         Reader reader = client.get(url);
         Gson gson = new Gson();
-        Message message = gson.fromJson(reader, Message.class);
+        MessageContainer container = gson.fromJson(reader, MessageContainer.class);
         reader.close();
-        return message;
+        return container.getMessage();
     }
 
     static class Delay {
