@@ -53,20 +53,48 @@ public class QueueModel {
         this.size = size;
     }
 
+    /**
+     * Returns total count of messages ever placed to the queue.
+     *
+     * @deprecated Use getTotalMessages() instead.
+     */
+    @Deprecated
     public int getTotal_messages() {
         return total_messages;
     }
 
-    public void setTotal_messages(int total_messages) {
-        this.total_messages = total_messages;
+    /**
+     * Returns total count of messages ever placed to the queue.
+     */
+    public int getTotalMessages() {
+        return total_messages;
     }
 
+    @Deprecated
+    public void setTotal_messages(int total_messages) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Returns Id of a project, which owns the Queue.
+     *
+     * @deprecated Use getProjectId() instead.
+     */
+    @Deprecated
     public String getProject_id() {
         return project_id;
     }
 
+    /**
+     * Returns Id of a project, which owns the Queue.
+     */
+    public String getProjectId() {
+        return project_id;
+    }
+
+    @Deprecated
     public void setProject_id(String project_id) {
-        this.project_id = project_id;
+        throw new UnsupportedOperationException();
     }
 
     public int getRetries() {
