@@ -18,4 +18,12 @@ public class Messages {
     public int getSize() {
         return messages.length;
     }
+
+    public MessageOptions[] toMessageOptions() {
+        int length = messages.length;
+        MessageOptions[] result = new MessageOptions[length];
+        for (int i = 0; i < length; i++)
+            result[i] = new MessageOptions(messages[i].getId(), messages[i].getReservationId());
+        return result;
+    }
 }
