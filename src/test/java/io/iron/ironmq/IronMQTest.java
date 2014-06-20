@@ -501,6 +501,20 @@ public class IronMQTest {
     }
 
     @Test
+    public void testGetQueueInfo() throws IOException {
+        String queueName = "my_queue_" + ts();
+        Queue queue = new Queue(client, queueName);
+        for (int i = 0; i < 3; i++)
+            queue.push("Some message");
+        QueueModel info = queue.getInfoAboutQueue();
+
+        Assert.assertEquals(queueName, info.getName());
+        Assert.assertFalse(info.getProjectId().isEmpty());
+        Assert.assertEquals(3, info.getSize());
+        Assert.assertEquals(3, info.getTotalMessages());
+    }
+
+    @Test
     public void testClearQueue() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
         queue.push("Some message");
