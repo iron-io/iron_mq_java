@@ -1,19 +1,23 @@
 package io.iron.ironmq;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.ArrayList;
 
 public class QueueModel {
     private String id;
     private String name;
-    private int size;
-    private int total_messages;
+    private Integer size;
+    private Integer total_messages;
     private String project_id;
-    private int retries;
+    private Integer retries;
     private String pushType;
-    private int retries_delay;
+    private Integer retries_delay;
     private String error_queue;
     private ArrayList<Subscriber> subscribers;
-    private ArrayList<Alert> alerts;
+    private ArrayList<Alert> alerts            ;
+    @SerializedName("message_timeout") private Integer messageTimeout;
+    @SerializedName("message_expiration") private Integer messageExpiration;
 
     public QueueModel(String id, String name, int size, int total_messages, String project_id, int retries, String pushType, int retriesDelay, String errorQueue, ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts) {
         this.id = id;
@@ -27,6 +31,34 @@ public class QueueModel {
         this.error_queue = errorQueue;
         this.subscribers = subscribers;
         this.alerts = alerts;
+    }
+
+    public QueueModel(int messageExpiration, int retries, String pushType, int retries_delay, String error_queue, ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts, int messageTimeout) {
+        this.messageExpiration = messageExpiration;
+        this.retries = retries;
+        this.pushType = pushType;
+        this.retries_delay = retries_delay;
+        this.error_queue = error_queue;
+        this.subscribers = subscribers;
+        this.alerts = alerts;
+        this.messageTimeout = messageTimeout;
+    }
+
+    public QueueModel(int messageTimeout, int messageExpiration) {
+        this.messageTimeout = messageTimeout;
+        this.messageExpiration = messageExpiration;
+    }
+
+    public QueueModel(ArrayList<Subscriber> subscribers, String pushType) {
+        this.pushType = pushType;
+        this.subscribers = subscribers;
+    }
+
+    public QueueModel(ArrayList<Alert> alerts) {
+        this.alerts = alerts;
+    }
+
+    public QueueModel() {
     }
 
     public String getId() {
@@ -143,5 +175,21 @@ public class QueueModel {
 
     public void setAlerts(ArrayList<Alert> alerts) {
         this.alerts = alerts;
+    }
+
+    public int getMessageTimeout() {
+        return messageTimeout;
+    }
+
+    public void setMessageTimeout(int messageTimeout) {
+        this.messageTimeout = messageTimeout;
+    }
+
+    public int getMessageExpiration() {
+        return messageExpiration;
+    }
+
+    public void setMessageExpiration(int messageExpiration) {
+        this.messageExpiration = messageExpiration;
     }
 }

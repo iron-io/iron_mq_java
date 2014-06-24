@@ -650,6 +650,17 @@ public class Queue {
         return updateQueue(subscribersList,alertsList,pushType,"",retries,retriesDelay);
     }
 
+    public QueueModel update(QueueModel model) throws IOException {
+        String url = "queues/" + name;
+        QueueContainer payload = new QueueContainer(model);
+
+        Gson gson = new Gson();
+        Reader reader = client.patch(url, gson.toJson(payload));
+        QueueContainer container = gson.fromJson(reader, QueueContainer.class);
+        reader.close();
+        return container.getQueue();
+    }
+
     /**
      * Add alerts to a queue. If there is no queue, an EmptyQueueException is thrown.
      * @param alerts The array list of alerts.

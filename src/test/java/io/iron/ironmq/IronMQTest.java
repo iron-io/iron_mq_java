@@ -536,9 +536,26 @@ public class IronMQTest {
 
         QueueModel response = queue.create();
         Assert.assertEquals(name, response.getName());
+        Assert.assertEquals(60, response.getMessageTimeout());
 
         QueueModel info = queue.getInfoAboutQueue();
         Assert.assertEquals(name, info.getName());
+    }
+
+    @Test
+    public void testUpdateQueue() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        Subscriber subscriber = new Subscriber("http://test.com");
+        ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
+        subscriberArrayList.add(subscriber);
+
+        QueueModel payload = new QueueModel();
+        payload.setMessageTimeout(69);
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals(69, info.getMessageTimeout());
     }
 
     @Test(expected = HTTPException.class)
