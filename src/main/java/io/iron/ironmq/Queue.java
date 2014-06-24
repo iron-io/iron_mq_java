@@ -626,6 +626,18 @@ public class Queue {
     }
 
     /**
+     * Creates a queue for specified queue client.
+     * If queue exists, it will be updated.
+     */
+    public QueueModel create() throws IOException {
+        String url = "queues/" + name;
+        Reader reader = client.put(url, "{}");
+        QueueContainer container = new Gson().fromJson(reader, QueueContainer.class);
+        reader.close();
+        return container.getQueue();
+    }
+
+    /**
      * Update queue. If there is no queue, an EmptyQueueException is thrown.
      * @param subscribersList The subscribers list.
      * @param alertsList The alerts list.
