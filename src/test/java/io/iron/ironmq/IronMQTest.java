@@ -524,6 +524,24 @@ public class IronMQTest {
     }
 
     @Test(expected = HTTPException.class)
+    public void testGetInfoBeforeQueueCreated() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        QueueModel info = queue.getInfoAboutQueue();
+    }
+
+    @Test
+    public void testCreateQueue() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel response = queue.create();
+        Assert.assertEquals(name, response.getName());
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(name, info.getName());
+    }
+
+    @Test(expected = HTTPException.class)
     public void testDeleteQueue() throws IOException {
         String queueName = "my_queue_" + ts();
         Queue queue = new Queue(client, queueName);
