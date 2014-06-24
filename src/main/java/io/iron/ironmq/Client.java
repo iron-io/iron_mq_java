@@ -135,6 +135,10 @@ public class Client {
         return request("PUT", endpoint, body);
     }
 
+    Reader patch(String endpoint, String body) throws IOException {
+        return request("PATCH", endpoint, body);
+    }
+
     private Reader request(String method, String endpoint, String body) throws IOException {
         String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
         URL url = new URL(cloud.scheme, cloud.host, cloud.port, path);
@@ -171,9 +175,9 @@ public class Client {
 
     private Reader singleRequest(String method, URL url, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        if (method.equals("DELETE")) {
+        if (method.equals("DELETE") || method.equals("PATCH")) {
             conn.setRequestMethod("POST");
-            conn.setRequestProperty("X-HTTP-Method-Override", "DELETE");
+            conn.setRequestProperty("X-HTTP-Method-Override", method);
         } else {
             conn.setRequestMethod(method);
         }
