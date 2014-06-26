@@ -38,6 +38,7 @@ public class ClientIronMQTest {
 
         infoAboutQueue = queue.getInfoAboutQueue();
         Assert.assertEquals(queueSize, infoAboutQueue.getSize());
+        queue.destroy();
     }
     private void setCredentials() throws IOException {
         Properties prop = new Properties();
