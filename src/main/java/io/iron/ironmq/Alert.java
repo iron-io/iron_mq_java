@@ -4,9 +4,14 @@ public class Alert {
     private String type;
     private String direction;
     private int trigger;
-    private int snooze;
+    private Integer snooze;
     private String queue;
     private String id;
+
+    public static final String typeFixed = "fixed";
+    public static final String typeProgressive = "progressive";
+    public static final String directionAscending = "asc";
+    public static final String directionDescending = "desc";
 
     public Alert(String type, String direction, int trigger, int snooze, String queue) {
 
@@ -14,6 +19,14 @@ public class Alert {
         this.direction = direction;
         this.trigger = trigger;
         this.snooze = snooze;
+        this.queue = queue;
+    }
+
+    public Alert(String type, String direction, int trigger, String queue) {
+
+        this.type = type;
+        this.direction = direction;
+        this.trigger = trigger;
         this.queue = queue;
     }
 
