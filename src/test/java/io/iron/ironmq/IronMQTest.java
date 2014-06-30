@@ -547,15 +547,58 @@ public class IronMQTest {
         String name = "my_queue_" + ts();
         Queue queue = new Queue(client, name);
 
-        Subscriber subscriber = new Subscriber("http://test.com");
-        ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
-        subscriberArrayList.add(subscriber);
-
         QueueModel payload = new QueueModel();
         payload.setMessageTimeout(69);
         QueueModel info = queue.update(payload);
 
         Assert.assertEquals(69, info.getMessageTimeout());
+    }
+
+    @Test
+    public void testUpdateQueueSubscribers() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel payload = new QueueModel();
+        payload.addSubscriber(new Subscriber("http://localhost:3000"));
+        payload.addSubscriber(new Subscriber("http://localhost:3030"));
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals(2, info.getPushInfo().getSubscribers().size());
+    }
+
+    @Test
+    public void testUpdateQueuePushParameters() throws IOException {
+        String name = "my_queue_" + ts();
+        final String url = "http://localhost:3000";
+        Queue queue = new Queue(client, name);
+
+        ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>() {{ add(new Subscriber(url)); }};
+        QueueModel payload = new QueueModel(new QueuePushModel(subscribers, "multicast", 4, 7, "test_err"));
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals("test_err", info.getPushInfo().getErrorQueue());
+        //Assert.assertEquals("multicast", info.getPushInfo().getType());
+        Assert.assertEquals(4, info.getPushInfo().getRetries().intValue());
+        Assert.assertEquals(7, info.getPushInfo().getRetriesDelay().intValue());
+
+        Assert.assertEquals(1, info.getPushInfo().getSubscribers().size());
+        Assert.assertEquals(url, info.getPushInfo().getSubscribers().get(0).getUrl());
+    }
+
+    @Test
+    public void testUpdateQueueAlerts() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+
+        ArrayList<Alert> alerts = new ArrayList<Alert>();
+        alerts.add(new Alert(Alert.typeProgressive, Alert.directionAscending, 5, "some_q"));
+        QueueModel payload = new QueueModel(alerts);
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals(5, info.getAlerts().get(0).getTrigger());
+        Assert.assertEquals(Alert.directionAscending, info.getAlerts().get(0).getDirection());
+        Assert.assertEquals(Alert.typeProgressive, info.getAlerts().get(0).getType());
+        Assert.assertEquals("some_q", info.getAlerts().get(0).getQueue());
     }
 
     @Test(expected = HTTPException.class)

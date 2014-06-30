@@ -10,36 +10,22 @@ public class QueueModel {
     private Integer size;
     private Integer total_messages;
     private String project_id;
-    private Integer retries;
-    private String pushType;
-    private Integer retries_delay;
-    private String error_queue;
-    private ArrayList<Subscriber> subscribers;
-    private ArrayList<Alert> alerts            ;
+    private QueuePushModel push;
+    private ArrayList<Alert> alerts;
     @SerializedName("message_timeout") private Integer messageTimeout;
     @SerializedName("message_expiration") private Integer messageExpiration;
 
-    public QueueModel(String id, String name, int size, int total_messages, String project_id, int retries, String pushType, int retriesDelay, String errorQueue, ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts) {
+    public QueueModel(String id, String name, Integer size, Integer total_messages, String project_id, Integer retries, String pushType, Integer retriesDelay, String errorQueue, ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts) {
         this.id = id;
         this.name = name;
         this.size = size;
         this.total_messages = total_messages;
         this.project_id = project_id;
-        this.retries = retries;
-        this.pushType = pushType;
-        this.retries_delay = retriesDelay;
-        this.error_queue = errorQueue;
-        this.subscribers = subscribers;
         this.alerts = alerts;
     }
 
     public QueueModel(int messageExpiration, int retries, String pushType, int retries_delay, String error_queue, ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts, int messageTimeout) {
         this.messageExpiration = messageExpiration;
-        this.retries = retries;
-        this.pushType = pushType;
-        this.retries_delay = retries_delay;
-        this.error_queue = error_queue;
-        this.subscribers = subscribers;
         this.alerts = alerts;
         this.messageTimeout = messageTimeout;
     }
@@ -49,13 +35,12 @@ public class QueueModel {
         this.messageExpiration = messageExpiration;
     }
 
-    public QueueModel(ArrayList<Subscriber> subscribers, String pushType) {
-        this.pushType = pushType;
-        this.subscribers = subscribers;
-    }
-
     public QueueModel(ArrayList<Alert> alerts) {
         this.alerts = alerts;
+    }
+
+    public QueueModel(QueuePushModel push) {
+        this.push = push;
     }
 
     public QueueModel() {
@@ -129,44 +114,54 @@ public class QueueModel {
         throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     public int getRetries() {
-        return retries;
+        throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     public void setRetries(int retries) {
-        this.retries = retries;
+        throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     public String getPushType() {
-        return pushType;
+        throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     public void setPushType(String pushType) {
-        this.pushType = pushType;
+        throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     public int getRetriesDelay() {
-        return retries_delay;
+        throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     public void setRetriesDelay(int retriesDelay) {
-        this.retries_delay = retriesDelay;
+        throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     public String getErrorQueue() {
-        return error_queue;
+        throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     public void setErrorQueue(String errorQueue) {
-        this.error_queue = errorQueue;
+        throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     public ArrayList<Subscriber> getSubscribers() {
-        return subscribers;
+        throw new UnsupportedOperationException();
     }
 
+    @Deprecated
     public void setSubscribers(ArrayList<Subscriber> subscribers) {
-        this.subscribers = subscribers;
+        throw new UnsupportedOperationException();
     }
 
     public ArrayList<Alert> getAlerts() {
@@ -191,5 +186,31 @@ public class QueueModel {
 
     public void setMessageExpiration(int messageExpiration) {
         this.messageExpiration = messageExpiration;
+    }
+
+    public QueuePushModel getPushInfo() {
+        return push;
+    }
+
+    public void setPushInfo(QueuePushModel push) {
+        this.push = push;
+    }
+
+    public void addSubscriber(Subscriber subscriber) {
+        synchronized (this) {
+            if (push == null) {
+                push = new QueuePushModel();
+            }
+        }
+        push.addSubscriber(subscriber);
+    }
+
+    public void addSubscribers(ArrayList<Subscriber> subscribers) {
+        synchronized (this) {
+            if (push == null) {
+                push = new QueuePushModel();
+            }
+        }
+        push.addSubscribers(subscribers);
     }
 }
