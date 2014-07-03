@@ -488,16 +488,30 @@ public class IronMQTest {
         for (int i = 0; i < pageSize * 2; i++) {
             createQueueWithMessage(repeatString("a", i + 1));
         }
-        ArrayList<QueueModel> queues = Queues.getQueues(client, "aa", pageSize);
+        ArrayList<QueueModel> queues = Queues.getQueues(client, "aa", pageSize, null);
 
         Assert.assertTrue(queues.size() == pageSize);
         for (int i = 0; i < queues.size(); i++) {
             Assert.assertEquals(repeatString("a", i + 3), queues.get(i).getName());
         }
 
-        Assert.assertEquals(2, Queues.getQueues(client, "aaaaaaa", 2).size());
+        Assert.assertEquals(2, Queues.getQueues(client, "aaaaaaa", 2, null).size());
         Assert.assertEquals("aaaaaaaa", Queues.getQueues(client, "aaaaaaa").get(0).getName());
         Assert.assertEquals(3, Queues.getQueues(client, 3).size());
+    }
+
+    @Test
+    public void testListQueuesFiltering() throws IOException {
+        String[] queueNames = new String[]{"abba", "abbca", "abbcb", "abbcd", "abbdd"};
+        for (int i = 0; i < queueNames.length; i++)
+            createQueueWithMessage(queueNames[i]);
+
+        ArrayList<QueueModel> queues = Queues.getQueues(client, null, null, "abbc");
+
+        Assert.assertTrue(queues.size() == 3);
+        for (int i = 0; i < queues.size(); i++) {
+            Assert.assertEquals(queueNames[i + 1], queues.get(i).getName());
+        }
     }
 
     @Test
@@ -562,9 +576,17 @@ public class IronMQTest {
         QueueModel payload = new QueueModel();
         payload.addSubscriber(new Subscriber("http://localhost:3000"));
         payload.addSubscriber(new Subscriber("http://localhost:3030"));
+        payload.addSubscriber(new Subscriber("http://localhost:3333"));
         QueueModel info = queue.update(payload);
 
-        Assert.assertEquals(2, info.getPushInfo().getSubscribers().size());
+        Assert.assertEquals(3, info.getPushInfo().getSubscribers().size());
+
+        ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>();
+        subscribers.add(new Subscriber("http://localhost:3000"));
+        subscribers.add(new Subscriber("http://localhost:3030"));
+        QueueModel info2 = queue.updateSubscribers(subscribers);
+
+        Assert.assertEquals(2, info2.getPushInfo().getSubscribers().size());
     }
 
     @Test
@@ -574,11 +596,11 @@ public class IronMQTest {
         Queue queue = new Queue(client, name);
 
         ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>() {{ add(new Subscriber(url)); }};
-        QueueModel payload = new QueueModel(new QueuePushModel(subscribers, "multicast", 4, 7, "test_err"));
+        QueueModel payload = new QueueModel(new QueuePushModel(subscribers, 4, 7, "test_err"));
         QueueModel info = queue.update(payload);
 
         Assert.assertEquals("test_err", info.getPushInfo().getErrorQueue());
-        //Assert.assertEquals("multicast", info.getPushInfo().getType());
+        Assert.assertEquals("multicast", info.getType());
         Assert.assertEquals(4, info.getPushInfo().getRetries().intValue());
         Assert.assertEquals(7, info.getPushInfo().getRetriesDelay().intValue());
 
@@ -592,8 +614,7 @@ public class IronMQTest {
 
         ArrayList<Alert> alerts = new ArrayList<Alert>();
         alerts.add(new Alert(Alert.typeProgressive, Alert.directionAscending, 5, "some_q"));
-        QueueModel payload = new QueueModel(alerts);
-        QueueModel info = queue.update(payload);
+        QueueModel info = queue.updateAlerts(alerts);
 
         Assert.assertEquals(5, info.getAlerts().get(0).getTrigger());
         Assert.assertEquals(Alert.directionAscending, info.getAlerts().get(0).getDirection());

@@ -35,8 +35,13 @@ Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
 Queue queue = client.queue("test-queue");
 ```
 
-    Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
-    
+It's also possible to specify more parameters:
+
+```java
+int apiVersion = 3;
+Client client = new Client(projectId, token, new Cloud("http", "localhost", 8080), apiVersion);
+```
+
 IronMQ supports multiple clouds/regions:
 - Cloud.ironAWSEUWest
 - Cloud.ironRackspaceORD
@@ -47,7 +52,10 @@ For full list, view /src/main/java/io/iron/ironmq/Cloud.java
 
     
 ## The Basics
-    Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
+
+```java
+Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
+```
 
 ### Post a Message to the Queue
 
@@ -59,7 +67,7 @@ More complex example:
 
 ```java
 String body = "Hello, IronMQ!";
-int timeout = 30;
+int timeout = 30; // this parameter is redundant and left only for backward compatibility
 int delay = 0;
 int expiresIn = 0;
 String messageId = queue.push(body, timeout, delay, expiresIn);
@@ -77,16 +85,16 @@ Ids ids = queue.pushMessages(messages);
 ### Get a Message off the Queue
 
 ```java
-Message msg = queue.get();
+Message msg = queue.reserve();
 ```
 
-When you pop/get a message from the queue, it will NOT be deleted.
+When you reserve a message from the queue, it will NOT be deleted.
 It will eventually go back onto the queue after a timeout if you don't delete it (default timeout is 60 seconds).
 
 Get multiple messages in one API call:
 
 ```java
-Message msg = queue.get(2);
+Messages messages = queue.reserve(2);
 ```
 
 --
@@ -94,19 +102,28 @@ Message msg = queue.get(2);
 ### Delete a Message from the Queue
 
 ```java
-Message msg = queue.get();
+Message msg = queue.reserve();
 queue.deleteMessage(msg);
 ```
+
 Delete a message from the queue when you're done with it.
 
-Delete multiple messages in one API call:
+### Delete multiple messages
+
+1\. Deleting Messages collection
 
 ```java
-String[] messages = {"c", "d"};
+Messages messages = queue.reserve(4);
+queue.deleteMessages(messages);
+```
+
+2\. Deleting by Ids
+
+```java
+String[] messages = {"hello", "world"};
 Ids ids = queue.pushMessages(messages);
 queue.deleteMessages();
 ```
-Delete multiple messages specified by messages id array.
 
 --
 
@@ -115,8 +132,22 @@ Delete multiple messages specified by messages id array.
 ### List Queues
 
 ```java
-Queues queues = new Queues(client);
-ArrayList<QueueModel> allQueues = queues.getAllQueues();
+ArrayList<QueueModel> allQueues = Queues.getQueues(client);
+```
+
+**Additional Parameters:**
+
+* `per\_page` - number of elements in response, default is 30.
+* `previous` - this is the last queue on the previous page, it will start from the next one. If queue with specified name doesn’t exist result will contain first `per_page` queues that lexicographically greater than `previous`
+* `prefix` - an optional queue prefix to search on. e.g., prefix=ca could return queues ["cars", "cats", etc.]
+
+Request below will return 20 queues started with "na" but lexicographically greater than "name_of_previous_queue".
+
+```java
+int perPage = 20;
+String previous = "name_of_previous_queue";
+String prefix = "na";
+ArrayList<QueueModel> allQueues = Queues.getQueues(client, previous, perPage, prefix);
 ```
 
 --
@@ -154,7 +185,7 @@ Ids ids = queue.pushMessages(messages);
 
 **Optional parameters (3rd, `array` of key-value pairs):**
 
-* `timeout`: After timeout (in seconds), item will be placed back onto queue.
+* ~~`timeout`~~: **Deprecated**. After timeout (in seconds), item will be placed back onto queue.
 You must delete the message from the queue to ensure it does not go back onto the queue.
  Default is 60 seconds. Minimum is 30 seconds. Maximum is 86,400 seconds (24 hours).
 
@@ -171,14 +202,14 @@ Default is 604,800 seconds (7 days). Maximum is 2,592,000 seconds (30 days).
 **Single message:**
 
 ```java
-Message msg = queue.get();
+Message msg = queue.reserve();
 ```
 
 **Multiple messages:**
 
 ```java
 int count = 5;
-Message msg = queue.get(count);
+Messages messages = queue.reserve(count);
 ```
 
 **Optional parameters:**
@@ -192,8 +223,8 @@ Message msg = queue.get(count);
 Touching a reserved message extends its timeout by the duration specified when the message was created, which is 60 seconds by default.
 
 ```java
-String messageId = "xxxxxxxxxxxxxx";
-queue.touchMessage(messageId);
+Message message = queue.reserve();
+queue.touchMessage(message);
 ```
 
 --
@@ -201,8 +232,9 @@ queue.touchMessage(messageId);
 ### Release Message
 
 ```java
+Message message = queue.reserve();
 int delay = 1;
-queue.releaseMessage(id, delay);
+queue.releaseMessage(message, delay);
 ```
 
 **Optional parameters:**
@@ -215,8 +247,8 @@ Default is 0 seconds. Maximum is 604,800 seconds (7 days).
 ### Delete a Message from a Queue
 
 ```java
-Message msg = queue.get();
-queue.deleteMessage(msg);
+Message message = queue.get();
+queue.deleteMessage(message);
 ```
 
 --
@@ -251,25 +283,9 @@ queue.clear();
 ### Add alerts to a queue. This is for Pull Queue only.
 
 ```java
-queue.addAlertsToQueue(alertsArrayList);
-```
-
-### Replace current queue alerts with a given list of alerts. This is for Pull Queue only.
-
-```java
-queue.updateAlertsToQueue(alertsArrayList);
-```
-
-### Remove alerts from a queue. This is for Pull Queue only.
-
-```java
-queue.deleteAlertsFromQueue(alertsArrayList);
-```
-
-### Remove alert from a queue by its ID. This is for Pull Queue only.
-
-```java
-queue.deleteAlertFromQueueById(alertid);
+ArrayList<Alert> alerts = new ArrayList<Alert>();
+alerts.add(new Alert(Alert.typeProgressive, Alert.directionAscending, 5, "some_q"));
+QueueModel info = queue.updateAlerts(alerts);
 ```
 
 --
@@ -283,41 +299,27 @@ IronMQ push queues allow you to setup a queue that will push to an endpoint, rat
 ### Update a Message Queue
 
 ```java
-String subscriberUrl1 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_1";
-Subscriber subscriber = new Subscriber();
-subscriber.url = subscriberUrl1;
-subscriberArrayList.add(subscriber);
-
-int retries = 3;
-int retriesDelay = 3;
-queue.updateQueue(subscriberArrayList, "multicast", retries, retriesDelay);
+ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>() {{ add(new Subscriber(url)); }};
+QueueModel payload = new QueueModel(new QueuePushModel(subscribers, "multicast", 4, 7, "test_err"));
+queue.update(payload);
 ```
 
 **The following parameters are all related to Push Queues:**
 
-* `subscribers`: An array of subscriber hashes containing a вЂњurlвЂќ field.
+* `subscribers`: An array of subscriber hashes containing url field.
 This set of subscribers will replace the existing subscribers.
-To add or remove subscribers, see the add subscribers endpoint or the remove subscribers endpoint.
-See below for example json.
-* `push_type`: Either `multicast` to push to all subscribers or `unicast` to push to one and only one subscriber. Default is `multicast`.
 * `retries`: How many times to retry on failure. Default is 3. Maximum is 100.
 * `retries_delay`: Delay between each retry in seconds. Default is 60.
 
 --
 
-### Add/Remove Subscribers on a Queue
-
-Add subscriber to Push Queue:
+### Update Queue Subscribers
 
 ```java
-String subscriberUrl1 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_1";
-Subscriber subscriber = new Subscriber();
-subscriber.url = subscriberUrl1;
-subscriberArrayList.add(subscriber);
-
-queue.addSubscribersToQueue(subscriberArrayList);
-
-queue.removeSubscribersFromQueue(subscribersToRemove);
+ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>();
+subscribers.add(new Subscriber("http://localhost:3000"));
+subscribers.add(new Subscriber("http://localhost:3030"));
+queue.updateSubscribers(subscribers);
 ```
 
 --
