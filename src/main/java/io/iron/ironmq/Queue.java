@@ -542,14 +542,22 @@ public class Queue {
      * @param subscribersList The array list of subscribers.
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws IOException If there is an error accessing the IronMQ server.
+     * @deprecated Use updateSubscribers instead
      */
+    @Deprecated
     public void addSubscribersToQueue(ArrayList<Subscriber> subscribersList) throws IOException {
-        String url = "queues/" + name + "/subscribers";
-        Subscribers subscribers = new Subscribers(subscribersList);
-        Gson gson = new Gson();
-        String jsonMessages = gson.toJson(subscribers);
-        Reader reader = client.post(url, jsonMessages);
-        reader.close();
+        this.updateSubscribers(subscribersList);
+    }
+
+    /**
+     * Add subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
+     * @param subscribersList The array list of subscribers.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public QueueModel updateSubscribers(ArrayList<Subscriber> subscribersList) throws IOException {
+        QueueModel payload = new QueueModel(new QueuePushModel(subscribersList));
+        return this.update(payload);
     }
 
     /**
@@ -667,13 +675,8 @@ public class Queue {
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws IOException If there is an error accessing the IronMQ server.
      */
-    public void addAlertsToQueue(ArrayList<Alert> alerts) throws IOException {
-        String url = "queues/" + name + "/alerts";
-        Alerts alert = new Alerts(alerts);
-        Gson gson = new Gson();
-        String jsonMessages = gson.toJson(alert);
-        Reader reader = client.post(url, jsonMessages);
-        reader.close();
+    public QueueModel addAlertsToQueue(ArrayList<Alert> alerts) throws IOException {
+        return this.updateAlerts(alerts);
     }
 
     /**
@@ -682,13 +685,19 @@ public class Queue {
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws IOException If there is an error accessing the IronMQ server.
      */
-    public void updateAlertsToQueue(ArrayList<Alert> alerts) throws IOException {
-        String url = "queues/" + name + "/alerts";
-        Alerts alert = new Alerts(alerts);
-        Gson gson = new Gson();
-        String jsonMessages = gson.toJson(alert);
-        Reader reader = client.put(url, jsonMessages);
-        reader.close();
+    public QueueModel updateAlertsToQueue(ArrayList<Alert> alerts) throws IOException {
+        return this.updateAlerts(alerts);
+    }
+
+    /**
+     * Replace current queue alerts with a given list of alerts. If there is no queue, an EmptyQueueException is thrown.
+     * @param alerts The array list of alerts.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public QueueModel updateAlerts(ArrayList<Alert> alerts) throws IOException {
+        QueueModel payload = new QueueModel(alerts);
+        return this.update(payload);
     }
 
     /**
