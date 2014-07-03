@@ -34,7 +34,7 @@ public class Queues {
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public static ArrayList<QueueModel> getQueues(Client client) throws IOException {
-        return getQueues(client, null, null);
+        return getQueues(client, null, null, null);
     }
 
     /**
@@ -46,7 +46,7 @@ public class Queues {
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public static ArrayList<QueueModel> getQueues(Client client, int perPage) throws IOException {
-        return getQueues(client, null, perPage);
+        return getQueues(client, null, perPage, null);
     }
 
     /**
@@ -60,7 +60,7 @@ public class Queues {
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public static ArrayList<QueueModel> getQueues(Client client, String previousQueueName) throws IOException {
-        return getQueues(client, previousQueueName, null);
+        return getQueues(client, previousQueueName, null, null);
     }
 
     /**
@@ -74,10 +74,13 @@ public class Queues {
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
-    public static ArrayList<QueueModel> getQueues(Client client, String previousQueueName, Integer perPage) throws IOException {
+    public static ArrayList<QueueModel> getQueues(Client client, String previousQueueName, Integer perPage, String prefix) throws IOException {
         StringBuilder params = new StringBuilder();
         if (previousQueueName != null && !previousQueueName.isEmpty()) {
             params.append(String.format("previous=%s", URLEncoder.encode(previousQueueName, "UTF-8")));
+        }
+        if (prefix != null && !prefix.isEmpty()) {
+            params.append(String.format("%sprefix=%s", params.length() > 0 ? "&" : "", URLEncoder.encode(prefix, "UTF-8")));
         }
         if (perPage != null) {
             if (perPage < 1) {
