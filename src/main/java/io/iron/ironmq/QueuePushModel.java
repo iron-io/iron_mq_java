@@ -7,24 +7,22 @@ import java.util.ArrayList;
 public class QueuePushModel {
     private ArrayList<Subscriber> subscribers;
     private Integer retries;
-    private String type;
     @SerializedName("retries_delay") private Integer retriesDelay;
     @SerializedName("error_queue")   private String errorQueue;
 
-    public QueuePushModel(ArrayList<Subscriber> subscribers, String type, Integer retries, Integer retriesDelay, String errorQueue) {
+    public QueuePushModel(ArrayList<Subscriber> subscribers, Integer retries, Integer retriesDelay, String errorQueue) {
         this.subscribers = subscribers;
         this.retries = retries;
-        this.type = type;
         this.retriesDelay = retriesDelay;
         this.errorQueue = errorQueue;
     }
 
     public QueuePushModel(ArrayList<Subscriber> subscribers) {
-        this(subscribers, null, null, null, null);
+        this(subscribers, null, null, null);
     }
 
     public QueuePushModel() {
-        this(null, null, null, null, null);
+        this(null, null, null, null);
     }
 
     public ArrayList<Subscriber> getSubscribers() {
@@ -41,14 +39,6 @@ public class QueuePushModel {
 
     public void setRetries(Integer retries) {
         this.retries = retries;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public Integer getRetriesDelay() {

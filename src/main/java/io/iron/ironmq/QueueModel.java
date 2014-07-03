@@ -7,9 +7,10 @@ import java.util.ArrayList;
 public class QueueModel {
     private String id;
     private String name;
+    private String type;
     private Integer size;
-    private Integer total_messages;
     private String project_id;
+    private Integer total_messages;
     private QueuePushModel push;
     private ArrayList<Alert> alerts;
     @SerializedName("message_timeout") private Integer messageTimeout;
@@ -186,6 +187,14 @@ public class QueueModel {
 
     public void setMessageExpiration(int messageExpiration) {
         this.messageExpiration = messageExpiration;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public QueuePushModel getPushInfo() {
