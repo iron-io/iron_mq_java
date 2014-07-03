@@ -501,6 +501,20 @@ public class IronMQTest {
     }
 
     @Test
+    public void testListQueuesFiltering() throws IOException {
+        String[] queueNames = new String[]{"abba", "abbca", "abbcb", "abbcd", "abbdd"};
+        for (int i = 0; i < queueNames.length; i++)
+            createQueueWithMessage(queueNames[i]);
+
+        ArrayList<QueueModel> queues = Queues.getQueues(client, null, null, "abbc");
+
+        Assert.assertTrue(queues.size() == 3);
+        for (int i = 0; i < queues.size(); i++) {
+            Assert.assertEquals(queueNames[i + 1], queues.get(i).getName());
+        }
+    }
+
+    @Test
     public void testGetQueueInfo() throws IOException {
         String queueName = "my_queue_" + ts();
         Queue queue = new Queue(client, queueName);
