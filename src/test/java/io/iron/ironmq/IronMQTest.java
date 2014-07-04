@@ -645,9 +645,12 @@ public class IronMQTest {
         prop.load(input);
         String token = prop.getProperty("token");
         String projectId = prop.getProperty("project_id");
-        //return new Client(projectId, token, new Cloud("http", "mq-v3-beta.iron.io", 80), 3);
-        return new Client(projectId, token, new Cloud("http", "localhost", 8080), 3);
-        //return new Client(projectId, token, Cloud.ironAWSUSEast, 1);
+
+        String host = prop.getProperty("serverHost");
+        String scheme = prop.getProperty("serverScheme");
+        int port = Integer.parseInt(prop.getProperty("serverPort"));
+
+        return new Client(projectId, token, new Cloud(scheme, host, port), 3);
     }
 
     private long ts() {
