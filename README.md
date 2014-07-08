@@ -346,10 +346,9 @@ queue.deletePushMessageForSubscriber(ids.getId(0), subscribersInfo.getSubscriber
 
 ## Further Links
 
-* [IronMQ Overview](http://dev.iron.io/mq/)
-* [IronMQ REST/HTTP API](http://dev.iron.io/mq/reference/api/)
-* [Push Queues](http://dev.iron.io/mq/reference/push_queues/)
-* [Other Client Libraries](http://dev.iron.io/mq/libraries/)
+* [IronMQ Overview](http://dev.iron.io/mq-onpremise/)
+* [IronMQ v3 REST/HTTP API](http://dev.iron.io/mq-onpremise/reference/api/)
+* [Other Client Libraries](http://dev.iron.io/mq-onpremise/reference/client_libraries/)
 * [Live Chat, Support & Fun](http://get.iron.io/chat)
 
 -------------
