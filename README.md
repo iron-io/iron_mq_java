@@ -1,5 +1,10 @@
-IronMQ Java Client
+IronMQ On-Premise/V3 Java Client
 ----------------
+
+**Note:** You are reading documentation of Iron.MQ v3. There are some differences from the previous version of IronMQ. For more information please go to [Iron.io Dev Center](http://dev.iron.io/mq-onpremise/).
+
+This version is for **IronMq Version 3** and **On-Premise**. If you are using the public version please use [version 0.0.17](http://github.com/iron-io/iron_mq_java)
+
 
 Getting Started
 ===============
@@ -14,7 +19,7 @@ There are three ways to get this package.
         <dependency>
             <groupId>io.iron.ironmq</groupId>
             <artifactId>ironmq</artifactId>
-            <version>0.0.19</version>
+            <version>3.0.0</version>
         </dependency>
     </dependencies>
 ```
@@ -86,19 +91,6 @@ int apiVersion = 3;
 Client client = new Client(projectId, token, new Cloud("http", "localhost", 8080), apiVersion);
 ```
 
-IronMQ supports multiple clouds/regions:
-- Cloud.ironAWSEUWest
-- Cloud.ironRackspaceORD
-- Cloud.ironRackspaceLON
-- and more...
-
-For full list, view /src/main/java/io/iron/ironmq/Cloud.java 
-
-You can combine using of .json config file and initializer. In the example below Client will be initialized with token from config file and project_id specified in code:
-
-```java
-Client client = new Client("my project", null);
-```
 
 ## The Basics
 
