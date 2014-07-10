@@ -1,5 +1,10 @@
-IronMQ Java Client
+IronMQ On-Premise/V3 Java Client
 ----------------
+
+**Note:** You are reading documentation of Iron.MQ v3. There are some differences from the previous version of IronMQ. For more information please go to [Iron.io Dev Center](http://dev.iron.io/mq-onpremise/).
+
+This version is for **IronMq Version 3** and **On-Premise**. If you are using the public version please use [version 0.0.17](http://github.com/iron-io/iron_mq_java)
+
 
 Getting Started
 ===============
@@ -14,7 +19,7 @@ There are three ways to get this package.
         <dependency>
             <groupId>io.iron.ironmq</groupId>
             <artifactId>ironmq</artifactId>
-            <version>0.0.17</version>
+            <version>3.0.0</version>
         </dependency>
     </dependencies>
 ```
@@ -42,15 +47,7 @@ int apiVersion = 3;
 Client client = new Client(projectId, token, new Cloud("http", "localhost", 8080), apiVersion);
 ```
 
-IronMQ supports multiple clouds/regions:
-- Cloud.ironAWSEUWest
-- Cloud.ironRackspaceORD
-- Cloud.ironRackspaceLON
-- and more...
 
-For full list, view /src/main/java/io/iron/ironmq/Cloud.java 
-
-    
 ## The Basics
 
 ```java
@@ -349,10 +346,9 @@ queue.deletePushMessageForSubscriber(ids.getId(0), subscribersInfo.getSubscriber
 
 ## Further Links
 
-* [IronMQ Overview](http://dev.iron.io/mq/)
-* [IronMQ REST/HTTP API](http://dev.iron.io/mq/reference/api/)
-* [Push Queues](http://dev.iron.io/mq/reference/push_queues/)
-* [Other Client Libraries](http://dev.iron.io/mq/libraries/)
+* [IronMQ Overview](http://dev.iron.io/mq-onpremise/)
+* [IronMQ v3 REST/HTTP API](http://dev.iron.io/mq-onpremise/reference/api/)
+* [Other Client Libraries](http://dev.iron.io/mq-onpremise/reference/client_libraries/)
 * [Live Chat, Support & Fun](http://get.iron.io/chat)
 
 -------------
