@@ -1,13 +1,13 @@
 package io.iron.ironmq;
 
-class Ids {
+public class Ids {
     private String[] ids;
 
-    String getId(int i) {
+    public String getId(int i) {
         return ids[i];
     }
 
-    int getSize(){
+    public int getSize(){
         return ids.length;
     }
 
