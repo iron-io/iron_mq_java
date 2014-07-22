@@ -331,6 +331,24 @@ public class IronMQTest {
     }
 
     @Test
+    public void testReserveMessageWithWait() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        queue.push("test");
+        queue.clear();
+
+        int intervalInSeconds = 3;
+
+        long start = new Date().getTime();
+        Messages messages = queue.reserve(4, 60, intervalInSeconds);
+        long finish = new Date().getTime();
+
+        Assert.assertEquals(0, messages.getSize());
+        System.out.println(finish - start);
+        Assert.assertTrue(finish - start > intervalInSeconds * 1000);
+        Assert.assertTrue(finish - start < intervalInSeconds * 2 * 1000);
+    }
+
+    @Test
     public void testPeekMessage() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
         String messageText = "Test message " + ts();
