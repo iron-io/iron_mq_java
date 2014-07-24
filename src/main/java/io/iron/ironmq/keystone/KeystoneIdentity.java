@@ -1,5 +1,6 @@
 package io.iron.ironmq.keystone;
 
+import com.google.gson.Gson;
 import io.iron.ironmq.HttpClient;
 import io.iron.ironmq.TokenContainer;
 
@@ -44,16 +45,35 @@ public class KeystoneIdentity implements TokenContainer {
             //singleRequest()
 
             // TODO:
-            // 1. replace body with gsonified object
-            // 2. get token from header
-            // 3. ...
+            // 1. replace body with gsonified object OK
+            // 2. add tenantid and domain to config
+            // 3. get token from header
+            // 4. ...
 
-            String body = "{\"auth\":{\"identity\":{\"methods\":[\"password\"],\"password\":{\"user\":{\"password\":\"eleven-some-neat\",\"name\":\"qaas\",\"domain\":{\"id\":\"default\"}}}, \"scope\":{\"id\":\"5feece3b2ade44dfa2df60411c63110d\"}}}}";
             String path = "/identity/v3/auth/tokens";
             String scheme = "http";
             String host = "108.244.164.20";
             int port = 80;
             String method = "POST";
+            String domain = "default";
+            String tenantId = "5feece3b2ade44dfa2df60411c63110d";
+
+            KeystonePayload payload = new KeystonePayload(
+                new Auth(
+                    new Identity(
+                        new String[]{"password"},
+                        new Password(
+                            new User(
+                                username,
+                                password,
+                                new Domain(domain)
+                            )
+                        ),
+                        new Scope(tenantId)
+                    )
+                )
+            );
+            String body = new Gson().toJson(payload);
 
             URL url = new URL(scheme, host, port, path);
 
