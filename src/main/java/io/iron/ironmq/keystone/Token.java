@@ -7,11 +7,29 @@ import java.util.Date;
 
 public class Token {
     protected Date localIssuedAt;
-    @SerializedName("issued_at")  protected Date issuedAt;
-    @SerializedName("expires_at") protected Date expiresAt;
+    protected Tenant tenant;
+    protected String id;
+    @SerializedName("issued_at") protected Date issuedAt;
+    @SerializedName("expires")   protected Date expiresAt;
 
     public Token() {
         localIssuedAt = new Date();
+    }
+
+    public Tenant getTenant() {
+        return tenant;
+    }
+
+    public void setTenant(Tenant tenant) {
+        this.tenant = tenant;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public Date getIssuedAt() {

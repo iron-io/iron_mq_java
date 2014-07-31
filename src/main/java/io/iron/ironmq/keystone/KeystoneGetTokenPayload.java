@@ -1,9 +1,9 @@
 package io.iron.ironmq.keystone;
 
-public class KeystonePayload {
+public class KeystoneGetTokenPayload {
     Auth auth;
 
-    public KeystonePayload(Auth auth) {
+    public KeystoneGetTokenPayload(Auth auth) {
         this.auth = auth;
     }
 
