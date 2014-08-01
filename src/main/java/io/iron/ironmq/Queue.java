@@ -113,7 +113,7 @@ public class Queue {
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws IOException If there is an error accessing the IronMQ server.
      */
-    public Messages reserve(int numberOfMessages, int timeout, int wait) throws IOException {
+    public Messages get(int numberOfMessages, int timeout, int wait) throws IOException {
         return reserve(numberOfMessages, timeout, wait);
 	}
 
