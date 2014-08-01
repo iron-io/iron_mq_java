@@ -11,11 +11,18 @@ import java.net.URL;
 import java.util.HashMap;
 
 public class KeystoneIdentity implements TokenContainer {
+    String server;
+    String tenant;
     String username;
     String password;
     Token tokenInfo;
 
-    public KeystoneIdentity(String username, String password) {
+    protected KeystoneIdentity() {
+    }
+
+    public KeystoneIdentity(String server, String tenant, String username, String password) {
+        this.server = server;
+        this.tenant = tenant;
         this.username = username;
         this.password = password;
     }
@@ -38,21 +45,6 @@ public class KeystoneIdentity implements TokenContainer {
 
     public String getToken() throws IOException {
         if (tokenInfo == null || tokenInfo.isExpired()) {
-            //singleRequest()
-
-            // TODO:
-            // 1. replace body with gsonified object [OK]
-            // 2. add tenant and domain to config
-            // 3. get token from header
-            // 4. ...
-
-            String path = "/v2.0/tokens";
-            String scheme = "http";
-            String host = "ec2-54-91-225-58.compute-1.amazonaws.com";
-            int port = 80;
-            String method = "POST";
-            String tenant = "people";
-
             Gson gson = new GsonBuilder()
                     .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.S")
                     .create();
@@ -65,8 +57,9 @@ public class KeystoneIdentity implements TokenContainer {
             );
             String body = gson.toJson(payload);
 
-            URL url = new URL(scheme, host, port, path);
+            URL url = new URL(server + (server.endsWith("/") ? "" : "/") + "tokens");
 
+            String method = "POST";
             System.out.println(method + " " + url + " " + (method != "GET" ? body : ""));
 
             HttpClient client = HttpClient.create();
@@ -75,7 +68,6 @@ public class KeystoneIdentity implements TokenContainer {
                 put("Accept", "application/json");
             }};
             Reader response = client.singleRequest(method, url, body, headers);
-
             KeystoneGetTokenResponse tokenResponse = gson.fromJson(response, KeystoneGetTokenResponse.class);
             response.close();
 
@@ -96,5 +88,22 @@ public class KeystoneIdentity implements TokenContainer {
         }
 
         return buf.toString();
+    }
+
+    public HashMap<String, Object> toHash() {
+        return new HashMap<String, Object>() {{
+            put("server", server);
+            put("tenant", tenant);
+            put("username", username);
+            put("password", password);
+        }};
+    }
+
+    public static KeystoneIdentity fromHash(HashMap<String, Object> hash) {
+        return new KeystoneIdentity(
+            (String) hash.get("server"),
+            (String) hash.get("tenant"),
+            (String) hash.get("username"),
+            (String) hash.get("password"));
     }
 }

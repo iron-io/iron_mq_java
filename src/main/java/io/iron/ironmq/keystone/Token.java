@@ -62,6 +62,6 @@ public class Token {
     public boolean isExpired(int seconds) {
         long diff = localIssuedAt.getTime() - issuedAt.getTime();
         long localExpiresAtTime = expiresAt.getTime() + diff;
-        return new Date().getTime() - seconds * 1000 < localExpiresAtTime;
+        return (new Date().getTime() - seconds * 1000) >= localExpiresAtTime;
     }
 }
