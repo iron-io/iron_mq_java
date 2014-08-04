@@ -1,40 +1,30 @@
 package io.iron.ironmq.keystone;
 
 public class User {
-    String name;
-    String password;
-    Domain domain;
+    protected String id;
+    protected String username;
 
     public User() {
     }
 
-    public User(String name, String password, Domain domain) {
-        this.name = name;
-        this.password = password;
-        this.domain = domain;
+    public User(String id, String username) {
+        this.id = id;
+        this.username = username;
     }
 
-    public String getName() {
-        return name;
+    public String getId() {
+        return id;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setId(String id) {
+        this.id = id;
     }
 
-    public String getPassword() {
-        return password;
+    public String getUsername() {
+        return username;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Domain getDomain() {
-        return domain;
-    }
-
-    public void setDomain(Domain domain) {
-        this.domain = domain;
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

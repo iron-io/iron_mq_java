@@ -1,5 +1,7 @@
 package io.iron.ironmq.keystone;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import io.iron.ironmq.HttpClient;
 import io.iron.ironmq.TokenContainer;
 
@@ -9,18 +11,20 @@ import java.net.URL;
 import java.util.HashMap;
 
 public class KeystoneIdentity implements TokenContainer {
+    String server;
+    String tenant;
     String username;
     String password;
-    String token;
     Token tokenInfo;
 
-    public KeystoneIdentity(String username, String password) {
-        this.username = username;
-        this.password = password;
+    protected KeystoneIdentity() {
     }
 
-    public KeystoneIdentity(String token) {
-        this.token = token;
+    public KeystoneIdentity(String server, String tenant, String username, String password) {
+        this.server = server;
+        this.tenant = tenant;
+        this.username = username;
+        this.password = password;
     }
 
     public String getUsername() {
@@ -41,23 +45,22 @@ public class KeystoneIdentity implements TokenContainer {
 
     public String getToken() throws IOException {
         if (tokenInfo == null || tokenInfo.isExpired()) {
-            //singleRequest()
+            Gson gson = new GsonBuilder()
+                    .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.S")
+                    .create();
 
-            // TODO:
-            // 1. replace body with gsonified object
-            // 2. get token from header
-            // 3. ...
+            KeystoneGetTokenPayload payload = new KeystoneGetTokenPayload(
+                new Auth(
+                    tenant,
+                    new PasswordCredentials(username, password)
+                )
+            );
+            String body = gson.toJson(payload);
 
-            String body = "{\"auth\":{\"identity\":{\"methods\":[\"password\"],\"password\":{\"user\":{\"password\":\"eleven-some-neat\",\"name\":\"qaas\",\"domain\":{\"id\":\"default\"}}}, \"scope\":{\"id\":\"5feece3b2ade44dfa2df60411c63110d\"}}}}";
-            String path = "/identity/v3/auth/tokens";
-            String scheme = "http";
-            String host = "108.244.164.20";
-            int port = 80;
+            URL url = new URL(server + (server.endsWith("/") ? "" : "/") + "tokens");
+
             String method = "POST";
-
-            URL url = new URL(scheme, host, port, path);
-
-            System.out.println(method + " " + url + " " + (method != "GET" ? body : ""));
+            // System.out.println(method + " " + url + " " + (method != "GET" ? body : ""));
 
             HttpClient client = HttpClient.create();
             HashMap<String, String> headers = new HashMap<String, String>() {{
@@ -65,16 +68,42 @@ public class KeystoneIdentity implements TokenContainer {
                 put("Accept", "application/json");
             }};
             Reader response = client.singleRequest(method, url, body, headers);
-
-            //Ids ids = gson.fromJson(response, Ids.class);
+            KeystoneGetTokenResponse tokenResponse = gson.fromJson(response, KeystoneGetTokenResponse.class);
             response.close();
 
+            // System.out.println(tokenResponse.getAccess().getToken().getId());
+            tokenInfo = tokenResponse.getAccess().getToken();
         }
 
-        return token;
+        return tokenInfo.getId();
     }
 
-    void setToken(String token) {
-        this.token = token;
+    public static String readFully(Reader reader) throws IOException {
+        char[] arr = new char[8*1024]; // 8K at a time
+        StringBuffer buf = new StringBuffer();
+        int numChars;
+
+        while ((numChars = reader.read(arr, 0, arr.length)) > 0) {
+            buf.append(arr, 0, numChars);
+        }
+
+        return buf.toString();
+    }
+
+    public HashMap<String, Object> toHash() {
+        return new HashMap<String, Object>() {{
+            put("server", server);
+            put("tenant", tenant);
+            put("username", username);
+            put("password", password);
+        }};
+    }
+
+    public static KeystoneIdentity fromHash(HashMap<String, Object> hash) {
+        return new KeystoneIdentity(
+            (String) hash.get("server"),
+            (String) hash.get("tenant"),
+            (String) hash.get("username"),
+            (String) hash.get("password"));
     }
 }
