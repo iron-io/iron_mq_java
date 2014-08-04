@@ -60,7 +60,7 @@ public class KeystoneIdentity implements TokenContainer {
             URL url = new URL(server + (server.endsWith("/") ? "" : "/") + "tokens");
 
             String method = "POST";
-            System.out.println(method + " " + url + " " + (method != "GET" ? body : ""));
+            // System.out.println(method + " " + url + " " + (method != "GET" ? body : ""));
 
             HttpClient client = HttpClient.create();
             HashMap<String, String> headers = new HashMap<String, String>() {{
@@ -71,7 +71,7 @@ public class KeystoneIdentity implements TokenContainer {
             KeystoneGetTokenResponse tokenResponse = gson.fromJson(response, KeystoneGetTokenResponse.class);
             response.close();
 
-            System.out.println(tokenResponse.getAccess().getToken().getId());
+            // System.out.println(tokenResponse.getAccess().getToken().getId());
             tokenInfo = tokenResponse.getAccess().getToken();
         }
 

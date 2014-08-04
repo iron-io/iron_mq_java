@@ -658,6 +658,7 @@ public class IronMQTest {
     @Ignore
     // Test ignored because it's hard to run it from maven when publishing the package
     // Feel free to run it on your own keystone server :)
+    // For more information read Keystone section in README file where described several ways of using Keystone.
     public void testUseKeystone() throws IOException, InterruptedException {
         Properties prop = new Properties();
         InputStream input;
@@ -679,6 +680,10 @@ public class IronMQTest {
         int port = Integer.parseInt(prop.getProperty("serverPort"));
 
         client = new Client(projectId, new KeystoneIdentity(server, tenant, username, password), new Cloud(scheme, host, port), 3);
+        // or:
+        //client = new Client(projectId, "", new Cloud(scheme, host, port), 3);
+        // or:
+        //client = new Client();
 
         Queue queue = new Queue(client, queueName);
 

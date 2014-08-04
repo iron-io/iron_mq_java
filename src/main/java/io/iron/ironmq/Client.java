@@ -303,15 +303,15 @@ public class Client {
         String token = (String) getOption("token");
 
         HashMap<String, Object> keystoneHash = (HashMap<String, Object>) getOption("keystone");
-        if (keystoneHash.containsKey("server") && keystoneHash.containsKey("tenant") &&
+        if (keystoneHash != null && keystoneHash.containsKey("server") && keystoneHash.containsKey("tenant") &&
             keystoneHash.containsKey("username") && keystoneHash.containsKey("password")) {
-            System.out.println("via keystone");
+            System.out.println("set up via keystone");
             tokenContainer = KeystoneIdentity.fromHash(keystoneHash);
+        } else if (StringUtils.isNotBlank(token)) {
+            System.out.println("set up via iron-token");
+            tokenContainer = new IronTokenContainer(token);
         } else {
-            if (StringUtils.isNotBlank(token)) {
-                System.out.println("via iron-token");
-                tokenContainer = new IronTokenContainer(token);
-            }
+            throw new IllegalArgumentException("You should specify Iron token or Keystone credentials");
         }
 
         if (userOptions.containsKey("cloud")) {
