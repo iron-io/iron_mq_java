@@ -47,6 +47,37 @@ int apiVersion = 3;
 Client client = new Client(projectId, token, new Cloud("http", "localhost", 8080), apiVersion);
 ```
 
+#### Keystone 2.0 authorization
+
+##### iron.json
+
+Add `keystone` section to your iron.json file
+
+```javascript
+{
+  "project_id": "000000000000000000000005",
+  "keystone": {
+    "server": "http://your.keystone.server/somepath/",
+    "tenant": "some_tenant",
+    "username": "bob",
+    "password": "secret123",
+  }
+}
+```
+
+Initialize `Client` with empty token:
+
+```java
+client = new Client(projectId, "", new Cloud(scheme, host, port), 3);
+```
+
+##### In code
+
+```java
+client = new Client(projectId, "", new Cloud(scheme, host, port), 3);
+```
+
+Token in iron.json file will be ignored.
 
 ## The Basics
 
