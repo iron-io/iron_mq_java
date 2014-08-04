@@ -74,7 +74,7 @@ client = new Client(projectId, "", new Cloud(scheme, host, port), 3);
 ##### In code
 
 ```java
-client = new Client(projectId, "", new Cloud(scheme, host, port), 3);
+client = new Client(projectId, new KeystoneIdentity(server, tenant, username, password), new Cloud(scheme, host, port), 3);
 ```
 
 Token in iron.json file will be ignored.
