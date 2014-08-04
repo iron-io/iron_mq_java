@@ -71,6 +71,29 @@ Initialize `Client` with empty token:
 client = new Client(projectId, "", new Cloud(scheme, host, port), 3);
 ```
 
+**Or**:
+
+Assumed that IronMQ On-Premise runs on localhost:8080
+
+```javascript
+{
+  "scheme":"http",
+  "host":"localhost",
+  "port":8080,
+  "project_id": "000000000000000000000005",
+  "keystone": {
+    "server": "http://your.keystone.server/somepath/",
+    "tenant": "some_tenant",
+    "username": "bob",
+    "password": "secret123",
+  }
+}
+```
+
+```java
+client = new Client();
+```
+
 ##### In code
 
 ```java
