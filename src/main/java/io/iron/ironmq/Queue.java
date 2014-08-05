@@ -62,6 +62,19 @@ public class Queue {
     * @throws IOException If there is an error accessing the IronMQ server.
     */
     public Messages get(int numberOfMessages, int timeout) throws IOException {
+        return get(numberOfMessages, timeout, 0);
+    }
+
+    /**
+     * Retrieves Messages from the queue and reserves it. If there are no items on the queue, an
+     * EmptyQueueException is thrown.
+     * @param numberOfMessages The number of messages to receive. Max. is 100.
+     * @param timeout timeout in seconds.
+     * @param wait Time to long poll for messages, in seconds. Max is 30 seconds. Default 0.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public Messages get(int numberOfMessages, int timeout, int wait) throws IOException {
         if (numberOfMessages < 1 || numberOfMessages > 100) {
             throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
         }
@@ -70,13 +83,16 @@ public class Queue {
         if (timeout > -1) {
             url += "&timeout=" + timeout;
         }
+        if (wait > 0) {
+            url += "&wait=" + wait;
+        }
         Reader reader = client.get(url);
         Gson gson = new Gson();
         Messages messages = gson.fromJson(reader, Messages.class);
         reader.close();
         return messages;
     }
-    
+
     /**
     * Peeking at a queue returns the next messages on the queue, but it does not reserve them. 
     * If there are no items on the queue, an EmptyQueueException is thrown.
