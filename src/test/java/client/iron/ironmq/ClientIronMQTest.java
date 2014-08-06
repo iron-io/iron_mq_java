@@ -19,8 +19,7 @@ public class ClientIronMQTest {
 
     @Test
     public void testPostMultipleMessagesAndIdsShouldNotBeNull() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
+        Client client = setCredentials();
         Queue queue = new Queue(client, queueName);
         String body = "Hello, IronMQ!";
         queue.push(body, 10);
@@ -40,17 +39,24 @@ public class ClientIronMQTest {
         Assert.assertEquals(queueSize, infoAboutQueue.getSize());
         queue.destroy();
     }
-    private void setCredentials() throws IOException {
+
+    private Client setCredentials() throws IOException {
         Properties prop = new Properties();
-        InputStream input = null;
+        InputStream input;
         try {
             input = new FileInputStream("config.properties");
-        } catch(FileNotFoundException fnfe) {
+        } catch (FileNotFoundException fnfe) {
             System.out.println("config.properties not found");
             input = new FileInputStream("../../config.properties"); //maven release hack
         }
         prop.load(input);
-        token = prop.getProperty("token");
-        projectId = prop.getProperty("project_id");
+        String token = prop.getProperty("token");
+        String projectId = prop.getProperty("project_id");
+
+        String host = prop.getProperty("serverHost");
+        String scheme = prop.getProperty("serverScheme");
+        int port = Integer.parseInt(prop.getProperty("serverPort"));
+
+        return new Client(projectId, token, new Cloud(scheme, host, port), 3);
     }
 }
