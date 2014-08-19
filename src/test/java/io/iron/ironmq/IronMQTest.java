@@ -655,6 +655,63 @@ public class IronMQTest {
     }
 
     @Test
+    public void testAddSubscribers() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel payload = new QueueModel();
+        payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
+        queue.update(payload);
+        queue.addSubscribers(new Subscriber[]{new Subscriber("http://localhost:3002", "test02")});
+
+        QueueModel info = queue.getInfoAboutQueue();
+
+        Assert.assertEquals(2, info.getSubscribers().size());
+        Subscriber subscriber = info.getSubscribers().get(1);
+        Assert.assertEquals("test02", subscriber.getName());
+        Assert.assertEquals("http://localhost:3002", subscriber.getUrl());
+    }
+
+    @Test
+    public void testReplaceSubscribers() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel payload = new QueueModel();
+        payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
+        queue.update(payload);
+        queue.replaceSubscribers(new Subscriber[]{new Subscriber("http://localhost:3002", "test02")});
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(1, info.getSubscribers().size());
+        Subscriber subscriber = info.getSubscribers().get(0);
+        Assert.assertEquals("test02", subscriber.getName());
+        Assert.assertEquals("http://localhost:3002", subscriber.getUrl());
+    }
+
+    @Test
+    public void testRemoveSubscribers() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel payload = new QueueModel();
+        Subscriber[] subscribers = new Subscriber[]{
+                new Subscriber("http://localhost:3001", "test01"),
+                new Subscriber("http://localhost:3002", "test02"),
+        };
+        payload.addSubscriber(subscribers[0]);
+        payload.addSubscriber(subscribers[1]);
+        queue.update(payload);
+        queue.removeSubscribers(new Subscriber[]{subscribers[0]});
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(1, info.getSubscribers().size());
+        Subscriber subscriber = info.getSubscribers().get(0);
+        Assert.assertEquals(subscribers[1].getName(), subscriber.getName());
+        Assert.assertEquals(subscribers[1].getUrl(), subscriber.getUrl());
+    }
+
+    @Test
     public void testLongPolling() throws IOException {
         Queue queue = client.queue("qaas-qa-bm903k");
         queue.push("test");

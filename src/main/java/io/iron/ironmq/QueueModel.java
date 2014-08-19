@@ -155,9 +155,8 @@ public class QueueModel {
         throw new UnsupportedOperationException();
     }
 
-    @Deprecated
     public ArrayList<Subscriber> getSubscribers() {
-        throw new UnsupportedOperationException();
+        return getPushInfo().getSubscribers();
     }
 
     @Deprecated

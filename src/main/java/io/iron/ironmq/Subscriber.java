@@ -7,6 +7,10 @@ public class Subscriber {
     private String name;
     private HashMap<String, String> headers;
 
+    public Subscriber(String name) {
+        this.name = name;
+    }
+
     public Subscriber(String url, String name) {
         this.url = url;
         this.name = name;
