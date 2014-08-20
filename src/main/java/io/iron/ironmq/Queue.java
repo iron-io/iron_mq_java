@@ -205,7 +205,8 @@ public class Queue {
      */
     public void touchMessage(String id, String reservationId) throws IOException {
         String payload = new Gson().toJson(new MessageOptions(reservationId));
-        client.post("queues/" + name + "/messages/" + id + "/touch", payload);
+        Reader reader = client.post("queues/" + name + "/messages/" + id + "/touch", payload);
+        reader.close();
     }
 
     /**
@@ -231,7 +232,8 @@ public class Queue {
      */
     public void deleteMessage(String id, String reservationId) throws IOException {
         String payload = new Gson().toJson(new MessageOptions(reservationId));
-        client.delete("queues/" + name + "/messages/" + id, payload);
+        Reader reader = client.delete("queues/" + name + "/messages/" + id, payload);
+        reader.close();
     }
 
     /**
@@ -283,7 +285,8 @@ public class Queue {
      * @throws IOException If there is an error accessing the IronMQ server.
      */
     public void destroy() throws IOException {
-    	client.delete("queues/" + name);
+    	Reader reader = client.delete("queues/" + name);
+        reader.close();
     }
 
     /**
@@ -415,7 +418,8 @@ public class Queue {
      * @throws java.io.IOException
      */
     public void clear() throws IOException {
-        client.delete("queues/" + name + "/messages", "{}");
+        Reader reader = client.delete("queues/" + name + "/messages", "{}");
+        reader.close();
     }
 
     /**
@@ -687,7 +691,8 @@ public class Queue {
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void deletePushMessageForSubscriber(String messageId, String subscriberId) throws  IOException {
-        client.delete("queues/" + name + "/messages/" + messageId + "/subscribers/" + subscriberId);
+        Reader reader = client.delete("queues/" + name + "/messages/" + messageId + "/subscribers/" + subscriberId);
+        reader.close();
     }
 
     static class UpdateQueue {
@@ -810,6 +815,7 @@ public class Queue {
      */
     public void deleteAlertFromQueueById(String alert_id) throws IOException {
         String url = "queues/" + name + "/alerts/" + alert_id;
-        client.delete(url);
+        Reader reader = client.delete(url);
+        reader.close();
     }
 }
