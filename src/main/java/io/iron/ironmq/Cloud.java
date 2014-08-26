@@ -1,9 +1,10 @@
 package io.iron.ironmq;
 
 public class Cloud {
-    final String scheme;
-    final String host;
-    final int port;
+    String scheme;
+    String host;
+    int port;
+    String pathPrefix;
 
     public static final Cloud ironAWSUSEast = new Cloud("https", "mq-aws-us-east-1.iron.io", 443);
     public static final Cloud ironAWSEUWest = new Cloud("https", "mq-aws-eu-west-1.iron.io", 443);
@@ -27,4 +28,8 @@ public class Cloud {
     public int getPort() {
         return port;
     }
+
+    public String getPathPrefix() { return pathPrefix;}
+
+    public void setPathPrefix(String pathPrefix) { this.pathPrefix = pathPrefix; }
 }
