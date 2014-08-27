@@ -154,8 +154,8 @@ public class Client {
     }
 
     private Reader request(String method, String endpoint, String body) throws IOException {
-        String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
-        URL url = new URL(cloud.scheme, cloud.host, cloud.port, cloud.pathPrefix + path);
+        String path = cloud.getSuffix() + "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
+        URL url = new URL(cloud.scheme, cloud.host, cloud.port, path);
 
         System.out.println(method + " " + url + " " + (method != "GET" ? body : ""));
 
