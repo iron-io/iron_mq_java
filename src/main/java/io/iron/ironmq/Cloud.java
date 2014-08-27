@@ -4,7 +4,7 @@ public class Cloud {
     String scheme;
     String host;
     int port;
-    String pathPrefix;
+    String pathPrefix = "";
 
     public static final Cloud ironAWSUSEast = new Cloud("https", "mq-aws-us-east-1.iron.io", 443);
     public static final Cloud ironAWSEUWest = new Cloud("https", "mq-aws-eu-west-1.iron.io", 443);
