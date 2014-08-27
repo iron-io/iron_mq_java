@@ -738,7 +738,19 @@ public class IronMQTest {
         String scheme = prop.getProperty("serverScheme");
         int port = Integer.parseInt(prop.getProperty("serverPort"));
 
-        return new Client(projectId, token, new Cloud(scheme, host, port), 3);
+        return new Client(projectId, token, new Cloud(scheme, host, port, "/qaas"), 3);
+    }
+
+    @Test
+    public void testCloudSlashes() {
+        Cloud c1 = new Cloud("http", "loaclhost", 8080, "test");
+        Assert.assertEquals("/test", c1.getSuffix());
+
+        Cloud c2 = new Cloud("http", "loaclhost", 8080, "test/");
+        Assert.assertEquals("/test", c2.getSuffix());
+
+        Cloud c3 = new Cloud("http", "loaclhost", 8080, "some/test/path/");
+        Assert.assertEquals("/some/test/path", c3.getSuffix());
     }
 
     private long ts() {
