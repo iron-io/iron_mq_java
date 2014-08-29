@@ -18,8 +18,8 @@ public class Cloud {
         URL u = new URL(url);
         this.scheme = u.getProtocol();
         this.host = u.getHost();
-        this.port = u.getPort();
-        this.pathPrefix = u.getPath();
+        this.port = u.getPort() == -1 ? u.getDefaultPort() : u.getPort();
+        this.pathPrefix = u.getPath().equals("/") ? "" : u.getPath();
     }
 
     public Cloud(String scheme, String host, int port) {
@@ -40,7 +40,11 @@ public class Cloud {
         return port;
     }
 
-    public String getPathPrefix() { return pathPrefix;}
+    public String getPathPrefix() {
+        return pathPrefix;
+    }
 
-    public void setPathPrefix(String pathPrefix) { this.pathPrefix = pathPrefix; }
+    public void setPathPrefix(String pathPrefix) {
+        this.pathPrefix = pathPrefix;
+    }
 }
