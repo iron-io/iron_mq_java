@@ -156,12 +156,15 @@ public class IronMQTest {
 
         String[] messages = {"c", "d"};
         Ids ids = queue.pushMessages(messages);
+        String[] messages_1 = {"c"};
+        Ids ids_1 = queue.pushMessages(messages_1);
 
         infoAboutQueue = queue.getInfoAboutQueue();
         Assert.assertEquals(messages.length, ids.getSize());
-        Assert.assertEquals(queueSize + 2, infoAboutQueue.getSize());
+        Assert.assertEquals(queueSize + 3, infoAboutQueue.getSize());
 
-        queue.deleteMessages(ids);
+        queue.deleteMessage(ids_1);
+        queue.deleteMessage(ids);
 
         infoAboutQueue = queue.getInfoAboutQueue();
         Assert.assertEquals(queueSize, infoAboutQueue.getSize());
