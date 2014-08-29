@@ -53,7 +53,19 @@ public class CloudTest {
 
     @Test
     public void testEmptyPath() throws MalformedURLException {
+        Cloud c = new Cloud("http://test.net");
+        Assert.assertEquals("", c.getPathPrefix());
+    }
+
+    @Test
+    public void testEmptyClosedPath() throws MalformedURLException {
         Cloud c = new Cloud("http://test.net/");
         Assert.assertEquals("", c.getPathPrefix());
+    }
+
+    @Test
+    public void testClosedPath() throws MalformedURLException {
+        Cloud c = new Cloud("http://test.net/my/cool/path/");
+        Assert.assertEquals("/my/cool/path", c.getPathPrefix());
     }
 }

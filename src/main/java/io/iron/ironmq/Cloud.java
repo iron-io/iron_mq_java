@@ -19,7 +19,8 @@ public class Cloud {
         this.scheme = u.getProtocol();
         this.host = u.getHost();
         this.port = u.getPort() == -1 ? u.getDefaultPort() : u.getPort();
-        this.pathPrefix = u.getPath().equals("/") ? "" : u.getPath();
+        String path = u.getPath();
+        this.pathPrefix = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
     }
 
     public Cloud(String scheme, String host, int port) {
