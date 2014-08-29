@@ -18,7 +18,7 @@ public class Cloud {
         URL u = new URL(url);
         this.scheme = u.getProtocol();
         this.host = u.getHost();
-        this.port = u.getPort() == -1 ? u.getDefaultPort() : u.getPort();
+        this.port = u.getPort() < 0 ? u.getDefaultPort() : u.getPort();
         String path = u.getPath();
         this.pathPrefix = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
     }
