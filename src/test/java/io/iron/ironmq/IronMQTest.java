@@ -1,7 +1,5 @@
 package io.iron.ironmq;
 
-import io.iron.ironmq.keystone.KeystoneIdentity;
-import io.iron.ironmq.keystone.Tenant;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -62,7 +60,7 @@ public class IronMQTest {
         String queueNameNew = queueName + "-update";
         Queue queue = new Queue(client, queueNameNew);
 
-        Subscriber subscriber = new Subscriber("http://test.com");
+        Subscriber subscriber = new Subscriber("http://test.com", "test");
         ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
         subscriberArrayList.add(subscriber);
 
@@ -93,7 +91,7 @@ public class IronMQTest {
         String queueNameNew = queueName + "-new";
         Queue queue = new Queue(client, queueNameNew);
 
-        Subscriber subscriber = new Subscriber("http://test.com");
+        Subscriber subscriber = new Subscriber("http://test.com", "test");
         ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
         subscriberArrayList.add(subscriber);
 
@@ -201,12 +199,12 @@ public class IronMQTest {
         String subscriberUrl2 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_2";
         String subscriberUrl3 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_3";
 
-        Subscriber subscriber = new Subscriber(subscriberUrl1);
+        Subscriber subscriber = new Subscriber(subscriberUrl1, "test");
         ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
         subscriberArrayList.add(subscriber);
-        Subscriber subscriber2 = new Subscriber(subscriberUrl2);
+        Subscriber subscriber2 = new Subscriber(subscriberUrl2, "test");
         subscriberArrayList.add(subscriber2);
-        Subscriber subscriber3 = new Subscriber(subscriberUrl3);
+        Subscriber subscriber3 = new Subscriber(subscriberUrl3, "test");
         subscriberArrayList.add(subscriber3);
         queue.addSubscribersToQueue(subscriberArrayList);
 
@@ -594,16 +592,16 @@ public class IronMQTest {
         Queue queue = new Queue(client, name);
 
         QueueModel payload = new QueueModel();
-        payload.addSubscriber(new Subscriber("http://localhost:3000"));
-        payload.addSubscriber(new Subscriber("http://localhost:3030"));
-        payload.addSubscriber(new Subscriber("http://localhost:3333"));
+        payload.addSubscriber(new Subscriber("http://localhost:3000", "test01"));
+        payload.addSubscriber(new Subscriber("http://localhost:3030", "test02"));
+        payload.addSubscriber(new Subscriber("http://localhost:3333", "test03"));
         QueueModel info = queue.update(payload);
 
         Assert.assertEquals(3, info.getPushInfo().getSubscribers().size());
 
         ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>();
-        subscribers.add(new Subscriber("http://localhost:3000"));
-        subscribers.add(new Subscriber("http://localhost:3030"));
+        subscribers.add(new Subscriber("http://localhost:3000", "test04"));
+        subscribers.add(new Subscriber("http://localhost:3030", "test05"));
         QueueModel info2 = queue.updateSubscribers(subscribers);
 
         Assert.assertEquals(2, info2.getPushInfo().getSubscribers().size());
@@ -615,7 +613,7 @@ public class IronMQTest {
         final String url = "http://localhost:3000";
         Queue queue = new Queue(client, name);
 
-        ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>() {{ add(new Subscriber(url)); }};
+        ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>() {{ add(new Subscriber(url, "test")); }};
         QueueModel payload = new QueueModel(new QueuePushModel(subscribers, 4, 7, "test_err"));
         QueueModel info = queue.update(payload);
 
@@ -647,11 +645,80 @@ public class IronMQTest {
         String queueName = "my_queue_" + ts();
         Queue queue = new Queue(client, queueName);
         queue.push("Some message");
-        queue.get(1,30);
         queue.destroy();
         Queue sameQueue = new Queue(client, queueName);
 
         sameQueue.getInfoAboutQueue();
+    }
+
+    @Test
+    public void testAddSubscribers() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel payload = new QueueModel();
+        payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
+        queue.update(payload);
+        queue.addSubscribers(new Subscriber[]{new Subscriber("http://localhost:3002", "test02")});
+
+        QueueModel info = queue.getInfoAboutQueue();
+
+        Assert.assertEquals(2, info.getSubscribers().size());
+        Subscriber subscriber = info.getSubscribers().get(1);
+        Assert.assertEquals("test02", subscriber.getName());
+        Assert.assertEquals("http://localhost:3002", subscriber.getUrl());
+    }
+
+    @Test
+    public void testReplaceSubscribers() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel payload = new QueueModel();
+        payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
+        queue.update(payload);
+        queue.replaceSubscribers(new Subscriber[]{new Subscriber("http://localhost:3002", "test02")});
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(1, info.getSubscribers().size());
+        Subscriber subscriber = info.getSubscribers().get(0);
+        Assert.assertEquals("test02", subscriber.getName());
+        Assert.assertEquals("http://localhost:3002", subscriber.getUrl());
+    }
+
+    @Test
+    public void testRemoveSubscribers() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel payload = new QueueModel();
+        Subscriber[] subscribers = new Subscriber[]{
+                new Subscriber("http://localhost:3001", "test01"),
+                new Subscriber("http://localhost:3002", "test02"),
+        };
+        payload.addSubscriber(subscribers[0]);
+        payload.addSubscriber(subscribers[1]);
+        queue.update(payload);
+        queue.removeSubscribers(new Subscriber[]{subscribers[0]});
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(1, info.getSubscribers().size());
+        Subscriber subscriber = info.getSubscribers().get(0);
+        Assert.assertEquals(subscribers[1].getName(), subscriber.getName());
+        Assert.assertEquals(subscribers[1].getUrl(), subscriber.getUrl());
+    }
+
+    @Test
+    public void testLongPolling() throws IOException {
+        Queue queue = client.queue("qaas-qa-bm903k");
+        queue.push("test");
+        queue.clear();
+        Date start = new Date();
+        System.out.println("Listening to queue:      " + start);
+        queue.reserve(1, 30, 5);
+        Date end = new Date();
+        System.out.println("Stop to listen to queue: " + end);
+        Assert.assertTrue(end.getTime() - start.getTime() > 4);
     }
 
     private long ts() {
