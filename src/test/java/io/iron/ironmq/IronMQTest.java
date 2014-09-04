@@ -22,7 +22,7 @@ public class IronMQTest {
 
     @Before
     public void setUp() throws Exception {
-        client = setCredentials();
+        client = new Client();
     }
 
     @Test(expected = HTTPException.class)
@@ -652,96 +652,6 @@ public class IronMQTest {
         Queue sameQueue = new Queue(client, queueName);
 
         sameQueue.getInfoAboutQueue();
-    }
-
-    @Test
-    public void testAddSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
-        QueueModel payload = new QueueModel();
-        payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
-        queue.update(payload);
-        queue.addSubscribers(new Subscriber[]{new Subscriber("http://localhost:3002", "test02")});
-
-        QueueModel info = queue.getInfoAboutQueue();
-
-        Assert.assertEquals(2, info.getSubscribers().size());
-        Subscriber subscriber = info.getSubscribers().get(1);
-        Assert.assertEquals("test02", subscriber.getName());
-        Assert.assertEquals("http://localhost:3002", subscriber.getUrl());
-    }
-
-    @Test
-    public void testReplaceSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
-        QueueModel payload = new QueueModel();
-        payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
-        queue.update(payload);
-        queue.replaceSubscribers(new Subscriber[]{new Subscriber("http://localhost:3002", "test02")});
-
-        QueueModel info = queue.getInfoAboutQueue();
-        Assert.assertEquals(1, info.getSubscribers().size());
-        Subscriber subscriber = info.getSubscribers().get(0);
-        Assert.assertEquals("test02", subscriber.getName());
-        Assert.assertEquals("http://localhost:3002", subscriber.getUrl());
-    }
-
-    @Test
-    public void testRemoveSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
-        QueueModel payload = new QueueModel();
-        Subscriber[] subscribers = new Subscriber[]{
-                new Subscriber("http://localhost:3001", "test01"),
-                new Subscriber("http://localhost:3002", "test02"),
-        };
-        payload.addSubscriber(subscribers[0]);
-        payload.addSubscriber(subscribers[1]);
-        queue.update(payload);
-        queue.removeSubscribers(new Subscriber[]{subscribers[0]});
-
-        QueueModel info = queue.getInfoAboutQueue();
-        Assert.assertEquals(1, info.getSubscribers().size());
-        Subscriber subscriber = info.getSubscribers().get(0);
-        Assert.assertEquals(subscribers[1].getName(), subscriber.getName());
-        Assert.assertEquals(subscribers[1].getUrl(), subscriber.getUrl());
-    }
-
-    @Test
-    public void testLongPolling() throws IOException {
-        Queue queue = client.queue("qaas-qa-bm903k");
-        queue.push("test");
-        queue.clear();
-        Date start = new Date();
-        System.out.println("Listening to queue:      " + start);
-        queue.reserve(1, 30, 5);
-        Date end = new Date();
-        System.out.println("Stop to listen to queue: " + end);
-        Assert.assertTrue(end.getTime() - start.getTime() > 4);
-    }
-
-    private Client setCredentials() throws IOException {
-        Properties prop = new Properties();
-        InputStream input;
-        try {
-            input = new FileInputStream("config.properties");
-        } catch (FileNotFoundException fnfe) {
-            System.out.println("config.properties not found");
-            input = new FileInputStream("../../config.properties"); //maven release hack
-        }
-        prop.load(input);
-        String token = prop.getProperty("token");
-        String projectId = prop.getProperty("project_id");
-
-        String host = prop.getProperty("serverHost");
-        String scheme = prop.getProperty("serverScheme");
-        int port = Integer.parseInt(prop.getProperty("serverPort"));
-
-        return new Client(projectId, token, new Cloud(scheme, host, port), 3);
     }
 
     private long ts() {
