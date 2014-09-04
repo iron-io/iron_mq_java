@@ -22,7 +22,7 @@ public class IronMQTest {
 
     @Before
     public void setUp() throws Exception {
-        client = setCredentials();
+        client = new Client();
     }
 
     @Test(expected = HTTPException.class)
@@ -652,65 +652,6 @@ public class IronMQTest {
         Queue sameQueue = new Queue(client, queueName);
 
         sameQueue.getInfoAboutQueue();
-    }
-
-    @Test
-    @Ignore
-    // Test ignored because it's hard to run it from maven when publishing the package
-    // Feel free to run it on your own keystone server :)
-    // For more information read Keystone section in README file where described several ways of using Keystone.
-    public void testUseKeystone() throws IOException, InterruptedException {
-        Properties prop = new Properties();
-        InputStream input;
-        try {
-            input = new FileInputStream("config.properties");
-        } catch (FileNotFoundException fnfe) {
-            System.out.println("config.properties not found");
-            input = new FileInputStream("../../config.properties"); //maven release hack
-        }
-        prop.load(input);
-        String server = prop.getProperty("keystoneServer");
-        String tenant = prop.getProperty("keystoneTenant");
-        String username = prop.getProperty("username");
-        String password = prop.getProperty("password");
-        String projectId = prop.getProperty("project_id");
-
-        String host = prop.getProperty("serverHost");
-        String scheme = prop.getProperty("serverScheme");
-        int port = Integer.parseInt(prop.getProperty("serverPort"));
-
-        client = new Client(projectId, new KeystoneIdentity(server, tenant, username, password), new Cloud(scheme, host, port), 3);
-        // or:
-        //client = new Client(projectId, "", new Cloud(scheme, host, port), 3);
-        // or:
-        //client = new Client();
-
-        Queue queue = new Queue(client, queueName);
-
-        queue.push("Some message");
-        Thread.sleep(2000);
-        //token will be taken from cache
-        queue.push("Some message");
-    }
-
-    private Client setCredentials() throws IOException {
-        Properties prop = new Properties();
-        InputStream input;
-        try {
-            input = new FileInputStream("config.properties");
-        } catch (FileNotFoundException fnfe) {
-            System.out.println("config.properties not found");
-            input = new FileInputStream("../../config.properties"); //maven release hack
-        }
-        prop.load(input);
-        String token = prop.getProperty("token");
-        String projectId = prop.getProperty("project_id");
-
-        String host = prop.getProperty("serverHost");
-        String scheme = prop.getProperty("serverScheme");
-        int port = Integer.parseInt(prop.getProperty("serverPort"));
-
-        return new Client(projectId, token, new Cloud(scheme, host, port), 3);
     }
 
     private long ts() {

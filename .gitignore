@@ -8,4 +8,5 @@ config.properties
 #ignore intelliJ files
 /.idea
 *.iml
+/iron.json
 
