@@ -28,7 +28,7 @@ public class IronMQTest {
     @Test(expected = HTTPException.class)
     public void testErrorResponse() throws IOException {
         // intentionally invalid project/token combination
-        Client client = new Client("4444444444444", "aaaaaa", Cloud.ironAWSUSEast);
+        Client client = new Client("4444444444444", "aaaaaa");
         Queue queue = client.queue("test-queue");
         queue.push("test");
     }
