@@ -17,10 +17,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import io.iron.ironmq.keystone.KeystoneIdentity;
 import org.apache.commons.lang3.ArrayUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * The Client class provides access to the IronMQ service.
@@ -41,7 +43,7 @@ public class Client {
     }
 
     private String projectId;
-    private String token;
+    private TokenContainer tokenContainer;
     private Cloud cloud;
 
     private String[] optionsList;
@@ -56,14 +58,14 @@ public class Client {
      * This constructor is equivalent to {@link #Client(String, String, Cloud, Integer) Client(null, null, null, null)}.
      */
     public Client() {
-        this(null, null, null, null);
+        this(null, (String) null, null, null);
     }
 
     /**
      * This constructor is equivalent to {@link #Client(String, String, Cloud, Integer) Client(projectId, token, null, null)}.
      *
      * @param projectId A 24-character project ID.
-     * @param token An OAuth token.
+     * @param token     An OAuth token.
      */
     public Client(String projectId, String token) {
         this(projectId, token, null, null);
@@ -73,8 +75,8 @@ public class Client {
      * This constructor is equivalent to {@link #Client(String, String, Cloud, Integer) Client(projectId, token, cloud, null)}.
      *
      * @param projectId A 24-character project ID.
-     * @param token An OAuth token.
-     * @param cloud The cloud to use.
+     * @param token     An OAuth token.
+     * @param cloud     The cloud to use.
      */
     public Client(String projectId, String token, Cloud cloud) {
         this(projectId, token, cloud, null);
@@ -88,15 +90,27 @@ public class Client {
      * The network is not accessed during construction and this call
      * succeeds even if the credentials are invalid.
      *
-     * @param projectId A 24-character project ID.
-     * @param token An OAuth token.
-     * @param cloud The cloud to use.
+     * @param projectId  A 24-character project ID.
+     * @param token      An OAuth token.
+     * @param cloud      The cloud to use.
      * @param apiVersion Version of ironmq api to use, default is 3.
      */
     public Client(String projectId, String token, Cloud cloud, Integer apiVersion) {
         Map<String, Object> userOptions = new HashMap<String, Object>();
         userOptions.put("project_id", projectId);
         userOptions.put("token", token);
+        if (cloud != null) {
+            userOptions.put("cloud", cloud);
+        }
+        this.apiVersion = (apiVersion == null || apiVersion < 1) ? defaultApiVersion : apiVersion.toString();
+
+        loadConfiguration("iron", "mq", userOptions, new String[]{"project_id", "token", "cloud"});
+    }
+
+    public Client(String projectId, KeystoneIdentity identity, Cloud cloud, Integer apiVersion) {
+        Map<String, Object> userOptions = new HashMap<String, Object>();
+        userOptions.put("project_id", projectId);
+        userOptions.put("keystone", identity.toHash());
         if (cloud != null) {
             userOptions.put("cloud", cloud);
         }
@@ -158,7 +172,7 @@ public class Client {
                 }
                 retries++;
                 // random delay between 0 and 4^tries*100 milliseconds
-                int pow = (1 << (2*retries))*100;
+                int pow = (1 << (2 * retries)) * 100;
                 int delay = rand.nextInt(pow);
                 try {
                     Thread.sleep(delay);
@@ -181,7 +195,7 @@ public class Client {
         } else {
             conn.setRequestMethod(method);
         }
-        conn.setRequestProperty("Authorization", "OAuth " + token);
+        conn.setRequestProperty("Authorization", "OAuth " + tokenContainer.getToken());
         conn.setRequestProperty("User-Agent", "IronMQ Java Client");
 
         if (body != null) {
@@ -235,11 +249,11 @@ public class Client {
     }
 
     private void loadConfiguration(String company, String product, Map<String, Object> userOptions, String[] extraOptionsList) {
-        optionsList = ArrayUtils.addAll(new String[]{"scheme", "host", "port", "user_agent"}, extraOptionsList);
+        optionsList = ArrayUtils.addAll(new String[]{"scheme", "host", "port", "user_agent", "keystone"}, extraOptionsList);
 
         options = new HashMap<String, Object>();
 
-        env = (String)userOptions.get("env");
+        env = (String) userOptions.get("env");
 
         if (env == null) {
             env = System.getenv(company.toUpperCase() + "_" + product.toUpperCase() + "_ENV");
@@ -250,11 +264,11 @@ public class Client {
         }
 
         if (env == null) {
-            env = (String)defaultOptions.get("env");
+            env = (String) defaultOptions.get("env");
         }
 
         loadFromHash(userOptions);
-        loadFromConfig(company, product, (String)userOptions.get("config"));
+        loadFromConfig(company, product, (String) userOptions.get("config"));
 
         loadFromConfig(company, product, System.getenv(company.toUpperCase() + "_" + product.toUpperCase() + "_CONFIG"));
         loadFromConfig(company, product, System.getenv(company.toUpperCase() + "_CONFIG"));
@@ -282,19 +296,31 @@ public class Client {
             }
         }
 
-        loadFromConfig(company, product, (String)defaultOptions.get("config"));
+        loadFromConfig(company, product, (String) defaultOptions.get("config"));
         loadFromHash(defaultOptions);
 
-        projectId = (String)getOption("project_id");
-        token = (String)getOption("token");
+        projectId = (String) getOption("project_id");
+        String token = (String) getOption("token");
+
+        HashMap<String, Object> keystoneHash = (HashMap<String, Object>) getOption("keystone");
+        if (keystoneHash != null && keystoneHash.containsKey("server") && keystoneHash.containsKey("tenant") &&
+            keystoneHash.containsKey("username") && keystoneHash.containsKey("password")) {
+            System.out.println("set up via keystone");
+            tokenContainer = KeystoneIdentity.fromHash(keystoneHash);
+        } else if (StringUtils.isNotBlank(token)) {
+            System.out.println("set up via iron-token");
+            tokenContainer = new IronTokenContainer(token);
+        } else {
+            throw new IllegalArgumentException("You should specify Iron token or Keystone credentials");
+        }
 
         if (userOptions.containsKey("cloud")) {
             Object cloudOption = userOptions.get("cloud");
-            if(cloudOption != null && cloudOption instanceof Cloud){
+            if (cloudOption != null && cloudOption instanceof Cloud) {
                 cloud = (Cloud) cloudOption;
             }
         } else {
-            cloud = new Cloud((String)getOption("scheme"), (String)getOption("host"), ((Number)getOption("port")).intValue());
+            cloud = new Cloud((String) getOption("scheme"), (String) getOption("host"), ((Number) getOption("port")).intValue());
         }
     }
 
@@ -314,7 +340,7 @@ public class Client {
                 return null;
             }
 
-            result = (Map<String, Object>)result.get(sub);
+            result = (Map<String, Object>) result.get(sub);
         }
 
         return result;
@@ -352,7 +378,7 @@ public class Client {
 
         Map<String, Object> configHash;
         try {
-             configHash = (Map<String, Object>)gson.fromJson(configReader, Map.class);
+            configHash = (Map<String, Object>) gson.fromJson(configReader, Map.class);
         } finally {
             try {
                 configReader.close();
