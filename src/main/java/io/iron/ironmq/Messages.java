@@ -31,10 +31,10 @@ public class Messages {
     }
 
     public MessageOptions[] toMessageOptions() {
-        int length = messages.length;
+        int length = messages.size();
         MessageOptions[] result = new MessageOptions[length];
         for (int i = 0; i < length; i++)
-            result[i] = new MessageOptions(messages[i].getId(), messages[i].getReservationId());
+            result[i] = new MessageOptions(messages.get(i).getId(), messages.get(i).getReservationId());
         return result;
     }
 }

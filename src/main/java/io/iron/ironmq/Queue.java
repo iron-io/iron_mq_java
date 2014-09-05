@@ -267,18 +267,6 @@ public class Queue {
     }
 
     /**
-     * Deletes multiple messages from the queue.
-     *
-     * @param messages The list of the messages to delete.
-     *
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
-     */
-    public void deleteMessages(Messages messages) throws IOException {
-        deleteMessages(new Ids(messages));
-    }
-
-    /**
      * Destroy the queue.
      *
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.

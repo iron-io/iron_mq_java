@@ -419,6 +419,23 @@ public class IronMQTest {
         Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
     }
 
+    @Test
+    public void testDeleteReservedMessagesPartially() throws IOException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        queue.clear();
+        queue.pushMessages(new String[]{"Test message 1", "Test message 2", "Test message 3", "Test message 4"});
+        Messages messages = queue.reserve(4);
+
+        Assert.assertEquals(4, queue.getInfoAboutQueue().getSize());
+
+        Messages messagesToDelete = new Messages();
+        messagesToDelete.add(messages.getMessage(1));
+        messagesToDelete.add(messages.getMessage(3));
+        queue.deleteMessages(messagesToDelete);
+
+        Assert.assertEquals(2, queue.getInfoAboutQueue().getSize());
+    }
+
     @Test(expected = HTTPException.class)
     public void testDeleteReservedMessagesWithoutReservationId() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
