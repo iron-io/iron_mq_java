@@ -379,7 +379,7 @@ public class IronMQTest {
 
     @Test
     public void testDeleteReservedMessage() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
+        Queue queue = createQueueWithMessage("my_queue_" + ts());
         queue.clear();
         queue.push("Test message");
         Message message = queue.reserve();
@@ -406,7 +406,7 @@ public class IronMQTest {
 
     @Test
     public void testDeleteReservedMessages() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
+        Queue queue = createQueueWithMessage("my_queue_" + ts());
         queue.clear();
         queue.push("Test message 1");
         queue.push("Test message 2");
@@ -415,6 +415,23 @@ public class IronMQTest {
         Assert.assertEquals(2, queue.getInfoAboutQueue().getSize());
         queue.deleteMessages(messages);
         Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
+    }
+
+    @Test
+    public void testDeleteReservedMessagesPartially() throws IOException {
+        Queue queue = createQueueWithMessage("my_queue_" + ts());
+        queue.clear();
+        queue.pushMessages(new String[]{"Test message 1", "Test message 2", "Test message 3", "Test message 4"});
+        Messages messages = queue.reserve(4);
+
+        Assert.assertEquals(4, queue.getInfoAboutQueue().getSize());
+
+        Messages messagesToDelete = new Messages();
+        messagesToDelete.add(messages.getMessage(1));
+        messagesToDelete.add(messages.getMessage(3));
+        queue.deleteMessages(messagesToDelete);
+
+        Assert.assertEquals(2, queue.getInfoAboutQueue().getSize());
     }
 
     @Test(expected = HTTPException.class)
@@ -726,9 +743,10 @@ public class IronMQTest {
         return new Date().getTime();
     }
 
-    private void createQueueWithMessage(String queueName) throws IOException {
+    private Queue createQueueWithMessage(String queueName) throws IOException {
         Queue queue = new Queue(client, queueName);
         queue.push("Test message");
+        return queue;
     }
 
     private String repeatString(String s, int times) {

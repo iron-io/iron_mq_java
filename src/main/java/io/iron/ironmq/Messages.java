@@ -1,29 +1,40 @@
 package io.iron.ironmq;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 public class Messages {
-    private Message[] messages;
+    private ArrayList<Message> messages;
 
     public Messages(Message... msgs) {
-        messages = msgs;
+        messages = new ArrayList<Message>(Arrays.asList(msgs));
+    }
+
+    public Messages(ArrayList<Message> msgs) {
+        messages = new ArrayList<Message>(msgs);
     }
 
     public Message getMessage(int i) {
-        return messages[i];
+        return messages.get(i);
     }
 
     public Message[] getMessages() {
-        return messages;
+        return messages.toArray(new Message[messages.size()]);
     }
 
     public int getSize() {
-        return messages.length;
+        return messages.size();
+    }
+
+    public boolean add(Message m) {
+        return messages.add(m);
     }
 
     public MessageOptions[] toMessageOptions() {
-        int length = messages.length;
+        int length = messages.size();
         MessageOptions[] result = new MessageOptions[length];
         for (int i = 0; i < length; i++)
-            result[i] = new MessageOptions(messages[i].getId(), messages[i].getReservationId());
+            result[i] = new MessageOptions(messages.get(i).getId(), messages.get(i).getReservationId());
         return result;
     }
 }
