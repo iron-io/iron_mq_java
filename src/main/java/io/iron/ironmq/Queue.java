@@ -714,10 +714,49 @@ public class Queue {
     }
 
     /**
+     * Creates a queue for specified queue client.
+     * If queue exists, it will be updated.
+     * @param subscribersList The subscribers list.
+     * @param alertsList The alerts list.
+     * @param pushType The push type - multicast or unicast.
+     * @param errorQueue The name of the error queue to use (can be null)
+     * @param retries The retries.
+     * @param retriesDelay The retries delay.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public QueueModel create(ArrayList<Subscriber> subscribersList, ArrayList<Alert> alertsList, String pushType, String errorQueue, int retries, int retriesDelay) throws IOException {
+        String url = "queues/" + name;
+        UpdateQueue updateQueue = new UpdateQueue(subscribersList, alertsList, pushType, errorQueue, retries, retriesDelay);
+        Gson gson = new Gson();
+        String jsonMessages = gson.toJson(updateQueue);
+        Reader reader = client.put(url, jsonMessages);
+        QueueModel message = gson.fromJson(reader, QueueModel.class);
+        reader.close();
+        return message;
+    }
+
+    /**
+     * Creates a queue for specified queue client.
+     * If queue exists, it will be updated.
+     * @param subscribersList The subscribers list.
+     * @param alertsList The alerts list.
+     * @param pushType The push type - multicast or unicast.
+     * @param retries The retries.
+     * @param retriesDelay The retries delay.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public QueueModel create(ArrayList<Subscriber> subscribersList, ArrayList<Alert> alertsList, String pushType, int retries, int retriesDelay) throws IOException {
+        return create(subscribersList, alertsList, pushType, "", retries, retriesDelay);
+    }
+
+    /**
      * Update queue. If there is no queue, an EmptyQueueException is thrown.
      * @param subscribersList The subscribers list.
      * @param alertsList The alerts list.
      * @param pushType The push type - multicast or unicast.
+     * @param errorQueue The name of the error queue to use (can be null)
      * @param retries The retries.
      * @param retriesDelay The retries delay.
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
@@ -728,14 +767,24 @@ public class Queue {
         UpdateQueue updateQueue = new UpdateQueue(subscribersList, alertsList, pushType, errorQueue, retries, retriesDelay);
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(updateQueue);
-        IronReader reader = client.post(url, jsonMessages);
-        QueueModel message = gson.fromJson(reader.reader, QueueModel.class);
+        Reader reader = client.patch(url, jsonMessages);
+        QueueModel message = gson.fromJson(reader, QueueModel.class);
         reader.close();
         return message;
     }
 
+    /**
+     * Update queue. If there is no queue, an EmptyQueueException is thrown.
+     * @param subscribersList The subscribers list.
+     * @param alertsList The alerts list.
+     * @param pushType The push type - multicast or unicast.
+     * @param retries The retries.
+     * @param retriesDelay The retries delay.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
     public QueueModel updateQueue(ArrayList<Subscriber> subscribersList, ArrayList<Alert> alertsList, String pushType, int retries, int retriesDelay) throws IOException {
-        return updateQueue(subscribersList,alertsList,pushType,"",retries,retriesDelay);
+        return updateQueue(subscribersList, alertsList, pushType, "", retries,retriesDelay);
     }
 
     public QueueModel update(QueueModel model) throws IOException {
