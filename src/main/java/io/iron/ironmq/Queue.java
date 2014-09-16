@@ -683,24 +683,6 @@ public class Queue {
         reader.close();
     }
 
-    static class UpdateQueue {
-        private String pushType;
-        private int retries;
-        private int retries_delay;
-        private String error_queue;
-        private ArrayList<Subscriber> subscribers;
-        private ArrayList<Alert> alerts;
-
-        public UpdateQueue(ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts, String pushType, String errorQueue, int retries, int retriesDelay) {
-            this.subscribers = subscribers;
-            this.alerts = alerts;
-            this.pushType = pushType;
-            this.error_queue = errorQueue;
-            this.retries = retries;
-            this.retries_delay = retriesDelay;
-        }
-    }
-
     /**
      * Creates a queue for specified queue client.
      * If queue exists, it will be updated.
@@ -726,14 +708,11 @@ public class Queue {
      * @throws IOException If there is an error accessing the IronMQ server.
      */
     public QueueModel create(ArrayList<Subscriber> subscribersList, ArrayList<Alert> alertsList, String pushType, String errorQueue, int retries, int retriesDelay) throws IOException {
-        String url = "queues/" + name;
-        UpdateQueue updateQueue = new UpdateQueue(subscribersList, alertsList, pushType, errorQueue, retries, retriesDelay);
-        Gson gson = new Gson();
-        String jsonMessages = gson.toJson(updateQueue);
-        Reader reader = client.put(url, jsonMessages);
-        QueueModel message = gson.fromJson(reader, QueueModel.class);
-        reader.close();
-        return message;
+        QueueModel model = new QueueModel();
+        model.setPushInfo(new QueuePushModel(subscribersList, retries, retriesDelay, errorQueue));
+        model.setAlerts(alertsList);
+        model.setType(pushType);
+        return create(model);
     }
 
     /**
@@ -752,6 +731,24 @@ public class Queue {
     }
 
     /**
+     * Creates a queue for specified queue client.
+     * If queue exists, it will be updated.
+     * @param model QueueModel instance with desired parameters of queue
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public QueueModel create(QueueModel model) throws IOException {
+        String url = "queues/" + name;
+        QueueContainer payload = new QueueContainer(model);
+
+        Gson gson = new Gson();
+        Reader reader = client.put(url, gson.toJson(payload));
+        QueueContainer container = gson.fromJson(reader, QueueContainer.class);
+        reader.close();
+        return container.getQueue();
+    }
+
+    /**
      * Update queue. If there is no queue, an EmptyQueueException is thrown.
      * @param subscribersList The subscribers list.
      * @param alertsList The alerts list.
@@ -763,14 +760,11 @@ public class Queue {
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public QueueModel updateQueue(ArrayList<Subscriber> subscribersList, ArrayList<Alert> alertsList, String pushType, String errorQueue, int retries, int retriesDelay) throws IOException {
-        String url = "queues/" + name;
-        UpdateQueue updateQueue = new UpdateQueue(subscribersList, alertsList, pushType, errorQueue, retries, retriesDelay);
-        Gson gson = new Gson();
-        String jsonMessages = gson.toJson(updateQueue);
-        Reader reader = client.patch(url, jsonMessages);
-        QueueModel message = gson.fromJson(reader, QueueModel.class);
-        reader.close();
-        return message;
+        QueueModel model = new QueueModel();
+        model.setPushInfo(new QueuePushModel(subscribersList, retries, retriesDelay, errorQueue));
+        model.setAlerts(alertsList);
+        model.setType(pushType);
+        return update(model);
     }
 
     /**

@@ -594,6 +594,60 @@ public class IronMQTest {
     }
 
     @Test
+    public void testCreateQueueWithParams() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel payload = new QueueModel();
+        payload.setMessageTimeout(69);
+        payload.setMessageExpiration(404);
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals(69, info.getMessageTimeout());
+        Assert.assertEquals(404, info.getMessageExpiration());
+    }
+
+    @Test
+    public void testCreateQueueOverload2() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        ArrayList<Subscriber> subs = new ArrayList<Subscriber>(){{ add(new Subscriber("http://localhost:3000/", "test")); }};
+
+        QueueModel response = queue.create(subs, null, "multicast", 5, 3);
+        Assert.assertEquals(name, response.getName());
+        Assert.assertEquals(60, response.getMessageTimeout());
+        Assert.assertEquals("multicast", response.getType());
+        Assert.assertEquals(5, response.getPushInfo().getRetries().intValue());
+        Assert.assertEquals(3, response.getPushInfo().getRetriesDelay().intValue());
+        Assert.assertEquals(1, response.getPushInfo().getSubscribers().size());
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(name, info.getName());
+    }
+
+
+    @Test
+    public void testCreateQueueOverload3() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        ArrayList<Subscriber> subs = new ArrayList<Subscriber>(){{ add(new Subscriber("http://localhost:3000/", "test")); }};
+
+        QueueModel response = queue.create(subs, null, "multicast", "err_q", 5, 3);
+        Assert.assertEquals(name, response.getName());
+        Assert.assertEquals(60, response.getMessageTimeout());
+        Assert.assertEquals("multicast", response.getType());
+        Assert.assertEquals(5, response.getPushInfo().getRetries().intValue());
+        Assert.assertEquals(3, response.getPushInfo().getRetriesDelay().intValue());
+        Assert.assertEquals("err_q", response.getPushInfo().getErrorQueue());
+        Assert.assertEquals(1, response.getPushInfo().getSubscribers().size());
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(name, info.getName());
+    }
+
+    @Test
     public void testUpdateQueue() throws IOException {
         String name = "my_queue_" + ts();
         Queue queue = new Queue(client, name);
