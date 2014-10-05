@@ -24,9 +24,9 @@ public class Queue {
     * Retrieves a Message from the queue. If there are no items on the queue, an
     * EmptyQueueException is thrown.
     *
-    * @throws EmptyQueueException If the queue is empty.
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.EmptyQueueException If the queue is empty.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public Message get() throws IOException {
         Messages msgs = get(1);
@@ -44,9 +44,9 @@ public class Queue {
     * Retrieves Messages from the queue. If there are no items on the queue, an
     * EmptyQueueException is thrown.
     * @param numberOfMessages The number of messages to receive. Max. is 100.
-    * @throws EmptyQueueException If the queue is empty.
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.EmptyQueueException If the queue is empty.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public Messages get(int numberOfMessages) throws IOException {
         return get(numberOfMessages, -1);
@@ -57,9 +57,9 @@ public class Queue {
     * EmptyQueueException is thrown.
     * @param numberOfMessages The number of messages to receive. Max. is 100.
     * @param timeout timeout in seconds.
-    * @throws EmptyQueueException If the queue is empty.
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.EmptyQueueException If the queue is empty.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public Messages get(int numberOfMessages, int timeout) throws IOException {
         return get(numberOfMessages, timeout, 0);
@@ -71,8 +71,8 @@ public class Queue {
      * @param numberOfMessages The number of messages to receive. Max. is 100.
      * @param timeout timeout in seconds.
      * @param wait Time to long poll for messages, in seconds. Max is 30 seconds. Default 0.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public Messages get(int numberOfMessages, int timeout, int wait) throws IOException {
         if (numberOfMessages < 1 || numberOfMessages > 100) {
@@ -86,9 +86,9 @@ public class Queue {
         if (wait > 0) {
             url += "&wait=" + wait;
         }
-        Reader reader = client.get(url);
+        IronReader reader = client.get(url);
         Gson gson = new Gson();
-        Messages messages = gson.fromJson(reader, Messages.class);
+        Messages messages = gson.fromJson(reader.reader, Messages.class);
         reader.close();
         return messages;
     }
@@ -97,9 +97,9 @@ public class Queue {
     * Peeking at a queue returns the next messages on the queue, but it does not reserve them. 
     * If there are no items on the queue, an EmptyQueueException is thrown.
     *
-    * @throws EmptyQueueException If the queue is empty.
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.EmptyQueueException If the queue is empty.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public Message peek() throws IOException {
         Messages msgs = peek(1);
@@ -117,17 +117,17 @@ public class Queue {
     * Peeking at a queue returns the next messages on the queue, but it does not reserve them.
     * 
     * @param numberOfMessages The number of messages to receive. Max. is 100.
-    * @throws EmptyQueueException If the queue is empty.
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.EmptyQueueException If the queue is empty.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public Messages peek(int numberOfMessages) throws IOException {
     	 if (numberOfMessages < 1 || numberOfMessages > 100) {
              throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
          }
-         Reader reader = client.get("queues/" + name + "/messages/peek?n="+numberOfMessages);
+        IronReader reader = client.get("queues/" + name + "/messages/peek?n="+numberOfMessages);
          try{
-        	 return new Gson().fromJson(reader, Messages.class);
+        	 return new Gson().fromJson(reader.reader, Messages.class);
          }finally{
         	 reader.close();
          }
@@ -138,8 +138,8 @@ public class Queue {
     *
     * @param id The ID of the message to delete.
     *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public void touchMessage(String id) throws IOException {
         client.post("queues/" + name + "/messages/" + id + "/touch", "");
@@ -150,8 +150,8 @@ public class Queue {
     *
     * @param id The ID of the message to delete.
     *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public void deleteMessage(String id) throws IOException {
         client.delete("queues/" + name + "/messages/" + id);
@@ -162,14 +162,14 @@ public class Queue {
      *
      * @param ids The IDs of the messages to delete.
      *
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void deleteMessages(Ids ids) throws IOException {
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(ids);
 
-        Reader reader = client.delete("queues/" + name + "/messages", jsonMessages);
+        IronReader reader = client.delete("queues/" + name + "/messages", jsonMessages);
         reader.close();
     }
 
@@ -178,8 +178,8 @@ public class Queue {
      *
      * @param messages The list of the messages to delete.
      *
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void deleteMessages(Messages messages) throws IOException {
         deleteMessages(new Ids(messages));
@@ -188,8 +188,8 @@ public class Queue {
     /**
      * Destroy the queue.
      * 
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void destroy() throws IOException {
     	client.delete("queues/" + name);
@@ -200,8 +200,8 @@ public class Queue {
     *
     * @param msg The message to delete.
     *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public void deleteMessage(Message msg) throws IOException {
         deleteMessage(msg.getId());
@@ -213,8 +213,8 @@ public class Queue {
     * @param msg The body of the message to push.
     * @return The new message's ID
     *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public String push(String msg) throws IOException {
         return push(msg, 0);
@@ -226,8 +226,8 @@ public class Queue {
      * @param msg The array of the messages to push.
      * @return The IDs of new messages
      *
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public Ids pushMessages(String[] msg) throws IOException {
         return pushMessages(msg, 0);
@@ -240,8 +240,8 @@ public class Queue {
     * @param timeout The message's timeout in seconds.
     * @return The new message's ID
     *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public String push(String msg, long timeout) throws IOException {
         return push(msg, timeout, 0);
@@ -254,8 +254,8 @@ public class Queue {
      * @param timeout The message's timeout in seconds.
      * @return The IDs of new messages
      *
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public Ids pushMessages(String msg[], long timeout) throws IOException {
         return pushMessages(msg, timeout, 0);
@@ -269,8 +269,8 @@ public class Queue {
     * @param delay The message's delay in seconds.
     * @return The new message's ID
     *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public String push(String msg, long timeout, long delay) throws IOException {
         return push(msg, timeout, delay, 0);
@@ -284,8 +284,8 @@ public class Queue {
      * @param delay The message's delay in seconds.
      * @return The IDs of new messages
      *
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public Ids pushMessages(String[] msg, long timeout, long delay) throws IOException {
         return pushMessages(msg, timeout, delay, 0);
@@ -300,8 +300,8 @@ public class Queue {
     * @param expiresIn The message's expiration offset in seconds.
     * @return The new message's ID
     *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
+    * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+    * @throws java.io.IOException If there is an error accessing the IronMQ server.
     */
     public String push(String msg, long timeout, long delay, long expiresIn) throws IOException {
         Message message = new Message();
@@ -314,8 +314,8 @@ public class Queue {
         Gson gson = new Gson();
         String body = gson.toJson(msgs);
 
-        Reader reader = client.post("queues/" + name + "/messages", body);
-        Ids ids = gson.fromJson(reader, Ids.class);
+        IronReader reader = client.post("queues/" + name + "/messages", body);
+        Ids ids = gson.fromJson(reader.reader, Ids.class);
         reader.close();
         return ids.getId(0);
     }
@@ -329,8 +329,8 @@ public class Queue {
      * @param expiresIn The message's expiration offset in seconds.
      * @return The IDs of new messages
      *
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public Ids pushMessages(String[] msg, long timeout, long delay, long expiresIn) throws IOException {
         ArrayList<Message> messages = new ArrayList<Message>();
@@ -347,15 +347,15 @@ public class Queue {
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(msgs);
 
-        Reader reader = client.post("queues/" + name + "/messages", jsonMessages);
-        Ids ids = gson.fromJson(reader, Ids.class);
+        IronReader reader = client.post("queues/" + name + "/messages", jsonMessages);
+        Ids ids = gson.fromJson(reader.reader, Ids.class);
         reader.close();
         return ids;
     }
 
     /**
      * Clears the queue off all messages
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public void clear() throws IOException {
         client.post("queues/"+name+"/clear", "").close();
@@ -370,14 +370,14 @@ public class Queue {
 
     /**
      * Retrieves Info about queue. If there is no queue, an EmptyQueueException is thrown.
-     * @throws EmptyQueueException If there is no queue.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.EmptyQueueException If there is no queue.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public QueueModel getInfoAboutQueue() throws IOException {
-        Reader reader = client.get("queues/" + name);
+        IronReader reader = client.get("queues/" + name);
         Gson gson = new Gson();
-        QueueModel message = gson.fromJson(reader, QueueModel.class);
+        QueueModel message = gson.fromJson(reader.reader, QueueModel.class);
         reader.close();
         return message;
     }
@@ -386,14 +386,14 @@ public class Queue {
      * Retrieves Message from the queue by message id. If there are no items on the queue, an
      * EmptyQueueException is thrown.
      * @param id The ID of the message to get.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public Message getMessageById(String id) throws IOException {
         String url = "queues/" + name + "/messages/" + id;
-        Reader reader = client.get(url);
+        IronReader reader = client.get(url);
         Gson gson = new Gson();
-        Message message = gson.fromJson(reader, Message.class);
+        Message message = gson.fromJson(reader.reader, Message.class);
         reader.close();
         return message;
     }
@@ -410,45 +410,45 @@ public class Queue {
      * EmptyQueueException is thrown.
      * @param id The ID of the message to release.
      * @param delay The time after which the message will be released.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void releaseMessage(String id, int delay) throws IOException {
         String url = "queues/" + name + "/messages/" + id + "/release";
         Gson gson = new Gson();
         Delay delayClass = new Delay(delay);
         String jsonMessages = gson.toJson(delayClass);
-        Reader reader = client.post(url, jsonMessages);
+        IronReader reader = client.post(url, jsonMessages);
         reader.close();
     }
 
     /**
      * Add subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
      * @param subscribersList The array list of subscribers.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void addSubscribersToQueue(ArrayList<Subscriber> subscribersList) throws IOException {
         String url = "queues/" + name + "/subscribers";
         Subscribers subscribers = new Subscribers(subscribersList);
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(subscribers);
-        Reader reader = client.post(url, jsonMessages);
+        IronReader reader = client.post(url, jsonMessages);
         reader.close();
     }
 
     /**
      * Remove subscribers from Queue. If there is no queue, an EmptyQueueException is thrown.
      * @param subscribersList The array list of subscribers.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void removeSubscribersFromQueue(ArrayList<Subscriber> subscribersList) throws IOException {
         String url = "queues/" + name + "/subscribers";
         Subscribers subscribers = new Subscribers(subscribersList);
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(subscribers);
-        Reader reader = client.delete(url, jsonMessages);
+        IronReader reader = client.delete(url, jsonMessages);
         reader.close();
     }
 
@@ -456,14 +456,14 @@ public class Queue {
     /**
      * Get push info of message by message id. If there is no message, an EmptyQueueException is thrown.
      * @param messageId The Message ID.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public SubscribersInfo getPushStatusForMessage(String messageId) throws IOException {
         String url = "queues/" + name + "/messages/" + messageId + "/subscribers";
-        Reader reader = client.get(url);
+        IronReader reader = client.get(url);
         Gson gson = new Gson();
-        SubscribersInfo subscribersInfo = gson.fromJson(reader, SubscribersInfo.class);
+        SubscribersInfo subscribersInfo = gson.fromJson(reader.reader, SubscribersInfo.class);
         reader.close();
         return subscribersInfo;
     }
@@ -473,8 +473,8 @@ public class Queue {
      * an EmptyQueueException is thrown.
      * @param subscriberId The Subscriber ID.
      * @param messageId The Message ID.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void deletePushMessageForSubscriber(String messageId, String subscriberId) throws  IOException {
         client.delete("queues/" + name + "/messages/" + messageId + "/subscribers/" + subscriberId);
@@ -505,16 +505,16 @@ public class Queue {
      * @param pushType The push type - multicast or unicast.
      * @param retries The retries.
      * @param retriesDelay The retries delay.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public QueueModel updateQueue(ArrayList<Subscriber> subscribersList, ArrayList<Alert> alertsList, String pushType, String errorQueue, int retries, int retriesDelay) throws IOException {
         String url = "queues/" + name;
         UpdateQueue updateQueue = new UpdateQueue(subscribersList, alertsList, pushType, errorQueue, retries, retriesDelay);
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(updateQueue);
-        Reader reader = client.post(url, jsonMessages);
-        QueueModel message = gson.fromJson(reader, QueueModel.class);
+        IronReader reader = client.post(url, jsonMessages);
+        QueueModel message = gson.fromJson(reader.reader, QueueModel.class);
         reader.close();
         return message;
     }
@@ -526,53 +526,53 @@ public class Queue {
     /**
      * Add alerts to a queue. If there is no queue, an EmptyQueueException is thrown.
      * @param alerts The array list of alerts.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void addAlertsToQueue(ArrayList<Alert> alerts) throws IOException {
         String url = "queues/" + name + "/alerts";
         Alerts alert = new Alerts(alerts);
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(alert);
-        Reader reader = client.post(url, jsonMessages);
+        IronReader reader = client.post(url, jsonMessages);
         reader.close();
     }
 
     /**
      * Replace current queue alerts with a given list of alerts. If there is no queue, an EmptyQueueException is thrown.
      * @param alerts The array list of alerts.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void updateAlertsToQueue(ArrayList<Alert> alerts) throws IOException {
         String url = "queues/" + name + "/alerts";
         Alerts alert = new Alerts(alerts);
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(alert);
-        Reader reader = client.put(url, jsonMessages);
+        IronReader reader = client.put(url, jsonMessages);
         reader.close();
     }
 
     /**
      * Delete alerts from a queue. If there is no queue, an EmptyQueueException is thrown.
      * @param alert_ids The array list of alert ids.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void deleteAlertsFromQueue(ArrayList<Alert> alert_ids) throws IOException {
         String url = "queues/" + name + "/alerts";
         Alerts alert = new Alerts(alert_ids);
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(alert);
-        Reader reader = client.delete(url, jsonMessages);
+        IronReader reader = client.delete(url, jsonMessages);
         reader.close();
     }
 
     /**
      * Delete alert from a queue by alert id. If there is no queue, an EmptyQueueException is thrown.
      * @param alert_id The alert id.
-     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws IOException If there is an error accessing the IronMQ server.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void deleteAlertFromQueueById(String alert_id) throws IOException {
         String url = "queues/" + name + "/alerts/" + alert_id;
