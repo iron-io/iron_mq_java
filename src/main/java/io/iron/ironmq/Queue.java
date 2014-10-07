@@ -21,14 +21,14 @@ public class Queue {
     }
 
     /**
-    * Retrieves a Message from the queue and reserves it. If there are no items on the queue, an
-    * EmptyQueueException is thrown.
-    *
-    * @throws EmptyQueueException If the queue is empty.
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
-    * @deprecated Use Queue.reserve() instead
-    */
+     * Retrieves a Message from the queue and reserves it. If there are no items on the queue, an
+     * EmptyQueueException is thrown.
+     *
+     * @throws EmptyQueueException If the queue is empty.
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     * @deprecated Use Queue.reserve() instead
+     */
     @Deprecated
     public Message get() throws IOException {
         return reserve();
@@ -121,8 +121,8 @@ public class Queue {
         Gson gson = new Gson();
         MessagesReservationModel payload = new MessagesReservationModel(numberOfMessages, timeout, wait);
         String url = "queues/" + name + "/reservations";
-        Reader reader = client.post(url, gson.toJson(payload));
-        Messages messages = gson.fromJson(reader, Messages.class);
+        IronReader reader = client.post(url, gson.toJson(payload));
+        Messages messages = gson.fromJson(reader.reader, Messages.class);
         reader.close();
         return messages;
     }
@@ -161,9 +161,9 @@ public class Queue {
         if (numberOfMessages < 1 || numberOfMessages > 100) {
             throw new IllegalArgumentException("numberOfMessages has to be within 1..100");
         }
-        Reader reader = client.get("queues/" + name + "/messages?n=" + numberOfMessages);
+        IronReader reader = client.get("queues/" + name + "/messages?n=" + numberOfMessages);
         try {
-            return new Gson().fromJson(reader, Messages.class);
+            return new Gson().fromJson(reader.reader, Messages.class);
         } finally {
             reader.close();
         }
@@ -205,18 +205,18 @@ public class Queue {
      */
     public void touchMessage(String id, String reservationId) throws IOException {
         String payload = new Gson().toJson(new MessageOptions(reservationId));
-        Reader reader = client.post("queues/" + name + "/messages/" + id + "/touch", payload);
+        IronReader reader = client.post("queues/" + name + "/messages/" + id + "/touch", payload);
         reader.close();
     }
 
     /**
-    * Deletes a Message from the queue.
-    *
-    * @param id The ID of the message to delete.
-    *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
-    */
+     * Deletes a Message from the queue.
+     *
+     * @param id The ID of the message to delete.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
     public void deleteMessage(String id) throws IOException {
         deleteMessage(id, null);
     }
@@ -232,7 +232,7 @@ public class Queue {
      */
     public void deleteMessage(String id, String reservationId) throws IOException {
         String payload = new Gson().toJson(new MessageOptions(reservationId));
-        Reader reader = client.delete("queues/" + name + "/messages/" + id, payload);
+        IronReader reader = client.delete("queues/" + name + "/messages/" + id, payload);
         reader.close();
     }
 
@@ -262,7 +262,7 @@ public class Queue {
 
     private void deleteMessages(MessageOptions[] messages) throws IOException {
         String payload = new Gson().toJson(new MessagesOptions(messages));
-        Reader reader = client.delete("queues/" + name + "/messages", payload);
+        IronReader reader = client.delete("queues/" + name + "/messages", payload);
         reader.close();
     }
 
@@ -273,31 +273,31 @@ public class Queue {
      * @throws IOException If there is an error accessing the IronMQ server.
      */
     public void destroy() throws IOException {
-    	Reader reader = client.delete("queues/" + name);
+        IronReader reader = client.delete("queues/" + name);
         reader.close();
     }
 
     /**
-    * Deletes a Message from the queue.
-    *
-    * @param msg The message to delete.
-    *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
-    */
+     * Deletes a Message from the queue.
+     *
+     * @param msg The message to delete.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
     public void deleteMessage(Message msg) throws IOException {
         deleteMessage(msg.getId(), msg.getReservationId());
     }
 
     /**
-    * Pushes a message onto the queue.
-    *
-    * @param msg The body of the message to push.
-    * @return The new message's ID
-    *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
-    */
+     * Pushes a message onto the queue.
+     *
+     * @param msg The body of the message to push.
+     * @return The new message's ID
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
     public String push(String msg) throws IOException {
         return push(msg, 0);
     }
@@ -316,15 +316,15 @@ public class Queue {
     }
 
     /**
-    * Pushes a message onto the queue.
-    *
-    * @param msg The body of the message to push.
-    * @param delay The message's delay in seconds.
-    * @return The new message's ID
-    *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
-    */
+     * Pushes a message onto the queue.
+     *
+     * @param msg The body of the message to push.
+     * @param delay The message's delay in seconds.
+     * @return The new message's ID
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
     public String push(String msg, long delay) throws IOException {
         return push(msg, delay, 0);
     }
@@ -344,16 +344,16 @@ public class Queue {
     }
 
     /**
-    * Pushes a message onto the queue.
-    *
-    * @param msg The body of the message to push.
-    * @param delay The message's delay in seconds.
-    * @param expiresIn The message's expiration offset in seconds.
-    * @return The new message's ID
-    *
-    * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
-    * @throws IOException If there is an error accessing the IronMQ server.
-    */
+     * Pushes a message onto the queue.
+     *
+     * @param msg The body of the message to push.
+     * @param delay The message's delay in seconds.
+     * @param expiresIn The message's expiration offset in seconds.
+     * @return The new message's ID
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
     public String push(String msg, long delay, long expiresIn) throws IOException {
         Message message = new Message();
         message.setBody(msg);
@@ -364,8 +364,8 @@ public class Queue {
         Gson gson = new Gson();
         String body = gson.toJson(msgs);
 
-        Reader reader = client.post("queues/" + name + "/messages", body);
-        Ids ids = gson.fromJson(reader, Ids.class);
+        IronReader reader = client.post("queues/" + name + "/messages", body);
+        Ids ids = gson.fromJson(reader.reader, Ids.class);
         reader.close();
         return ids.getId(0);
     }
@@ -395,8 +395,8 @@ public class Queue {
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(msgs);
 
-        Reader reader = client.post("queues/" + name + "/messages", jsonMessages);
-        Ids ids = gson.fromJson(reader, Ids.class);
+        IronReader reader = client.post("queues/" + name + "/messages", jsonMessages);
+        Ids ids = gson.fromJson(reader.reader, Ids.class);
         reader.close();
         return ids;
     }
@@ -406,7 +406,7 @@ public class Queue {
      * @throws IOException
      */
     public void clear() throws IOException {
-        Reader reader = client.delete("queues/" + name + "/messages", "{}");
+        IronReader reader = client.delete("queues/" + name + "/messages", "{}");
         reader.close();
     }
 
@@ -424,9 +424,9 @@ public class Queue {
      * @throws IOException If there is an error accessing the IronMQ server.
      */
     public QueueModel getInfoAboutQueue() throws IOException {
-        Reader reader = client.get("queues/" + name);
+        IronReader reader = client.get("queues/" + name);
         Gson gson = new Gson();
-        QueueContainer queueContainer = gson.fromJson(reader, QueueContainer.class);
+        QueueContainer queueContainer = gson.fromJson(reader.reader, QueueContainer.class);
         reader.close();
         return queueContainer.getQueue();
     }
@@ -440,9 +440,9 @@ public class Queue {
      */
     public Message getMessageById(String id) throws IOException {
         String url = "queues/" + name + "/messages/" + id;
-        Reader reader = client.get(url);
+        IronReader reader = client.get(url);
         Gson gson = new Gson();
-        MessageContainer container = gson.fromJson(reader, MessageContainer.class);
+        MessageContainer container = gson.fromJson(reader.reader, MessageContainer.class);
         reader.close();
         return container.getMessage();
     }
@@ -510,7 +510,7 @@ public class Queue {
     public void releaseMessage(String id, String reservationId, Long delay) throws IOException {
         String url = "queues/" + name + "/messages/" + id + "/release";
         String payload = new Gson().toJson(new MessageOptions(reservationId, delay));
-        Reader reader = client.post(url, payload);
+        IronReader reader = client.post(url, payload);
         reader.close();
     }
 
@@ -555,7 +555,7 @@ public class Queue {
     public void addSubscribers(Subscribers subscribers) throws IOException {
         String payload = new Gson().toJson(subscribers);
         System.out.println(payload);
-        Reader reader = client.post("queues/" + name + "/subscribers", payload);
+        IronReader reader = client.post("queues/" + name + "/subscribers", payload);
         reader.close();
     }
 
@@ -602,7 +602,7 @@ public class Queue {
     public void replaceSubscribers(Subscribers subscribers) throws IOException {
         String payload = new Gson().toJson(subscribers);
         System.out.println(payload);
-        Reader reader = client.put("queues/" + name + "/subscribers", payload);
+        IronReader reader = client.put("queues/" + name + "/subscribers", payload);
         reader.close();
     }
 
@@ -618,7 +618,7 @@ public class Queue {
         Subscribers subscribers = new Subscribers(subscribersList);
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(subscribers);
-        Reader reader = client.delete(url, jsonMessages);
+        IronReader reader = client.delete(url, jsonMessages);
         reader.close();
     }
 
@@ -651,7 +651,7 @@ public class Queue {
     public void removeSubscribers(Subscribers subscribers) throws IOException {
         String url = "queues/" + name + "/subscribers";
         String jsonMessages = new Gson().toJson(subscribers);
-        Reader reader = client.delete(url, jsonMessages);
+        IronReader reader = client.delete(url, jsonMessages);
         reader.close();
     }
 
@@ -663,9 +663,9 @@ public class Queue {
      */
     public SubscribersInfo getPushStatusForMessage(String messageId) throws IOException {
         String url = "queues/" + name + "/messages/" + messageId + "/subscribers";
-        Reader reader = client.get(url);
+        IronReader reader = client.get(url);
         Gson gson = new Gson();
-        SubscribersInfo subscribersInfo = gson.fromJson(reader, SubscribersInfo.class);
+        SubscribersInfo subscribersInfo = gson.fromJson(reader.reader, SubscribersInfo.class);
         reader.close();
         return subscribersInfo;
     }
@@ -679,7 +679,7 @@ public class Queue {
      * @throws IOException If there is an error accessing the IronMQ server.
      */
     public void deletePushMessageForSubscriber(String messageId, String subscriberId) throws  IOException {
-        Reader reader = client.delete("queues/" + name + "/messages/" + messageId + "/subscribers/" + subscriberId);
+        IronReader reader = client.delete("queues/" + name + "/messages/" + messageId + "/subscribers/" + subscriberId);
         reader.close();
     }
 
@@ -689,8 +689,8 @@ public class Queue {
      */
     public QueueModel create() throws IOException {
         String url = "queues/" + name;
-        Reader reader = client.put(url, "{}");
-        QueueContainer container = new Gson().fromJson(reader, QueueContainer.class);
+        IronReader reader = client.put(url, "{}");
+        QueueContainer container = new Gson().fromJson(reader.reader, QueueContainer.class);
         reader.close();
         return container.getQueue();
     }
@@ -742,8 +742,8 @@ public class Queue {
         QueueContainer payload = new QueueContainer(model);
 
         Gson gson = new Gson();
-        Reader reader = client.put(url, gson.toJson(payload));
-        QueueContainer container = gson.fromJson(reader, QueueContainer.class);
+        IronReader reader = client.put(url, gson.toJson(payload));
+        QueueContainer container = gson.fromJson(reader.reader, QueueContainer.class);
         reader.close();
         return container.getQueue();
     }
@@ -786,8 +786,8 @@ public class Queue {
         QueueContainer payload = new QueueContainer(model);
 
         Gson gson = new Gson();
-        Reader reader = client.patch(url, gson.toJson(payload));
-        QueueContainer container = gson.fromJson(reader, QueueContainer.class);
+        IronReader reader = client.patch(url, gson.toJson(payload));
+        QueueContainer container = gson.fromJson(reader.reader, QueueContainer.class);
         reader.close();
         return container.getQueue();
     }
@@ -834,7 +834,7 @@ public class Queue {
         Alerts alert = new Alerts(alert_ids);
         Gson gson = new Gson();
         String jsonMessages = gson.toJson(alert);
-        Reader reader = client.delete(url, jsonMessages);
+        IronReader reader = client.delete(url, jsonMessages);
         reader.close();
     }
 
@@ -846,7 +846,7 @@ public class Queue {
      */
     public void deleteAlertFromQueueById(String alert_id) throws IOException {
         String url = "queues/" + name + "/alerts/" + alert_id;
-        Reader reader = client.delete(url);
+        IronReader reader = client.delete(url);
         reader.close();
     }
 }

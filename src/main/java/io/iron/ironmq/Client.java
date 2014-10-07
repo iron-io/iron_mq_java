@@ -129,31 +129,31 @@ public class Client {
         return new Queue(this, name);
     }
 
-    Reader delete(String endpoint) throws IOException {
+    IronReader delete(String endpoint) throws IOException {
         return request("DELETE", endpoint, null);
     }
 
-    Reader delete(String endpoint, String body) throws IOException {
+    IronReader delete(String endpoint, String body) throws IOException {
         return request("DELETE", endpoint, body);
     }
 
-    Reader get(String endpoint) throws IOException {
+    IronReader get(String endpoint) throws IOException {
         return request("GET", endpoint, null);
     }
 
-    Reader post(String endpoint, String body) throws IOException {
+    IronReader post(String endpoint, String body) throws IOException {
         return request("POST", endpoint, body);
     }
 
-    Reader put(String endpoint, String body) throws IOException {
+    IronReader put(String endpoint, String body) throws IOException {
         return request("PUT", endpoint, body);
     }
 
-    Reader patch(String endpoint, String body) throws IOException {
+    IronReader patch(String endpoint, String body) throws IOException {
         return request("PATCH", endpoint, body);
     }
 
-    private Reader request(String method, String endpoint, String body) throws IOException {
+    private IronReader request(String method, String endpoint, String body) throws IOException {
         String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
         URL url = new URL(cloud.scheme, cloud.host, cloud.port, cloud.pathPrefix + path);
 
@@ -187,7 +187,7 @@ public class Client {
         String msg;
     }
 
-    private Reader singleRequest(String method, URL url, String body) throws IOException {
+    private IronReader singleRequest(String method, URL url, String body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         if (method.equals("DELETE") || method.equals("PATCH")) {
             conn.setRequestMethod("POST");
@@ -233,7 +233,7 @@ public class Client {
             throw new HTTPException(status, msg);
         }
 
-        return new InputStreamReader(conn.getInputStream());
+        return new IronReader(new InputStreamReader(conn.getInputStream()),conn);
     }
 
     public Map<String, Object> getOptions() {
@@ -304,7 +304,7 @@ public class Client {
 
         HashMap<String, Object> keystoneHash = (HashMap<String, Object>) getOption("keystone");
         if (keystoneHash != null && keystoneHash.containsKey("server") && keystoneHash.containsKey("tenant") &&
-            keystoneHash.containsKey("username") && keystoneHash.containsKey("password")) {
+                keystoneHash.containsKey("username") && keystoneHash.containsKey("password")) {
             System.out.println("set up via keystone");
             tokenContainer = KeystoneIdentity.fromHash(keystoneHash);
         } else if (StringUtils.isNotBlank(token)) {
