@@ -23,6 +23,10 @@ public class IronMQTest {
         client = new Client();
     }
 
+    /**
+     * This test tries to connect to ironmq server using invalid project_id and token
+     * Expected result is HTTPException
+     */
     @Test(expected = HTTPException.class)
     public void testErrorResponse() throws IOException {
         // intentionally invalid project/token combination
@@ -31,237 +35,11 @@ public class IronMQTest {
         queue.push("test");
     }
 
-    @Test
-    @Ignore
-    public void testCreatingQueueAndMessage() throws IOException {
-        String queueNameNew = queueName + "-new";
-        Queue queue = new Queue(client, queueNameNew);
-
-        String body = "Hello, IronMQ!";
-        String id = queue.push(body, 10);
-
-        QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(1, infoAboutQueue.getSize());
-        Assert.assertEquals(queueNameNew, infoAboutQueue.getName());
-
-        Message msg = queue.get();
-        Assert.assertEquals(body, msg.getBody());
-        Assert.assertEquals(id, msg.getId());
-        queue.deleteMessage(msg);
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(0, infoAboutQueue.getSize());
-        queue.destroy();
-    }
-
-    @Test
-    @Ignore
-    public void testUpdatingQueue() throws IOException {
-        // Create the main push queue
-        String queueNameNew = queueName + "-update";
-        Queue queue = new Queue(client, queueNameNew);
-
-        Subscriber subscriber = new Subscriber("http://test.com", "test");
-        ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
-        subscriberArrayList.add(subscriber);
-
-        QueueModel infoAboutQueue = queue.updateQueue(subscriberArrayList, null, "multicast", 60, 10);
-
-        // Validate retries
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(60, infoAboutQueue.getRetries());
-        Assert.assertEquals(10, infoAboutQueue.getRetriesDelay());
-
-
-        // Update the queue
-        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(), "multicast", 100, 100);
-
-        // Validate the error queue has been set
-        Assert.assertEquals(100, newInfoAboutQueue.getRetries());
-        Assert.assertEquals(100, newInfoAboutQueue.getRetriesDelay());
-
-        // Clean up
-        queue.destroy();
-    }
-
-
-    @Test
-    @Ignore
-    public void testCreatingQueueAndErrorQueue() throws IOException {
-        // Create the main push queue
-        String queueNameNew = queueName + "-new";
-        Queue queue = new Queue(client, queueNameNew);
-
-        Subscriber subscriber = new Subscriber("http://test.com", "test");
-        ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
-        subscriberArrayList.add(subscriber);
-
-        QueueModel infoAboutQueue = queue.updateQueue(subscriberArrayList, null, "multicast", "", 60, 10);
-
-        // Validate no error queue is set
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(null, infoAboutQueue.getErrorQueue());
-
-        // Create the error queue
-        String queueNameError = queueName + "-error";
-        Queue errorQueue = new Queue(client, queueNameError);
-        String body = "Hello, IronMQ!";
-        errorQueue.push(body, 10);
-
-        // Set the Error Queue on the main queue
-        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(), "multicast", queueNameError, 60, 10);
-
-        // Validate the error queue has been set
-        Assert.assertEquals(queueNameError, newInfoAboutQueue.getErrorQueue());
-        Assert.assertEquals(queueNameError, queue.getInfoAboutQueue().getErrorQueue());
-
-        // Clean up
-        queue.destroy();
-        errorQueue.destroy();
-    }
-
-    @Test
-    @Ignore
-    public void testGettingQueuesList() throws IOException {
-        Queue queue = new Queue(client, queueName);
-        String body = "Hello, IronMQ!";
-        queue.push(body, 10);
-        Queues queues = new Queues(client);
-        ArrayList<QueueModel> allQueues = queues.getAllQueues();
-        Assert.assertTrue(allQueues.size() >= 1);
-        queue.destroy();
-    }
-
-    @Test
-    @Ignore
-    public void testGettingMessageById() throws IOException {
-        Queue queue = new Queue(client, queueName);
-        String body = "testing get message by id";
-        String id = queue.push(body, 10);
-        Message msg = queue.getMessageById(id);
-
-        Assert.assertEquals(body, msg.getBody());
-        Assert.assertEquals(id, msg.getId());
-    }
-
-    @Test
-    @Ignore
-    public void testPostMultipleMessagesAndDelete() throws IOException {
-        Queue queue = new Queue(client, queueName);
-        String body = "Hello, IronMQ!";
-        queue.push(body, 10);
-        QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        int queueSize = infoAboutQueue.getSize();
-
-        String[] messages = {"c", "d"};
-        Ids ids = queue.pushMessages(messages);
-
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(messages.length, ids.getSize());
-        Assert.assertEquals(queueSize + 2, infoAboutQueue.getSize());
-
-        queue.deleteMessages(ids);
-
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(queueSize, infoAboutQueue.getSize());
-    }
-
-    @Test
-    @Ignore
-    public void testPeekAndClearAllMessages() throws IOException {
-        String queueNameMulti = "java-test-queue-multi";
-        Queue queue = new Queue(client, queueNameMulti);
-        queue.push("first-test-msg");
-        QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        int queueSize = infoAboutQueue.getSize();
-
-        String[] messages = {"c", "d"};
-        Ids ids = queue.pushMessages(messages);
-
-        Messages msg = queue.peek(2);
-        Assert.assertEquals(msg.getSize(), ids.getSize());
-
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(messages.length, ids.getSize());
-        Assert.assertEquals(queueSize + 2, infoAboutQueue.getSize());
-
-        queue.clear();
-
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertFalse(queueSize == infoAboutQueue.getSize());
-    }
-
-    @Test
-    @Ignore
-    public void testSubscribers() throws IOException {
-        String queueNameSubscriber = "java-testing-queue-push";
-        Queue queue = new Queue(client, queueNameSubscriber);
-        String subscriberUrl1 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_1";
-        String subscriberUrl2 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_2";
-        String subscriberUrl3 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_3";
-
-        Subscriber subscriber = new Subscriber(subscriberUrl1, "test");
-        ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
-        subscriberArrayList.add(subscriber);
-        Subscriber subscriber2 = new Subscriber(subscriberUrl2, "test");
-        subscriberArrayList.add(subscriber2);
-        Subscriber subscriber3 = new Subscriber(subscriberUrl3, "test");
-        subscriberArrayList.add(subscriber3);
-        queue.addSubscribersToQueue(subscriberArrayList);
-
-        String[] messages = {"test1", "test2"};
-        Ids ids = queue.pushMessages(messages);
-
-        QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.getSubscribers().size(), 3);
-
-        ArrayList<Subscriber> subscribersToRemove = new ArrayList<Subscriber>();
-        subscribersToRemove.add(subscriber3);
-        queue.removeSubscribersFromQueue(subscribersToRemove);
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.getSubscribers().size(), 2);
-
-        SubscribersInfo subscribersInfo = queue.getPushStatusForMessage(ids.getId(0));
-        Assert.assertEquals(subscribersInfo.getSubscribers().size(), 3);
-
-//        queue.deletePushMessageForSubscriber(ids.getId(0), subscribersInfo.getSubscribers().get(0).id);
-//        subscribersInfo = queue.getPushStatusForMessage(ids.getId(0));
-//        Assert.assertEquals(subscribersInfo.getSubscribers().size(), 1);
-
-        queue.destroy();
-    }
-
-    @Test
-    @Ignore
-    public void testAlerts() throws IOException {
-        String queueNameSubscriber = "java-test_alert_queue";
-        Queue queue = new Queue(client, queueNameSubscriber);
-        queue.push("test-message-alert");
-
-        Alert alert = new Alert("fixed", "asc", 101, 5, queueNameSubscriber);
-        Alert alert2 = new Alert("fixed", "desc", 102, 6, queueNameSubscriber);
-        Alert alert3 = new Alert("fixed", "desc", 103, 7, queueNameSubscriber);
-
-        ArrayList<Alert> alertArrayList = new ArrayList<Alert>();
-        alertArrayList.add(alert);
-        alertArrayList.add(alert2);
-        alertArrayList.add(alert3);
-
-        queue.addAlertsToQueue(alertArrayList);
-//         queue.updateAlertsToQueue(alertArrayList);
-
-        QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.getAlerts().size(), 3);
-
-        queue.deleteAlertFromQueueById(infoAboutQueue.getAlerts().get(0).getId());
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.getAlerts().size(), 2);
-
-        queue.deleteAlertsFromQueue(infoAboutQueue.getAlerts());
-
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertNull(infoAboutQueue.getAlerts());
-    }
-
+    /**
+     * This is the simplest way of posting the message
+     * Expected that server will respond with id of the message
+     * @throws IOException
+     */
     @Test
     public void testPostMessage() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -269,6 +47,11 @@ public class IronMQTest {
         Assert.assertTrue(messageId.length() > 0);
     }
 
+    /**
+     * This test shows old way of reserving a message queue.get()
+     * Test placed here to check backward compatibility
+     * @throws IOException
+     */
     @Test
     public void testReserveMessageViaGet() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -282,6 +65,11 @@ public class IronMQTest {
         Assert.assertEquals(1, message.getReservedCount());
     }
 
+    /**
+     * Queue,reserve() should raise exception if queue is empty
+     * Expected result is EmptyQueueException
+     * @throws IOException
+     */
     @Test(expected = EmptyQueueException.class)
     public void testReserveMessageFromEmptyQueue() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -290,6 +78,11 @@ public class IronMQTest {
         Message message = queue.reserve();
     }
 
+    /**
+     * Reservation of several messages should not raise exception id queue is empty
+     * Expected result: empty collection of messages
+     * @throws IOException
+     */
     @Test
     public void testReserveMessagesFromEmptyQueue() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -300,6 +93,13 @@ public class IronMQTest {
         Assert.assertEquals(0, messages.getMessages().length);
     }
 
+    /**
+     * This test shows simplest way of reserving the message
+     * Expected:
+     * - Message has id and reservation id
+     * - Message has information that it has been reserved one time
+     * @throws IOException
+     */
     @Test
     public void testReserveMessage() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -313,6 +113,13 @@ public class IronMQTest {
         Assert.assertEquals(1, message.getReservedCount());
     }
 
+    /**
+     * This test shows how to reserve multiple messages from a queue
+     * Expected:
+     * - Each message in result collection has id and reservation id
+     * - Each message in result collection has information that it has been reserved one time
+     * @throws IOException
+     */
     @Test
     public void testReserveMessages() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -321,7 +128,13 @@ public class IronMQTest {
         Messages messages = queue.reserve(4);
 
         Assert.assertTrue(messages.getSize() > 0);
-        Assert.assertTrue(messages.getSize() < 4);
+        Assert.assertTrue(messages.getSize() < 4); // count of messages could be less than 4 in two cases:
+                                                   // - there are less than 4 messages in queue (not in this test)
+                                                   // - messages were pushed with big intervals between and IronMQ
+                                                   //   can't find all within acceptable interval of time.
+                                                   // for more info look at
+                                                   // http://dev.iron.io/mq-onpremise/reference/api/#reserve-messages
+
         for (int i = 0; i < messages.getSize(); i++) {
             Assert.assertTrue(messages.getMessage(i).getReservationId().length() > 0);
             Assert.assertEquals(ids.getId(i), messages.getMessage(i).getId());
@@ -330,6 +143,14 @@ public class IronMQTest {
         }
     }
 
+    /**
+     * This test shows how to use long-polling.
+     * Expected that response time will be greater than long-polling interval (`wait` parameter)
+     * because queue is empty
+     * You can add the message in separate thread 2 seconds after the `queue.reserve(...);` call
+     * and queue reserve will finish immediately
+     * @throws IOException
+     */
     @Test
     public void testReserveMessageWithWait() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -348,6 +169,14 @@ public class IronMQTest {
         Assert.assertTrue(finish - start < intervalInSeconds * 2 * 1000);
     }
 
+    /**
+     * This test shows how to peek a message from a queue
+     * Expected that
+     * - Messsage has id and body
+     * - Count of reservations is equal to 0 and reservation id is empty because peek doesn't reserve the message
+     * - Second call of peek will return the same message because peek doesn't reserve the message
+     * @throws IOException
+     */
     @Test
     public void testPeekMessage() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -364,6 +193,16 @@ public class IronMQTest {
         Assert.assertEquals(message.getId(), sameMessage.getId());
     }
 
+    /**
+     * This test shows how to get message using it's id.
+     * Please note that:
+     * - Message would not be reserved with this command
+     * - You wouldn't be able to delete it if the message is reserved by another user (because you havent reservation id)
+     * Expected that:
+     * - Messsage has id and body
+     * - Count of reservations is equal to 0 and reservation id is empty because peek doesn't reserve the message
+     * @throws IOException
+     */
     @Test
     public void testGetMessageById() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -377,6 +216,14 @@ public class IronMQTest {
         Assert.assertEquals(0, message.getReservedCount());
     }
 
+    /**
+     * This test shows 2 ways how reserved message could be deleted
+     * Please note that
+     * - Size of queue will not change after reservation. It will decrease only when message has been deleted.
+     * Expected that
+     * - Size of queue will decrease
+     * @throws IOException
+     */
     @Test
     public void testDeleteReservedMessage() throws IOException {
         Queue queue = createQueueWithMessage("my_queue_" + ts());
@@ -386,7 +233,7 @@ public class IronMQTest {
 
         Assert.assertEquals(1, queue.getInfoAboutQueue().getSize());
         queue.deleteMessage(message);
-        // or
+        // or second way:
         // queue.deleteMessage(message.getId(), message.getReservationId());
         Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
     }
@@ -623,7 +470,6 @@ public class IronMQTest {
         QueueModel info = queue.getInfoAboutQueue();
         Assert.assertEquals(name, info.getName());
     }
-
 
     @Test
     public void testCreateQueueOverload3() throws IOException {
