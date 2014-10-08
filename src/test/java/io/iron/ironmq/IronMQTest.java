@@ -79,7 +79,7 @@ public class IronMQTest {
     }
 
     /**
-     * Reservation of several messages should not raise exception id queue is empty
+     * Reservation of several messages should not raise exception if queue is empty
      * Expected result: empty collection of messages
      * @throws IOException
      */
@@ -238,6 +238,16 @@ public class IronMQTest {
         Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
     }
 
+    /**
+     * This test shows how you should not delete reserved message
+     * Expected:
+     * - Exception, because way of deleting non-reserved message (by id) is not acceptable
+     *   for deleting reserved messages
+     * Note:
+     *   Method queue.deleteMessage(Message) is more convenient because it deletes reserved messages with
+     *   reservation id and non-reserved messages without it.
+     * @throws IOException
+     */
     @Test(expected = HTTPException.class)
     public void testDeleteReservedMessageWithoutReservationId() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -251,6 +261,14 @@ public class IronMQTest {
         Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
     }
 
+    /**
+     * This test shows how to delete reserved messages
+     * Please note that
+     * - Size of queue will not change after reservation. It will decrease only when messages have been deleted.
+     * Expected that
+     * - Size of queue will decrease
+     * @throws IOException
+     */
     @Test
     public void testDeleteReservedMessages() throws IOException {
         Queue queue = createQueueWithMessage("my_queue_" + ts());
@@ -264,6 +282,14 @@ public class IronMQTest {
         Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
     }
 
+    /**
+     * This test shows how to delete not all reserved messages.
+     * Use case:
+     *   User gets a bunch of messages and processes these messages. Some of messages could not be processed
+     *   with current consumer script. So unprocessed messages should not be removed, but released back to queue.
+     *   So, user wants to delete processed with single request to increase performance.
+     * @throws IOException
+     */
     @Test
     public void testDeleteReservedMessagesPartially() throws IOException {
         Queue queue = createQueueWithMessage("my_queue_" + ts());
@@ -281,6 +307,13 @@ public class IronMQTest {
         Assert.assertEquals(2, queue.getInfoAboutQueue().getSize());
     }
 
+    /**
+     * This test just verifies that deleteMessages method should raise an exception for
+     * reserved messages without reservation ids
+     * Expected:
+     * - HTTPException
+     * @throws IOException
+     */
     @Test(expected = HTTPException.class)
     public void testDeleteReservedMessagesWithoutReservationId() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -293,6 +326,13 @@ public class IronMQTest {
         queue.deleteMessages(messages);
     }
 
+    /**
+     * Test shows how to increase time of message reservation
+     * Expected that:
+     * - message will be available after 5 seconds (initial timeout is 5 seconds)
+     * @throws IOException
+     * @throws InterruptedException
+     */
     @Test
     public void testTouchMessage() throws IOException, InterruptedException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -305,6 +345,13 @@ public class IronMQTest {
         Assert.assertEquals(0, queue.reserve(1).getSize());
     }
 
+    /**
+     * This test shows how to release a message back to queue if, for example, it could not be processed
+     * Expected that:
+     * - Message should return to the queue and be available for reserving
+     * @throws IOException
+     * @throws InterruptedException
+     */
     @Test
     public void testReleaseMessage() throws IOException, InterruptedException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -318,6 +365,16 @@ public class IronMQTest {
         Assert.assertEquals(message.getId(), sameMessage.getId());
     }
 
+    /**
+     * This test shows that reserved message could not be released without reservation id
+     * Note:
+     * - queue.releaseMessage(id, delay) has been deprecated
+     * - reserved message can't be touched without reservation id too
+     * Expected:
+     * - HTTPException (403) Wrong reservation_id
+     * @throws IOException
+     * @throws InterruptedException
+     */
     @Test(expected = HTTPException.class)
     public void testReleaseMessageWithoutReservationId() throws IOException, InterruptedException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -328,6 +385,10 @@ public class IronMQTest {
         queue.releaseMessage(message.getId(), 0);
     }
 
+    /**
+     * This test shows old way of listing queues. Don't use it
+     * @throws IOException
+     */
     @Test
     public void testListQueuesOldWay() throws IOException {
         createQueueWithMessage("my_queue_" + ts());
@@ -340,6 +401,12 @@ public class IronMQTest {
         Assert.assertNull("Expect json with only names", allQueues.get(0).getId());
     }
 
+    /**
+     * This test shows simplest way of listing queues
+     * Expected
+     * - list of names of queues
+     * @throws IOException
+     */
     @Test
     public void testListQueues() throws IOException {
         createQueueWithMessage("my_queue_" + ts());
@@ -351,6 +418,12 @@ public class IronMQTest {
         Assert.assertNull("Expect json with only names", allQueues.get(0).getId());
     }
 
+    /**
+     * This test checks listing of queues with default pagination
+     * More information available here: http://dev.iron.io/mq-onpremise/reference/api/#list-queues
+     *                        and here: http://dev.iron.io/mq-onpremise/reference/api/#changes
+     * @throws IOException
+     */
     @Test
     public void testListQueuesDefaultPagination() throws IOException {
         int defaultPageSize = 30;
@@ -364,6 +437,12 @@ public class IronMQTest {
         Assert.assertTrue(queues.get(queues.size() - 1).getName().compareTo(repeatString("z", defaultPageSize + 2)) < 0);
     }
 
+    /**
+     * This test shows how to list queues with pagination
+     * More information available here: http://dev.iron.io/mq-onpremise/reference/api/#list-queues
+     *                        and here: http://dev.iron.io/mq-onpremise/reference/api/#changes
+     * @throws IOException
+     */
     @Test
     public void testListQueuesPagination() throws IOException {
         int pageSize = 4;
@@ -382,6 +461,12 @@ public class IronMQTest {
         Assert.assertEquals(3, Queues.getQueues(client, 3).size());
     }
 
+    /**
+     * This test shows how to list queues with filtering
+     * More information available here: http://dev.iron.io/mq-onpremise/reference/api/#list-queues
+     *                        and here: http://dev.iron.io/mq-onpremise/reference/api/#changes
+     * @throws IOException
+     */
     @Test
     public void testListQueuesFiltering() throws IOException {
         String[] queueNames = new String[]{"abba", "abbca", "abbcb", "abbcd", "abbdd"};
@@ -396,6 +481,12 @@ public class IronMQTest {
         }
     }
 
+    /**
+     * This test shows how to retrieve information about queue
+     * Expected that:
+     * - Queue will have name, size and total messages count
+     * @throws IOException
+     */
     @Test
     public void testGetQueueInfo() throws IOException {
         String queueName = "my_queue_" + ts();
@@ -410,6 +501,12 @@ public class IronMQTest {
         Assert.assertEquals(3, info.getTotalMessages());
     }
 
+    /**
+     * This test shows how to clear all messages from a queue
+     * Expected that:
+     * - after cleaning queue will contain no messages
+     * @throws IOException
+     */
     @Test
     public void testClearQueue() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -419,12 +516,22 @@ public class IronMQTest {
         Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
     }
 
+    /**
+     * This test shows that queue can't be cleared until it been created
+     * Expected
+     * - HTTPException (404) Queue not found
+     * @throws IOException
+     */
     @Test(expected = HTTPException.class)
     public void testGetInfoBeforeQueueCreated() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
         QueueModel info = queue.getInfoAboutQueue();
     }
 
+    /**
+     * This test shows the simplest way how to create a queue
+     * @throws IOException
+     */
     @Test
     public void testCreateQueue() throws IOException {
         String name = "my_queue_" + ts();
@@ -438,6 +545,13 @@ public class IronMQTest {
         Assert.assertEquals(name, info.getName());
     }
 
+    /**
+     * This test shows how to create a queue and specify it's parameters
+     * Using the QueueModel class is preferred way of specifying parameters of queue
+     * Expected that:
+     * - Created queue will have all specified parameters
+     * @throws IOException
+     */
     @Test
     public void testCreateQueueWithParams() throws IOException {
         String name = "my_queue_" + ts();
@@ -452,6 +566,11 @@ public class IronMQTest {
         Assert.assertEquals(404, info.getMessageExpiration());
     }
 
+    /**
+     * This test shows a way of creating a push queue
+     * To create a queue we need to pass array-list of subscribers, specify queue type, retries count and retries delay
+     * @throws IOException
+     */
     @Test
     public void testCreateQueueOverload2() throws IOException {
         String name = "my_queue_" + ts();
@@ -471,6 +590,12 @@ public class IronMQTest {
         Assert.assertEquals(name, info.getName());
     }
 
+    /**
+     * This test shows a way of creating a push queue
+     * To create a queue we need to pass array-list of subscribers, specify queue type, name of error-queue,
+     * retries count and retries delay
+     * @throws IOException
+     */
     @Test
     public void testCreateQueueOverload3() throws IOException {
         String name = "my_queue_" + ts();
@@ -491,6 +616,11 @@ public class IronMQTest {
         Assert.assertEquals(name, info.getName());
     }
 
+    /**
+     * This test shows how to update a queue
+     * Feel free to use the QueueModel class to specify other parameters of queue
+     * @throws IOException
+     */
     @Test
     public void testUpdateQueue() throws IOException {
         String name = "my_queue_" + ts();
@@ -503,6 +633,12 @@ public class IronMQTest {
         Assert.assertEquals(69, info.getMessageTimeout());
     }
 
+    /**
+     * This test shows how to update subscribers of a queue
+     * Expected:
+     * - old subscribers should be replaced by new subscribers
+     * @throws IOException
+     */
     @Test
     public void testUpdateQueueSubscribers() throws IOException {
         String name = "my_queue_" + ts();
@@ -524,6 +660,10 @@ public class IronMQTest {
         Assert.assertEquals(2, info2.getPushInfo().getSubscribers().size());
     }
 
+    /**
+     * This test shows how to update parameters of push queue
+     * @throws IOException
+     */
     @Test
     public void testUpdateQueuePushParameters() throws IOException {
         String name = "my_queue_" + ts();
@@ -543,6 +683,12 @@ public class IronMQTest {
         Assert.assertEquals(url, info.getPushInfo().getSubscribers().get(0).getUrl());
     }
 
+    /**
+     * This test shows how to update alerts of a queue
+     * Expected that:
+     * - new alert will be available after update
+     * @throws IOException
+     */
     @Test
     public void testUpdateQueueAlerts() throws IOException {
         Queue queue = new Queue(client, "my_queue_" + ts());
@@ -557,6 +703,14 @@ public class IronMQTest {
         Assert.assertEquals("some_q", info.getAlerts().get(0).getQueue());
     }
 
+    /**
+     * This test shows how to delete a queue
+     * Expected:
+     * - HTTPException (404), because queue is no longer available after deleting, so, getInfoAboutQueue
+     *   should raise an exception
+     * @throws IOException
+     * @throws InterruptedException
+     */
     @Test(expected = HTTPException.class)
     public void testDeleteQueue() throws IOException, InterruptedException {
         String queueName = "my_queue_" + ts();
@@ -568,6 +722,10 @@ public class IronMQTest {
         sameQueue.getInfoAboutQueue();
     }
 
+    /**
+     * This test shows how to add subscribers to a queue.
+     * @throws IOException
+     */
     @Test
     public void testAddSubscribers() throws IOException {
         String name = "my_queue_" + ts();
@@ -586,6 +744,14 @@ public class IronMQTest {
         Assert.assertEquals("http://localhost:3002", subscriber.getUrl());
     }
 
+    /**
+     * This test shows another way of replacing subscribers. First one is update() with setting new subscribers
+     * via new QueueModel(new QueuePushModel(subscribersArrayList))
+     * Expected:
+     * - old subscribers to be deleted
+     * - new subscribers to appear in the queue-info
+     * @throws IOException
+     */
     @Test
     public void testReplaceSubscribers() throws IOException {
         String name = "my_queue_" + ts();
@@ -624,19 +790,6 @@ public class IronMQTest {
         Subscriber subscriber = info.getSubscribers().get(0);
         Assert.assertEquals(subscribers[1].getName(), subscriber.getName());
         Assert.assertEquals(subscribers[1].getUrl(), subscriber.getUrl());
-    }
-
-    @Test
-    public void testLongPolling() throws IOException {
-        Queue queue = client.queue("qaas-qa-bm903k");
-        queue.push("test");
-        queue.clear();
-        Date start = new Date();
-        System.out.println("Listening to queue:      " + start);
-        queue.reserve(1, 30, 5);
-        Date end = new Date();
-        System.out.println("Stop to listen to queue: " + end);
-        Assert.assertTrue(end.getTime() - start.getTime() > 4);
     }
 
     private long ts() {
