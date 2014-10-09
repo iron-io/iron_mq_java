@@ -90,9 +90,9 @@ public class Queues {
         }
         String url = "queues?" + params;
 
-        Reader reader = client.get(url);
+        IronReader reader = client.get(url);
         Gson gson = new Gson();
-        QueuesContainer queues = gson.fromJson(reader, QueuesContainer.class);
+        QueuesContainer queues = gson.fromJson(reader.reader, QueuesContainer.class);
         reader.close();
         return queues.getQueues();
     }
