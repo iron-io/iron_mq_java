@@ -554,7 +554,6 @@ public class Queue {
      */
     public void addSubscribers(Subscribers subscribers) throws IOException {
         String payload = new Gson().toJson(subscribers);
-        System.out.println(payload);
         IronReader reader = client.post("queues/" + name + "/subscribers", payload);
         reader.close();
     }
@@ -601,7 +600,6 @@ public class Queue {
      */
     public void replaceSubscribers(Subscribers subscribers) throws IOException {
         String payload = new Gson().toJson(subscribers);
-        System.out.println(payload);
         IronReader reader = client.put("queues/" + name + "/subscribers", payload);
         reader.close();
     }
