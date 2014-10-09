@@ -157,8 +157,6 @@ public class Client {
         String path = cloud.getSuffix() + "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
         URL url = new URL(cloud.scheme, cloud.host, cloud.port, path);
 
-        System.out.println(method + " " + url + " " + (method != "GET" ? body : ""));
-
         final int maxRetries = 5;
         int retries = 0;
         while (true) {
@@ -304,11 +302,9 @@ public class Client {
 
         HashMap<String, Object> keystoneHash = (HashMap<String, Object>) getOption("keystone");
         if (keystoneHash != null && keystoneHash.containsKey("server") && keystoneHash.containsKey("tenant") &&
-            keystoneHash.containsKey("username") && keystoneHash.containsKey("password")) {
-            System.out.println("set up via keystone");
+                keystoneHash.containsKey("username") && keystoneHash.containsKey("password")) {
             tokenContainer = KeystoneIdentity.fromHash(keystoneHash);
         } else if (StringUtils.isNotBlank(token)) {
-            System.out.println("set up via iron-token");
             tokenContainer = new IronTokenContainer(token);
         } else {
             throw new IllegalArgumentException("You should specify Iron token or Keystone credentials");
