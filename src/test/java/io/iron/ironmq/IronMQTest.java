@@ -26,7 +26,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test tries to connect to ironmq server using invalid project_id and token
+     * This test tries to connect to an ironmq server using an invalid project_id and token
      * Expected result is HTTPException
      */
     @Test(expected = HTTPException.class)
@@ -38,7 +38,7 @@ public class IronMQTest {
     }
 
     /**
-     * This is the simplest way of posting the message
+     * This is the simplest way of posting a message
      * Expected that server will respond with id of the message
      * @throws IOException
      */
@@ -50,7 +50,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows old way of reserving a message queue.get()
+     * This test shows old way of reserving a message using queue.get()
      * Test placed here to check backward compatibility
      * @throws IOException
      */
@@ -68,7 +68,7 @@ public class IronMQTest {
     }
 
     /**
-     * Queue,reserve() should raise exception if queue is empty
+     * Queue.reserve() should raise exception if queue is empty
      * Expected result is EmptyQueueException
      * @throws IOException
      */
@@ -96,7 +96,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows simplest way of reserving the message
+     * This test shows the easiest way to reserve a message
      * Expected:
      * - Message has id and reservation id
      * - Message has information that it has been reserved one time
@@ -196,7 +196,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows how to get message using it's id.
+     * This test shows how to get a message using its id.
      * Please note that:
      * - Message would not be reserved with this command
      * - You wouldn't be able to delete it if the message is reserved by another user (because you havent reservation id)
@@ -219,7 +219,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows 2 ways how reserved message could be deleted
+     * This test shows 2 ways that a reserved message can be deleted
      * Please note that
      * - Size of queue will not change after reservation. It will decrease only when message has been deleted.
      * Expected that
@@ -241,7 +241,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows how you should not delete reserved message
+     * This test shows how you should not delete a reserved message
      * Expected:
      * - Exception, because way of deleting non-reserved message (by id) is not acceptable
      *   for deleting reserved messages
@@ -285,11 +285,11 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows how to delete not all reserved messages.
+     * This test shows how to delete a partial set of the reserved messages.
      * Use case:
-     *   User gets a bunch of messages and processes these messages. Some of messages could not be processed
-     *   with current consumer script. So unprocessed messages should not be removed, but released back to queue.
-     *   So, user wants to delete processed with single request to increase performance.
+     *   User gets a bunch of messages and processes these messages. Some messages could not be processed
+     *   with current consumer script. Unprocessed messages should not be removed, rather released back to queue.
+     *   User wants to delete processed with single request to increase performance.
      * @throws IOException
      */
     @Test
@@ -368,10 +368,10 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows that reserved message could not be released without reservation id
+     * This test shows that a reserved message could not be released without a reservation id
      * Note:
      * - queue.releaseMessage(id, delay) has been deprecated
-     * - reserved message can't be touched without reservation id too
+     * - reserved message can't be touched without reservation id as well
      * Expected:
      * - HTTPException (403) Wrong reservation_id
      * @throws IOException
@@ -388,7 +388,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows old way of listing queues. Don't use it
+     * This test shows old way of listing queues. Don't use it.
      * @throws IOException
      */
     @Test
@@ -404,7 +404,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows simplest way of listing queues
+     * This test shows the easiest way to get a list of queues
      * Expected
      * - list of names of queues
      * @throws IOException
@@ -484,7 +484,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows how to retrieve information about queue
+     * This test shows how to retrieve information about a queue
      * Expected that:
      * - Queue will have name, size and total messages count
      * @throws IOException
@@ -519,7 +519,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows that queue can't be cleared until it been created
+     * This test shows that a queue can't be cleared until it has been created
      * Expected
      * - HTTPException (404) Queue not found
      * @throws IOException
@@ -531,7 +531,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows the simplest way how to create a queue
+     * This test shows the easist way to create a queue 
      * @throws IOException
      */
     @Test
@@ -569,7 +569,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows a way of creating a push queue
+     * This test shows how to create a push queue
      * To create a queue we need to pass array-list of subscribers, specify queue type, retries count and retries delay
      * @throws IOException
      */
@@ -593,7 +593,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows a way of creating a push queue
+     * This test shows how to create a push queue
      * To create a queue we need to pass array-list of subscribers, specify queue type, name of error-queue,
      * retries count and retries delay
      * @throws IOException
@@ -663,7 +663,7 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows how to update parameters of push queue
+     * This test shows how to update parameters of a push queue
      * @throws IOException
      */
     @Test
