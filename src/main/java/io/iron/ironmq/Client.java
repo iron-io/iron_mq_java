@@ -119,6 +119,18 @@ public class Client {
         loadConfiguration("iron", "mq", userOptions, new String[]{"project_id", "token", "cloud"});
     }
 
+    public Client(String projectId, String token, Cloud cloud, Integer apiVersion, int lookUpLimit) {
+        Map<String, Object> userOptions = new HashMap<String, Object>();
+        userOptions.put("project_id", projectId);
+        userOptions.put("token", token);
+        if (cloud != null) {
+            userOptions.put("cloud", cloud);
+        }
+        this.apiVersion = (apiVersion == null || apiVersion < 1) ? defaultApiVersion : apiVersion.toString();
+
+        loadConfiguration("iron", "mq", userOptions, new String[]{"project_id", "token", "cloud"}, lookUpLimit);
+    }
+
     /**
      * Returns a Queue using the given name.
      * The network is not accessed during this call.
@@ -247,6 +259,10 @@ public class Client {
     }
 
     private void loadConfiguration(String company, String product, Map<String, Object> userOptions, String[] extraOptionsList) {
+        loadConfiguration(company, product, userOptions, extraOptionsList, 0);
+    }
+
+    private void loadConfiguration(String company, String product, Map<String, Object> userOptions, String[] extraOptionsList, int lookUpLimit) {
         optionsList = ArrayUtils.addAll(new String[]{"scheme", "host", "port", "user_agent", "keystone"}, extraOptionsList);
 
         options = new HashMap<String, Object>();
@@ -285,6 +301,15 @@ public class Client {
 
         for (String suffix : suffixes) {
             for (String configBase : new String[]{company + "-" + product, company + "_" + product, company}) {
+                if (true || lookUpLimit > 0) {
+                    File parent = new File(System.getProperty("user.dir")).getParentFile();
+                    for (int i = lookUpLimit; i > 0 && parent !=null; i--) {
+                        String name = parent.getAbsolutePath();
+                        loadFromConfig(company, product, name + "/" + configBase + suffix + ".json");
+                        loadFromConfig(company, product, name + "/." + configBase + suffix + ".json");
+                        parent = parent.getParentFile();
+                    }
+                }
                 loadFromConfig(company, product, System.getProperty("user.dir") + "/" + configBase + suffix + ".json");
                 loadFromConfig(company, product, System.getProperty("user.dir") + "/." + configBase + suffix + ".json");
                 loadFromConfig(company, product, System.getProperty("user.dir") + "/config/" + configBase + suffix + ".json");

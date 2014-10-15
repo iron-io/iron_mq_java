@@ -22,7 +22,7 @@ public class IronMQTest {
 
     @Before
     public void setUp() throws Exception {
-        client = new Client();
+        client = new Client(null, null, null, 3, 2);
     }
 
     /**
