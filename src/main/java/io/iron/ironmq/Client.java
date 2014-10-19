@@ -301,7 +301,7 @@ public class Client {
 
         for (String suffix : suffixes) {
             for (String configBase : new String[]{company + "-" + product, company + "_" + product, company}) {
-                if (true || lookUpLimit > 0) {
+                if (lookUpLimit > 0) {
                     File parent = new File(System.getProperty("user.dir")).getParentFile();
                     for (int i = lookUpLimit; i > 0 && parent !=null; i--) {
                         String name = parent.getAbsolutePath();
