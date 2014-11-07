@@ -191,8 +191,10 @@ public class Queue {
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
-    public void touchMessage(Message message) throws IOException {
-        touchMessage(message.getId(), message.getReservationId());
+    public MessageOptions touchMessage(Message message) throws IOException {
+        MessageOptions messageOptions = touchMessage(message.getId(), message.getReservationId());
+        message.setReservationId(messageOptions.getReservationId());
+        return messageOptions;
     }
 
     /**
@@ -203,10 +205,14 @@ public class Queue {
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
-    public void touchMessage(String id, String reservationId) throws IOException {
+    public MessageOptions touchMessage(String id, String reservationId) throws IOException {
         String payload = new Gson().toJson(new MessageOptions(reservationId));
-        Reader reader = client.post("queues/" + name + "/messages/" + id + "/touch", payload);
-        reader.close();
+        IronReader reader = client.post("queues/" + name + "/messages/" + id + "/touch", payload);
+        try {
+            return new Gson().fromJson(reader.reader, MessageOptions.class);
+        } finally {
+            reader.close();
+        }
     }
 
     /**

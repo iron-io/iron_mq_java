@@ -348,6 +348,29 @@ public class IronMQTest {
     }
 
     /**
+     * Test shows how to touch a message multiple times.
+     * Expected that:
+     * - after second touch call message will have new reservation id
+     * - new reservation id will not equal to old one
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Test
+    public void testTouchMessageTwice() throws IOException, InterruptedException {
+        Queue queue = new Queue(client, "my_queue_" + ts());
+        queue.push("Test message");
+        Message message = queue.reserve(1, 5).getMessage(0);
+
+        Thread.sleep(3500);
+        MessageOptions options1 = queue.touchMessage(message);
+        Thread.sleep(3500);
+        MessageOptions options2 = queue.touchMessage(message);
+
+        Assert.assertFalse(options1.getReservationId().equals(options2.getReservationId()));
+        Assert.assertEquals(message.getReservationId(), options2.getReservationId());
+    }
+
+    /**
      * This test shows how to release a message back to queue if, for example, it could not be processed
      * Expected that:
      * - Message should return to the queue and be available for reserving
