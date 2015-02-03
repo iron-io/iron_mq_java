@@ -222,7 +222,7 @@ public class Client {
         }
 
         int status = conn.getResponseCode();
-        if (status != 200) {
+        if (status < 200 || status >= 300) {
             String msg;
             if (conn.getContentLength() > 0 && conn.getContentType().equals("application/json")) {
                 InputStreamReader reader = null;
