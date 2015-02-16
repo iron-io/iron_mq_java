@@ -5,7 +5,7 @@ Getting Started
 ===============
 There are three ways to get this package.
 
-1. Add it as a Maven dependency
+1\. Add it as a Maven dependency
    Your pom.xml will look something like:
 
 ```xml
@@ -19,9 +19,18 @@ There are three ways to get this package.
     </dependencies>
 ```
 
-2. [Download the jar from Maven Repo](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.iron.ironmq%22).
+2\. [Download the jar from Maven Repo](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22io.iron.ironmq%22).
 
-3. Build from source with [Apache Buildr](http://buildr.apache.org):
+**Note**: You also need to have several dependencies added to classpath: [com.google.code.gson 2.1 or later](https://code.google.com/p/google-gson/downloads/list?can=1) and [org.apache.commons 3.3.1 or later](http://commons.apache.org/proper/commons-lang/download_lang.cgi).
+
+For example following commands could be used to run your simple test program:
+
+```sh
+src$ javac -cp ".:ironmq.jar:gson-2.2.4.jar:commons-lang3-3.1.jar" org/ironmq_test/Program.java
+src$ java -cp  ".:ironmq.jar:gson-2.2.4.jar:commons-lang3-3.1.jar" org.ironmq_test.Program
+```
+
+3\. Build from source with [Apache Buildr](http://buildr.apache.org):
 
     buildr package
 
@@ -30,6 +39,41 @@ The .jar file will appear under the target directory.
 ### Configure
 
 **Initialize** a client and get a queue object:
+
+#### Using iron.json file
+
+Put all settings in iron.json file. At least token and project_id. But `host`, `port`, `scheme` are also supported.
+
+```js
+{
+  "token": "0000000000000000JhRJ",
+  "project_id": "54000000000000000000000d",
+  "scheme": "http",
+  "host": "mq-aws-us-east-1.iron.io",
+  "port": 80
+}
+```
+
+Then you need to instantiate a `Client`:
+
+```java
+Client client = new Client();
+```
+
+iron.json file could be placed in home directory, in current directory of executing program or in ./config/ directory. File also could be hidden, i.e. to start with `.` symbol.
+
+In case of using Maven put your iron.json in the root of project (near the pom.xml file) or in home directory.
+
+It's also possible to look for iron.json file in parent directories:
+
+```java
+lookUpLimit = 3;
+Client client = new Client(<projectId or null>, <token or null>, <cloud or null>, 1, lookUpLimit);
+```
+In example above IronMq library will try to find iron.json file in 3 levels of parent folders of executing file.
+
+#### Specifying configuration in initializer
+
 ```java
 Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
 Queue queue = client.queue("test-queue");
@@ -45,7 +89,12 @@ IronMQ supports multiple clouds/regions:
 
 For full list, view /src/main/java/io/iron/ironmq/Cloud.java 
 
-    
+You can combine using of .json config file and initializer. In the example below Client will be initialized with token from config file and project_id specified in code:
+
+```java
+Client client = new Client("my project", null);
+```
+
 ## The Basics
     Client client = new Client("my project", "my token", Cloud.ironAWSUSEast);
 
