@@ -51,10 +51,10 @@ Put all settings in iron.json file. At least token and project_id. But `host`, `
 
 ```js
 {
-  "token": "0000000000000000JhRJ",
+  "token": "m6000000000000000000RJ",
   "project_id": "54000000000000000000000d",
   "scheme": "http",
-  "host": "mq-aws-us-east-1.iron.io",
+  "host": "mq-v3-aws-us-east-1.iron.io",
   "port": 80
 }
 ```
@@ -145,6 +145,12 @@ client = new Client(projectId, new KeystoneIdentity(server, tenant, username, pa
 ```
 
 Token in iron.json file will be ignored.
+
+You can combine using of .json config file and initializer. In the example below Client will be initialized with token from config file and project_id specified in code:
+
+```java
+Client client = new Client("my project", null);
+```
 
 ## The Basics
 
