@@ -9,10 +9,7 @@ public class Cloud {
     int port;
     String pathPrefix = "";
 
-    public static final Cloud ironAWSUSEast = new Cloud("https", "mq-aws-us-east-1.iron.io", 443);
-    public static final Cloud ironAWSEUWest = new Cloud("https", "mq-aws-eu-west-1.iron.io", 443);
-    public static final Cloud ironRackspaceORD = new Cloud("https", "mq-rackspace-ord.iron.io", 443);
-    public static final Cloud ironRackspaceLON = new Cloud("https", "mq-rackspace-lon.iron.io", 443);
+    public static final Cloud ironAWSUSEast = new Cloud("https", "mq-v3-aws-us-east-1.iron.io", 443);
 
     public Cloud(String url) throws MalformedURLException {
         URL u = new URL(url);
