@@ -329,7 +329,7 @@ public class IronMQTest {
     @Test
     public void testReleaseMessage() throws IOException, InterruptedException {
         queue.push("Test message");
-        Message message = queue.reserve(1, 5).getMessage(0);
+        Message message = queue.reserve(1).getMessage(0);
 
         Thread.sleep(500);
         queue.releaseMessage(message);
@@ -585,9 +585,38 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows how to update subscribers of a queue
+     * This test shows how to replace subscribers of a queue
      * Expected:
      * - old subscribers should be replaced by new subscribers
+     * @throws IOException
+     */
+    @Test
+    public void testReplaceQueueSubscribers() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel payload = new QueueModel();
+        payload.addSubscriber(new Subscriber("http://localhost:3000", "test01"));
+        payload.addSubscriber(new Subscriber("http://localhost:3030", "test02"));
+        payload.addSubscriber(new Subscriber("http://localhost:3333", "test03"));
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals(3, info.getPushInfo().getSubscribers().size());
+
+        ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>();
+        subscribers.add(new Subscriber("http://localhost:3000", "test04"));
+        subscribers.add(new Subscriber("http://localhost:3030", "test05"));
+        queue.replaceSubscribers(subscribers);
+
+        QueueModel info2 = queue.getInfoAboutQueue();
+        Assert.assertEquals(2, info2.getPushInfo().getSubscribers().size());
+    }
+
+    /**
+     * This test shows how to update subscribers of a queue
+     * Expected:
+     * - old subscribers should be updated
+     * - one of 3 subscribers not affected by update should stay the same
      * @throws IOException
      */
     @Test
@@ -604,11 +633,15 @@ public class IronMQTest {
         Assert.assertEquals(3, info.getPushInfo().getSubscribers().size());
 
         ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>();
-        subscribers.add(new Subscriber("http://localhost:3000", "test04"));
-        subscribers.add(new Subscriber("http://localhost:3030", "test05"));
-        QueueModel info2 = queue.updateSubscribers(subscribers);
+        subscribers.add(new Subscriber("http://localhost:3030", "test01"));
+        subscribers.add(new Subscriber("http://localhost:3030", "test03"));
+        queue.updateSubscribers(subscribers);
 
-        Assert.assertEquals(2, info2.getPushInfo().getSubscribers().size());
+        QueueModel info2 = queue.getInfoAboutQueue();
+        Assert.assertEquals(3, info2.getPushInfo().getSubscribers().size());
+        for (int i = 0; i < info2.getSubscribers().size(); i++) {
+            Assert.assertEquals(info2.getSubscribers().get(i).getUrl(), "http://localhost:3030");
+        }
     }
 
     /**
