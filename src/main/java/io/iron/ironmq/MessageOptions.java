@@ -10,6 +10,7 @@ import java.io.Serializable;
 public class MessageOptions implements Serializable {
     protected String id;
     protected Long delay;
+    private Long timeout;
 
     @SerializedName("reservation_id")
     protected String reservationId;
@@ -31,6 +32,12 @@ public class MessageOptions implements Serializable {
         this.reservationId = reservationId;
     }
 
+    public MessageOptions(String id, String reservationId, Long timeout) {
+        this.id = id;
+        this.reservationId = reservationId;
+        this.timeout = timeout;
+    }
+
     /**
      * Returns Id of the Message.
      */
@@ -49,6 +56,11 @@ public class MessageOptions implements Serializable {
      * Returns the number of seconds after which the Message will be available.
      */
     public long getDelay() { return delay; }
+
+    /**
+     * Returns the Message's timeout.
+     */
+    public long getTimeout() { return timeout; }
 
     /**
      * Sets Id to the Message.
@@ -74,4 +86,11 @@ public class MessageOptions implements Serializable {
      * @param delay The new delay.
      */
     public void setDelay(long delay) { this.delay = delay; }
+
+    /**
+     * Sets the Message's timeout.
+     *
+     * @param timeout The new timeout.
+     */
+    public void setTimeout(long timeout) { this.timeout = timeout; }
 }
