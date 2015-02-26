@@ -505,22 +505,6 @@ public class Queue {
      * Release reserved message after specified time. If there is no message with such id on the queue, an
      * EmptyQueueException is thrown.
      *
-     * @param id The ID of the message to release.
-     * @param delay The time after which the message will be released.
-     *
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
-     * @deprecated Reservation Id is required for message releasing since v3
-     */
-    @Deprecated
-    public void releaseMessage(String id, int delay) throws IOException {
-        releaseMessage(id, null, new Long(delay));
-    }
-
-    /**
-     * Release reserved message after specified time. If there is no message with such id on the queue, an
-     * EmptyQueueException is thrown.
-     *
      * @param message The message to release.
      *
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
