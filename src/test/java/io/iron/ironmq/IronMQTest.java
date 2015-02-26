@@ -414,25 +414,6 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows that a reserved message could not be released without a reservation id
-     * Note:
-     * - queue.releaseMessage(id, delay) has been deprecated
-     * - reserved message can't be touched without reservation id as well
-     * Expected:
-     * - HTTPException (403) Wrong reservation_id
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    @Test(expected = HTTPException.class)
-    public void testReleaseMessageWithoutReservationId() throws IOException, InterruptedException {
-        queue.push("Test message");
-        Message message = queue.reserve(1, 5).getMessage(0);
-
-        Thread.sleep(500);
-        queue.releaseMessage(message.getId(), 0);
-    }
-
-    /**
      * This test shows old way of listing queues. Don't use it.
      * @throws IOException
      */
