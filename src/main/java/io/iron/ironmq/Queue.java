@@ -550,18 +550,6 @@ public class Queue {
      * @param subscribersList The array list of subscribers.
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
-     * @deprecated Use updateSubscribers instead
-     */
-    @Deprecated
-    public void addSubscribersToQueue(ArrayList<Subscriber> subscribersList) throws IOException {
-        this.updateSubscribers(subscribersList);
-    }
-
-    /**
-     * Add subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
-     * @param subscribersList The array list of subscribers.
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void addSubscribers(ArrayList<Subscriber> subscribersList) throws IOException {
         addSubscribers(new Subscribers(subscribersList));
@@ -590,14 +578,33 @@ public class Queue {
     }
 
     /**
-     * Add subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
+     * Update old or add new subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
      * @param subscribersList The array list of subscribers.
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
-    public QueueModel updateSubscribers(ArrayList<Subscriber> subscribersList) throws IOException {
-        QueueModel payload = new QueueModel(new QueuePushModel(subscribersList));
-        return this.update(payload);
+    public void updateSubscribers(ArrayList<Subscriber> subscribersList) throws IOException {
+        addSubscribers(subscribersList);
+    }
+
+    /**
+     * Update old or add new subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
+     * @param subscribers The array of subscribers.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public void updateSubscribers(Subscriber[] subscribers) throws IOException {
+        addSubscribers(subscribers);
+    }
+
+    /**
+     * Update old or add new subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
+     * @param subscribers The array of subscribers.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public void updateSubscribers(Subscribers subscribers) throws IOException {
+        addSubscribers(subscribers);
     }
 
     /**
@@ -632,22 +639,6 @@ public class Queue {
     public void replaceSubscribers(Subscribers subscribers) throws IOException {
         String payload = new Gson().toJson(subscribers);
         IronReader reader = client.put("queues/" + name + "/subscribers", payload);
-        reader.close();
-    }
-
-
-    /**
-     * Remove subscribers from Queue. If there is no queue, an EmptyQueueException is thrown.
-     * @param subscribersList The array list of subscribers.
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
-     */
-    public void removeSubscribersFromQueue(ArrayList<Subscriber> subscribersList) throws IOException {
-        String url = "queues/" + name + "/subscribers";
-        Subscribers subscribers = new Subscribers(subscribersList);
-        Gson gson = new Gson();
-        String jsonMessages = gson.toJson(subscribers);
-        IronReader reader = client.delete(url, jsonMessages);
         reader.close();
     }
 
