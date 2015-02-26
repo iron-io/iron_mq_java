@@ -172,27 +172,39 @@ public class Queue {
     /**
      * Touching a reserved message extends its timeout to the duration specified when the message was created.
      *
-     * @param id The ID of the message to delete.
-     *
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
-     * @deprecated It's not possible to touch a message without reservation id since v3 of IronMQ
-     */
-    @Deprecated
-    public void touchMessage(String id) throws IOException {
-        touchMessage(id, null);
-    }
-
-    /**
-     * Touching a reserved message extends its timeout to the duration specified when the message was created.
-     *
      * @param message The message to delete.
      *
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public MessageOptions touchMessage(Message message) throws IOException {
-        MessageOptions messageOptions = touchMessage(message.getId(), message.getReservationId());
+        return touchMessage(message, null);
+    }
+
+    /**
+     * Touching a reserved message extends its timeout to the specified duration.
+     *
+     * @param message The message to delete.
+     * @param timeout After timeout (in seconds), item will be placed back onto queue.
+     *
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public MessageOptions touchMessage(Message message, int timeout) throws IOException {
+        return touchMessage(message, (long) timeout);
+    }
+
+    /**
+     * Touching a reserved message extends its timeout to the duration specified when the message was created.
+     *
+     * @param message The message to delete.
+     * @param timeout After timeout (in seconds), item will be placed back onto queue.
+     *
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public MessageOptions touchMessage(Message message, Long timeout) throws IOException {
+        MessageOptions messageOptions = touchMessage(message.getId(), message.getReservationId(), timeout);
         message.setReservationId(messageOptions.getReservationId());
         return messageOptions;
     }
@@ -201,12 +213,41 @@ public class Queue {
      * Touching a reserved message extends its timeout to the duration specified when the message was created.
      *
      * @param id The ID of the message to delete.
+     * @param reservationId This id is returned when you reserve a message and must be provided to delete a message that is reserved.
      *
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public MessageOptions touchMessage(String id, String reservationId) throws IOException {
-        String payload = new Gson().toJson(new MessageOptions(reservationId));
+        return touchMessage(id, reservationId, null);
+    }
+
+    /**
+     * Touching a reserved message extends its timeout to the specified duration.
+     *
+     * @param id The ID of the message to delete.
+     * @param reservationId This id is returned when you reserve a message and must be provided to delete a message that is reserved.
+     * @param timeout After timeout (in seconds), item will be placed back onto queue.
+     *
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public MessageOptions touchMessage(String id, String reservationId, int timeout) throws IOException {
+        return touchMessage(id, reservationId, (long) timeout);
+    }
+
+    /**
+     * Touching a reserved message extends its timeout to the duration specified when the message was created.
+     *
+     * @param id The ID of the message to delete.
+     * @param reservationId This id is returned when you reserve a message and must be provided to delete a message that is reserved.
+     * @param timeout After timeout (in seconds), item will be placed back onto queue.
+     *
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public MessageOptions touchMessage(String id, String reservationId, Long timeout) throws IOException {
+        String payload = new Gson().toJson(new MessageOptions(null, reservationId, timeout));
         IronReader reader = client.post("queues/" + name + "/messages/" + id + "/touch", payload);
         try {
             return new Gson().fromJson(reader.reader, MessageOptions.class);

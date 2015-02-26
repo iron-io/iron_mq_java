@@ -9,7 +9,6 @@ import com.google.gson.annotations.SerializedName;
  */
 public class Message extends MessageOptions implements Serializable {
     private String body;
-    private long timeout;
     // Long, not long, so that it's nullable. Gson doesn't serialize null,
     // so we can use the default on the server and not have to know about
     // it.
@@ -29,18 +28,6 @@ public class Message extends MessageOptions implements Serializable {
     * @param body The new body contents.
     */
     public void setBody(String body) { this.body = body; }
-
-    /**
-    * Returns the Message's timeout.
-    */
-    public long getTimeout() { return timeout; }
-
-    /**
-    * Sets the Message's timeout.
-    *
-    * @param timeout The new timeout.
-    */
-    public void setTimeout(long timeout) { this.timeout = timeout; }
 
     /**
      * Returns the number of times the message has been reserved.
