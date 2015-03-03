@@ -158,6 +158,22 @@ public class Queue {
     }
 
     /**
+     * Deletes a Message(s) from the queue.
+     *
+     * @param ids The ids of message(s) to delete.
+     *
+     * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws IOException If there is an error accessing the IronMQ server.
+     */
+    public void deleteMessage(Ids ids) throws IOException {
+        if (ids.getSize() == 1)
+            deleteMessage(ids.getId(0));
+        else if (ids.getSize() > 1)
+            deleteMessages(ids);
+        else throw new IOException("Something wrong with ids array");
+    }
+
+    /**
      * Deletes multiple messages from the queue.
      *
      * @param ids The IDs of the messages to delete.
