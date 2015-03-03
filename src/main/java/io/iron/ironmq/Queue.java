@@ -278,8 +278,21 @@ public class Queue {
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void deleteMessage(String id, String reservationId) throws IOException {
-        String payload = new Gson().toJson(new MessageOptions(reservationId));
-        Reader reader = client.delete("queues/" + name + "/messages/" + id, payload);
+        deleteMessage(id, reservationId, null);
+    }
+
+    /**
+     * Deletes a Message from the queue.
+     *
+     * @param id The ID of the message to delete.
+     * @param reservationId Reservation Id of the message. Reserved message could not be deleted without reservation Id.
+     *
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public void deleteMessage(String id, String reservationId, String subscriberName) throws IOException {
+        String payload = new Gson().toJson(new SubscribedMessageOptions(reservationId, subscriberName));
+        IronReader reader = client.delete("queues/" + name + "/messages/" + id, payload);
         reader.close();
     }
 
@@ -693,14 +706,13 @@ public class Queue {
     /**
      * Delete push message for subscriber by subscriber ID and message ID. If there is no message or subscriber,
      * an EmptyQueueException is thrown.
-     * @param subscriberId The Subscriber ID.
+     * @param subscriberName The name of Subscriber.
      * @param messageId The Message ID.
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
-    public void deletePushMessageForSubscriber(String messageId, String subscriberId) throws  IOException {
-        Reader reader = client.delete("queues/" + name + "/messages/" + messageId + "/subscribers/" + subscriberId);
-        reader.close();
+    public void deletePushMessageForSubscriber(String messageId, String subscriberName) throws  IOException {
+        deleteMessage(messageId, null, subscriberName);
     }
 
     /**

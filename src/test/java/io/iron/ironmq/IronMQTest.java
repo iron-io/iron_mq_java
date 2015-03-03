@@ -476,7 +476,7 @@ public class IronMQTest {
      */
     @Test(expected = HTTPException.class)
     public void testGetInfoBeforeQueueCreated() throws IOException {
-        QueueModel info = queue.getInfoAboutQueue();
+        queue.getInfoAboutQueue();
     }
 
     /**
@@ -574,9 +574,6 @@ public class IronMQTest {
      */
     @Test
     public void testUpdateQueue() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
         QueueModel payload = new QueueModel();
         payload.setMessageTimeout(69);
         QueueModel info = queue.update(payload);
@@ -592,9 +589,6 @@ public class IronMQTest {
      */
     @Test
     public void testReplaceQueueSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
         QueueModel payload = new QueueModel();
         payload.addSubscriber(new Subscriber("http://localhost:3000", "test01"));
         payload.addSubscriber(new Subscriber("http://localhost:3030", "test02"));
@@ -621,9 +615,6 @@ public class IronMQTest {
      */
     @Test
     public void testUpdateQueueSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
         QueueModel payload = new QueueModel();
         payload.addSubscriber(new Subscriber("http://localhost:3000", "test01"));
         payload.addSubscriber(new Subscriber("http://localhost:3030", "test02"));
@@ -707,9 +698,6 @@ public class IronMQTest {
      */
     @Test
     public void testAddSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
         QueueModel payload = new QueueModel();
         payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
         queue.update(payload);
@@ -733,9 +721,6 @@ public class IronMQTest {
      */
     @Test
     public void testReplaceSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
         QueueModel payload = new QueueModel();
         payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
         queue.update(payload);
@@ -751,9 +736,6 @@ public class IronMQTest {
     @Test
     @Ignore // there is a bug in implementation of ironmq
     public void testRemoveSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
         QueueModel payload = new QueueModel();
         Subscriber[] subscribers = new Subscriber[]{
                 new Subscriber("http://localhost:3001", "test01"),
