@@ -711,8 +711,8 @@ public class Queue {
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
-    public void deletePushMessageForSubscriber(String messageId, String subscriberName) throws  IOException {
-        deleteMessage(messageId, null, subscriberName);
+    public void deletePushMessageForSubscriber(String messageId, String reservationId, String subscriberName) throws  IOException {
+        deleteMessage(messageId, reservationId, subscriberName);
     }
 
     /**
