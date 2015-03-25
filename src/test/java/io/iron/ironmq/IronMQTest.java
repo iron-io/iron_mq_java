@@ -1,306 +1,769 @@
 package io.iron.ironmq;
 
+import io.iron.ironmq.keystone.KeystoneIdentity;
+import io.iron.ironmq.keystone.Tenant;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import javax.sound.midi.VoiceStatus;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Properties;
-
-import org.junit.Assert;
-import org.junit.Test;
 
 public class IronMQTest {
     private String queueName = "java-testing-queue";
-    private String token = "";
-    private String projectId = "";
+    private Client client;
+    private Queue queue;
 
+    @Before
+    public void setUp() throws Exception {
+        client = new Client(null, null, null, 3, 1);
+        queue = new Queue(client, "my_queue_" + ts());
+    }
+
+    /**
+     * This test tries to connect to an ironmq server using an invalid project_id and token
+     * Expected result is HTTPException
+     */
     @Test(expected = HTTPException.class)
     public void testErrorResponse() throws IOException {
         // intentionally invalid project/token combination
-        Client client = new Client("4444444444444", "aaaaaa", Cloud.ironAWSUSEast);
+        Client client = new Client("4444444444444", "aaaaaa");
         Queue queue = client.queue("test-queue");
         queue.push("test");
     }
 
+    /**
+     * This is the simplest way of posting a message
+     * Expected that server will respond with id of the message
+     * @throws IOException
+     */
     @Test
-    public void testCreatingQueueAndMessage() throws IOException {
-        setCredentials();
-        String queueNameNew = queueName + "-new";
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        Queue queue = new Queue(client, queueNameNew);
-
-        String body = "Hello, IronMQ!";
-        String id = queue.push(body, 10);
-
-        QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(1, infoAboutQueue.getSize());
-        Assert.assertEquals(queueNameNew, infoAboutQueue.getName());
-
-        Message msg = queue.get();
-        Assert.assertEquals(body, msg.getBody());
-        Assert.assertEquals(id, msg.getId());
-        queue.deleteMessage(msg);
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(0, infoAboutQueue.getSize());
-        queue.destroy();
+    public void testPostMessage() throws IOException {
+        String messageId = queue.push("Test message");
+        Assert.assertTrue(messageId.length() > 0);
     }
 
+    /**
+     * This test shows old way of reserving a message using queue.get()
+     * Test placed here to check backward compatibility
+     * @throws IOException
+     */
     @Test
-    public void testUpdatingQueue() throws IOException {
+    public void testReserveMessageViaGet() throws IOException {
+        String messageText = "Test message " + ts();
+        String messageId = queue.push(messageText);
+        Message message = queue.get();
 
-        setCredentials();
-
-        // Create the main push queue
-        String queueNameNew = queueName + "-update";
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        Queue queue = new Queue(client, queueNameNew);
-
-        Subscriber subscriber = new Subscriber("http://test.com");
-        ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
-        subscriberArrayList.add(subscriber);
-
-        QueueModel infoAboutQueue = queue.updateQueue(subscriberArrayList, null,"multicast",60,10);
-
-        // Validate retries
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(60, infoAboutQueue.getRetries());
-        Assert.assertEquals(10, infoAboutQueue.getRetriesDelay());
-
-
-        // Update the queue
-        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(),"multicast",100,100);
-
-        // Validate the error queue has been set
-        Assert.assertEquals(100, newInfoAboutQueue.getRetries());
-        Assert.assertEquals(100, newInfoAboutQueue.getRetriesDelay());
-
-        // Clean up
-        queue.destroy();
+        Assert.assertTrue(message.getReservationId().length() > 0);
+        Assert.assertEquals(messageId, message.getId());
+        Assert.assertEquals(messageText, message.getBody());
+        Assert.assertEquals(1, message.getReservedCount());
     }
 
-
-    @Test
-    public void testCreatingQueueAndErrorQueue() throws IOException {
-
-        setCredentials();
-
-        // Create the main push queue
-        String queueNameNew = queueName + "-new";
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        Queue queue = new Queue(client, queueNameNew);
-
-        Subscriber subscriber = new Subscriber("http://test.com");
-        ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
-        subscriberArrayList.add(subscriber);
-
-        QueueModel infoAboutQueue = queue.updateQueue(subscriberArrayList, null,"multicast", "",60,10);
-
-        // Validate no error queue is set
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(null, infoAboutQueue.getErrorQueue());
-
-        // Create the error queue
-        String queueNameError = queueName + "-error";
-        Queue errorQueue = new Queue(client, queueNameError);
-        String body = "Hello, IronMQ!";
-        errorQueue.push(body, 10);
-
-        // Set the Error Queue on the main queue
-        QueueModel newInfoAboutQueue = queue.updateQueue(subscriberArrayList, infoAboutQueue.getAlerts(),"multicast", queueNameError,60,10);
-
-        // Validate the error queue has been set
-        Assert.assertEquals(queueNameError, newInfoAboutQueue.getErrorQueue());
-        Assert.assertEquals(queueNameError, queue.getInfoAboutQueue().getErrorQueue());
-
-        // Clean up
-        queue.destroy();
-        errorQueue.destroy();
+    /**
+     * Queue.reserve() should raise exception if queue is empty
+     * Expected result is EmptyQueueException
+     * @throws IOException
+     */
+    @Test(expected = EmptyQueueException.class)
+    public void testReserveMessageFromEmptyQueue() throws IOException {
+        queue.push("");
+        queue.clear();
+        Message message = queue.reserve();
     }
 
+    /**
+     * Reservation of several messages should not raise exception if queue is empty
+     * Expected result: empty collection of messages
+     * @throws IOException
+     */
     @Test
-    public void testGettingQueuesList() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        Queue queue = new Queue(client, queueName);
-        String body = "Hello, IronMQ!";
-        queue.push(body, 10);
-        Queues queues = new Queues(client);
-        ArrayList<QueueModel> allQueues = queues.getAllQueues();
-        Assert.assertTrue(allQueues.size() >= 1);
-        queue.destroy();
+    public void testReserveMessagesFromEmptyQueue() throws IOException {
+        queue.push("");
+        queue.clear();
+        Messages messages = queue.reserve(4);
+        Assert.assertEquals(0, messages.getSize());
+        Assert.assertEquals(0, messages.getMessages().length);
     }
 
+    /**
+     * This test shows the easiest way to reserve a message
+     * Expected:
+     * - Message has id and reservation id
+     * - Message has information that it has been reserved one time
+     * @throws IOException
+     */
     @Test
-    public void testGettingMessageById() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        Queue queue = new Queue(client, queueName);
-        String body = "testing get message by id";
-        String id = queue.push(body, 10);
-        Message msg = queue.getMessageById(id);
+    public void testReserveMessage() throws IOException {
+        String messageText = "Test message " + ts();
+        String messageId = queue.push(messageText);
+        Message message = queue.reserve();
 
-        Assert.assertEquals(body, msg.getBody());
-        Assert.assertEquals(id, msg.getId());
+        Assert.assertTrue(message.getReservationId().length() > 0);
+        Assert.assertEquals(messageId, message.getId());
+        Assert.assertEquals(messageText, message.getBody());
+        Assert.assertEquals(1, message.getReservedCount());
     }
 
+    /**
+     * This test shows how to reserve multiple messages from a queue
+     * Expected:
+     * - Each message in result collection has id and reservation id
+     * - Each message in result collection has information that it has been reserved one time
+     * @throws IOException
+     */
     @Test
-    public void testPostMultipleMessagesAndDelete() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        Queue queue = new Queue(client, queueName);
-        String body = "Hello, IronMQ!";
-        queue.push(body, 10);
-        QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        int queueSize = infoAboutQueue.getSize();
+    public void testReserveMessages() throws IOException {
+        String messageText = "Test message " + ts();
+        Ids ids = queue.pushMessages(new String[]{messageText + "0", messageText + "1", messageText + "2"});
+        Messages messages = queue.reserve(4);
 
-        String[] messages = {"c", "d"};
-        Ids ids = queue.pushMessages(messages);
+        Assert.assertTrue(messages.getSize() > 0);
+        Assert.assertTrue(messages.getSize() < 4); // count of messages could be less than 4 in two cases:
+                                                   // - there are less than 4 messages in queue (not in this test)
+                                                   // - messages were pushed with big intervals between and IronMQ
+                                                   //   can't find all within acceptable interval of time.
+                                                   // for more info look at
+                                                   // http://dev.iron.io/mq-onpremise/reference/api/#reserve-messages
 
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(messages.length, ids.getSize());
-        Assert.assertEquals(queueSize + 2, infoAboutQueue.getSize());
-
-        queue.deleteMessages(ids);
-
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(queueSize, infoAboutQueue.getSize());
+        for (int i = 0; i < messages.getSize(); i++) {
+            Assert.assertTrue(messages.getMessage(i).getReservationId().length() > 0);
+            Assert.assertEquals(ids.getId(i), messages.getMessage(i).getId());
+            Assert.assertEquals(messageText + i, messages.getMessage(i).getBody());
+            Assert.assertEquals(1, messages.getMessage(i).getReservedCount());
+        }
     }
 
+    /**
+     * This test shows how to use long-polling.
+     * Expected that response time will be greater than long-polling interval (`wait` parameter)
+     * because queue is empty
+     * You can add the message in separate thread 2 seconds after the `queue.reserve(...);` call
+     * and queue reserve will finish immediately
+     * @throws IOException
+     */
     @Test
-    public void testPeekAndClearAllMessages() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        String queueNameMulti = "java-test-queue-multi";
-        Queue queue = new Queue(client, queueNameMulti);
-        queue.push("first-test-msg");
-        QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        int queueSize = infoAboutQueue.getSize();
-
-        String[] messages = {"c", "d"};
-        Ids ids = queue.pushMessages(messages);
-
-        Messages msg = queue.peek(2);
-        Assert.assertEquals(msg.getSize(), ids.getSize());
-
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(messages.length, ids.getSize());
-        Assert.assertEquals(queueSize + 2, infoAboutQueue.getSize());
-
+    public void testReserveMessageWithWait() throws IOException {
+        queue.push("test");
         queue.clear();
 
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertFalse(queueSize == infoAboutQueue.getSize());
+        int intervalInSeconds = 3;
+
+        long start = new Date().getTime();
+        Messages messages = queue.reserve(4, 60, intervalInSeconds);
+        long finish = new Date().getTime();
+
+        Assert.assertEquals(0, messages.getSize());
+        System.out.println(finish - start);
+        Assert.assertTrue(finish - start > intervalInSeconds * 1000);
+        Assert.assertTrue(finish - start < intervalInSeconds * 2 * 1000);
     }
 
+    /**
+     * This test shows how to peek a message from a queue
+     * Expected that
+     * - Messsage has id and body
+     * - Count of reservations is equal to 0 and reservation id is empty because peek doesn't reserve the message
+     * - Second call of peek will return the same message because peek doesn't reserve the message
+     * @throws IOException
+     */
     @Test
-    public void testReleaseMessageAndDestroyQueue() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
+    public void testPeekMessage() throws IOException {
+        String messageText = "Test message " + ts();
+        String messageId = queue.push(messageText);
+        Message message = queue.peek();
+
+        Assert.assertNull(message.getReservationId());
+        Assert.assertEquals(messageId, message.getId());
+        Assert.assertEquals(messageText, message.getBody());
+        Assert.assertEquals(0, message.getReservedCount());
+
+        Message sameMessage = queue.peek();
+        Assert.assertEquals(message.getId(), sameMessage.getId());
+    }
+
+    /**
+     * This test shows how to get a message using its id.
+     * Please note that:
+     * - Message would not be reserved with this command
+     * - You wouldn't be able to delete it if the message is reserved by another user (because you havent reservation id)
+     * Expected that:
+     * - Messsage has id and body
+     * - Count of reservations is equal to 0 and reservation id is empty because peek doesn't reserve the message
+     * @throws IOException
+     */
+    @Test
+    public void testGetMessageById() throws IOException {
+        String messageText = "Test message " + ts();
+        String messageId = queue.push(messageText);
+        Message message = queue.getMessageById(messageId);
+
+        Assert.assertNull(message.getReservationId());
+        Assert.assertEquals(messageId, message.getId());
+        Assert.assertEquals(messageText, message.getBody());
+        Assert.assertEquals(0, message.getReservedCount());
+    }
+
+    /**
+     * This test shows 2 ways that a reserved message can be deleted
+     * Please note that
+     * - Size of queue will not change after reservation. It will decrease only when message has been deleted.
+     * Expected that
+     * - Size of queue will decrease
+     * @throws IOException
+     */
+    @Test
+    public void testDeleteReservedMessage() throws IOException {
+        Queue queue = createQueueWithMessage("my_queue_" + ts());
+        queue.clear();
+        queue.push("Test message");
+        Message message = queue.reserve();
+
+        Assert.assertEquals(1, queue.getInfoAboutQueue().getSize());
+        queue.deleteMessage(message);
+        // or second way:
+        // queue.deleteMessage(message.getId(), message.getReservationId());
+        Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
+    }
+
+    /**
+     * This test shows how you should not delete a reserved message
+     * Expected:
+     * - Exception, because way of deleting non-reserved message (by id) is not acceptable
+     *   for deleting reserved messages
+     * Note:
+     *   Method queue.deleteMessage(Message) is more convenient because it deletes reserved messages with
+     *   reservation id and non-reserved messages without it.
+     * @throws IOException
+     */
+    @Test(expected = HTTPException.class)
+    public void testDeleteReservedMessageWithoutReservationId() throws IOException {
+        queue.clear();
+        queue.push("Test message");
+        Message message = queue.reserve();
+
+        // this way of deleting is acceptable for non reserved messages,
+        // for example for messages which was got by id
+        queue.deleteMessage(message.getId());
+        Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
+    }
+
+    /**
+     * This test shows how to delete reserved messages
+     * Please note that
+     * - Size of queue will not change after reservation. It will decrease only when messages have been deleted.
+     * Expected that
+     * - Size of queue will decrease
+     * @throws IOException
+     */
+    @Test
+    public void testDeleteReservedMessages() throws IOException {
+        Queue queue = createQueueWithMessage("my_queue_" + ts());
+        queue.clear();
+        queue.push("Test message 1");
+        queue.push("Test message 2");
+        Messages messages = queue.reserve(2);
+
+        Assert.assertEquals(2, queue.getInfoAboutQueue().getSize());
+        queue.deleteMessages(messages);
+        Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
+    }
+
+    /**
+     * This test shows how to delete a partial set of the reserved messages.
+     * Use case:
+     *   User gets a bunch of messages and processes these messages. Some messages could not be processed
+     *   with current consumer script. Unprocessed messages should not be removed, rather released back to queue.
+     *   User wants to delete processed with single request to increase performance.
+     * @throws IOException
+     */
+    @Test
+    public void testDeleteReservedMessagesPartially() throws IOException {
+        Queue queue = createQueueWithMessage("my_queue_" + ts());
+        queue.clear();
+        queue.pushMessages(new String[]{"Test message 1", "Test message 2", "Test message 3", "Test message 4"});
+        Messages messages = queue.reserve(4);
+
+        Assert.assertEquals(4, queue.getInfoAboutQueue().getSize());
+
+        Messages messagesToDelete = new Messages();
+        messagesToDelete.add(messages.getMessage(1));
+        messagesToDelete.add(messages.getMessage(3));
+        queue.deleteMessages(messagesToDelete);
+
+        Assert.assertEquals(2, queue.getInfoAboutQueue().getSize());
+    }
+
+    /**
+     * This test just verifies that deleteMessages method should raise an exception for
+     * reserved messages without reservation ids
+     * Expected:
+     * - HTTPException
+     * @throws IOException
+     */
+    @Test(expected = HTTPException.class)
+    public void testDeleteReservedMessagesWithoutReservationId() throws IOException {
+        queue.clear();
+        queue.push("Test message 1");
+        queue.push("Test message 2");
+        Messages messages = queue.reserve(2);
+
+        messages.getMessage(0).setReservationId(null);
+        queue.deleteMessages(messages);
+    }
+
+    /**
+     * This test shows how to release a message back to queue if, for example, it could not be processed
+     * Expected that:
+     * - Message should return to the queue and be available for reserving
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Test
+    public void testReleaseMessage() throws IOException, InterruptedException {
+        queue.push("Test message");
+        Message message = queue.reserve(1).getMessage(0);
+
+        Thread.sleep(500);
+        queue.releaseMessage(message);
+
+        Message sameMessage = queue.reserve();
+        Assert.assertEquals(message.getId(), sameMessage.getId());
+    }
+
+    /**
+     * This test shows old way of listing queues. Don't use it.
+     * @throws IOException
+     */
+    @Test
+    public void testListQueuesOldWay() throws IOException {
+        createQueueWithMessage("my_queue_" + ts());
         Queues queues = new Queues(client);
-        ArrayList<QueueModel> allQueuesOrig = queues.getAllQueues();
-
-        String queueNewName = "java-release-testing";
-        Queue queue = new Queue(client, queueNewName);
-        String msgBody = "release-test-message";
-        String id = queue.push(msgBody);
-        queue.releaseMessage(id, 0);
-        Message message = queue.get();
-        Assert.assertEquals(message.getBody(), msgBody);
-
         ArrayList<QueueModel> allQueues = queues.getAllQueues();
-        Assert.assertFalse(allQueuesOrig.size() == allQueues.size());
-        queue.destroy();
 
-        allQueues = queues.getAllQueues();
-        Assert.assertTrue(allQueuesOrig.size() == allQueues.size());
+        Assert.assertTrue(allQueues.size() > 0);
+        Assert.assertTrue(allQueues.get(0).getName().length() > 0);
+        Assert.assertNull("Expect json with only names", allQueues.get(0).getProject_id());
+        Assert.assertNull("Expect json with only names", allQueues.get(0).getId());
     }
 
+    /**
+     * This test shows the easiest way to get a list of queues
+     * Expected
+     * - list of names of queues
+     * @throws IOException
+     */
     @Test
-    public void testSubscribers() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        String queueNameSubscriber = "java-testing-queue-push";
-        Queue queue = new Queue(client, queueNameSubscriber);
-        String subscriberUrl1 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_1";
-        String subscriberUrl2 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_2";
-        String subscriberUrl3 = "http://mysterious-brook-1807.herokuapp.com/ironmq_push_3";
+    public void testListQueues() throws IOException {
+        createQueueWithMessage("my_queue_" + ts());
+        ArrayList<QueueModel> allQueues = Queues.getQueues(client);
 
-        Subscriber subscriber = new Subscriber(subscriberUrl1);
-        ArrayList<Subscriber> subscriberArrayList = new ArrayList<Subscriber>();
-        subscriberArrayList.add(subscriber);
-        Subscriber subscriber2 = new Subscriber(subscriberUrl2);
-        subscriberArrayList.add(subscriber2);
-        Subscriber subscriber3 = new Subscriber(subscriberUrl3);
-        subscriberArrayList.add(subscriber3);
-        queue.addSubscribersToQueue(subscriberArrayList);
-
-        String[] messages = {"test1", "test2"};
-        Ids ids = queue.pushMessages(messages);
-
-        QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.getSubscribers().size(), 3);
-
-        ArrayList<Subscriber> subscribersToRemove = new ArrayList<Subscriber>();
-        subscribersToRemove.add(subscriber3);
-        queue.removeSubscribersFromQueue(subscribersToRemove);
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.getSubscribers().size(), 2);
-
-        SubscribersInfo subscribersInfo = queue.getPushStatusForMessage(ids.getId(0));
-        Assert.assertEquals(subscribersInfo.getSubscribers().size(), 3);
-
-//        queue.deletePushMessageForSubscriber(ids.getId(0), subscribersInfo.getSubscribers().get(0).id);
-//        subscribersInfo = queue.getPushStatusForMessage(ids.getId(0));
-//        Assert.assertEquals(subscribersInfo.getSubscribers().size(), 1);
-
-        queue.destroy();
+        Assert.assertTrue(allQueues.size() > 0);
+        Assert.assertTrue(allQueues.get(0).getName().length() > 0);
+        Assert.assertNull("Expect json with only names", allQueues.get(0).getProject_id());
+        Assert.assertNull("Expect json with only names", allQueues.get(0).getId());
     }
 
+    /**
+     * This test checks listing of queues with default pagination
+     * More information available here: http://dev.iron.io/mq-onpremise/reference/api/#list-queues
+     *                        and here: http://dev.iron.io/mq-onpremise/reference/api/#changes
+     * @throws IOException
+     */
     @Test
-    public void testAlerts() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
-        String queueNameSubscriber = "java-test_alert_queue";
-        Queue queue = new Queue(client, queueNameSubscriber);
-        queue.push("test-message-alert");
-
-        Alert alert = new Alert("fixed", "asc", 101, 5, queueNameSubscriber);
-        Alert alert2 = new Alert("fixed", "desc", 102, 6, queueNameSubscriber);
-        Alert alert3 = new Alert("fixed", "desc", 103, 7, queueNameSubscriber);
-
-        ArrayList<Alert> alertArrayList = new ArrayList<Alert>();
-        alertArrayList.add(alert);
-        alertArrayList.add(alert2);
-        alertArrayList.add(alert3);
-
-        queue.addAlertsToQueue(alertArrayList);
-//         queue.updateAlertsToQueue(alertArrayList);
-
-        QueueModel infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.getAlerts().size(), 3);
-
-        queue.deleteAlertFromQueueById(infoAboutQueue.getAlerts().get(0).getId());
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertEquals(infoAboutQueue.getAlerts().size(), 2);
-
-        queue.deleteAlertsFromQueue(infoAboutQueue.getAlerts());
-
-        infoAboutQueue = queue.getInfoAboutQueue();
-        Assert.assertNull(infoAboutQueue.getAlerts());
-    }
-
-    private void setCredentials() throws IOException {
-        Properties prop = new Properties();
-        InputStream input = null;
-        try {
-            input = new FileInputStream("config.properties");
-        } catch(FileNotFoundException fnfe) {
-            System.out.println("config.properties not found");
-            input = new FileInputStream("../../config.properties"); //maven release hack
+    public void testListQueuesDefaultPagination() throws IOException {
+        int defaultPageSize = 30;
+        for (int i = 0; i < defaultPageSize + 3; i++) {
+            createQueueWithMessage(repeatString("z", i + 1));
         }
-        prop.load(input);
-        token = prop.getProperty("token");
-        projectId = prop.getProperty("project_id");
+        ArrayList<QueueModel> queues = Queues.getQueues(client);
+
+        Assert.assertTrue(queues.size() > 0);
+        Assert.assertTrue(queues.size() <= defaultPageSize);
+        Assert.assertTrue(queues.get(queues.size() - 1).getName().compareTo(repeatString("z", defaultPageSize + 2)) < 0);
+    }
+
+    /**
+     * This test shows how to list queues with pagination
+     * More information available here: http://dev.iron.io/mq-onpremise/reference/api/#list-queues
+     *                        and here: http://dev.iron.io/mq-onpremise/reference/api/#changes
+     * @throws IOException
+     */
+    @Test
+    public void testListQueuesPagination() throws IOException {
+        int pageSize = 4;
+        for (int i = 0; i < pageSize * 2; i++) {
+            createQueueWithMessage(repeatString("a", i + 1));
+        }
+        ArrayList<QueueModel> queues = Queues.getQueues(client, "aa", pageSize, null);
+
+        Assert.assertTrue(queues.size() == pageSize);
+        for (int i = 0; i < queues.size(); i++) {
+            Assert.assertEquals(repeatString("a", i + 3), queues.get(i).getName());
+        }
+
+        Assert.assertEquals(2, Queues.getQueues(client, "aaaaaaa", 2, null).size());
+        Assert.assertEquals("aaaaaaaa", Queues.getQueues(client, "aaaaaaa").get(0).getName());
+        Assert.assertEquals(3, Queues.getQueues(client, 3).size());
+    }
+
+    /**
+     * This test shows how to list queues with filtering
+     * More information available here: http://dev.iron.io/mq-onpremise/reference/api/#list-queues
+     *                        and here: http://dev.iron.io/mq-onpremise/reference/api/#changes
+     * @throws IOException
+     */
+    @Test
+    public void testListQueuesFiltering() throws IOException {
+        String[] queueNames = new String[]{"abba", "abbca", "abbcb", "abbcd", "abbdd"};
+        for (int i = 0; i < queueNames.length; i++)
+            createQueueWithMessage(queueNames[i]);
+
+        ArrayList<QueueModel> queues = Queues.getQueues(client, null, null, "abbc");
+
+        Assert.assertTrue(queues.size() == 3);
+        for (int i = 0; i < queues.size(); i++) {
+            Assert.assertEquals(queueNames[i + 1], queues.get(i).getName());
+        }
+    }
+
+    /**
+     * This test shows how to retrieve information about a queue
+     * Expected that:
+     * - Queue will have name, size and total messages count
+     * @throws IOException
+     */
+    @Test
+    public void testGetQueueInfo() throws IOException {
+        String queueName = "my_queue_" + ts();
+        Queue queue = new Queue(client, queueName);
+        for (int i = 0; i < 3; i++)
+            queue.push("Some message");
+        QueueModel info = queue.getInfoAboutQueue();
+
+        Assert.assertEquals(queueName, info.getName());
+        Assert.assertFalse(info.getProjectId().isEmpty());
+        Assert.assertEquals(3, info.getSize());
+        Assert.assertEquals(3, info.getTotalMessages());
+    }
+
+    /**
+     * This test shows how to clear all messages from a queue
+     * Expected that:
+     * - after cleaning queue will contain no messages
+     * @throws IOException
+     */
+    @Test
+    public void testClearQueue() throws IOException {
+        queue.push("Some message");
+        Assert.assertTrue(queue.getInfoAboutQueue().getSize() > 0);
+        queue.clear();
+        Assert.assertEquals(0, queue.getInfoAboutQueue().getSize());
+    }
+
+    /**
+     * This test shows that a queue can't be cleared until it has been created
+     * Expected
+     * - HTTPException (404) Queue not found
+     * @throws IOException
+     */
+    @Test(expected = HTTPException.class)
+    public void testGetInfoBeforeQueueCreated() throws IOException {
+        queue.getInfoAboutQueue();
+    }
+
+    /**
+     * This test shows the easist way to create a queue 
+     * @throws IOException
+     */
+    @Test
+    public void testCreateQueue() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel response = queue.create();
+        Assert.assertEquals(name, response.getName());
+        Assert.assertEquals(60, response.getMessageTimeout());
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(name, info.getName());
+    }
+
+    /**
+     * This test shows how to create a queue and specify it's parameters
+     * Using the QueueModel class is preferred way of specifying parameters of queue
+     * Expected that:
+     * - Created queue will have all specified parameters
+     * @throws IOException
+     */
+    @Test
+    public void testCreateQueueWithParams() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        QueueModel payload = new QueueModel();
+        payload.setMessageTimeout(69);
+        payload.setMessageExpiration(404);
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals(69, info.getMessageTimeout());
+        Assert.assertEquals(404, info.getMessageExpiration());
+    }
+
+    /**
+     * This test shows how to create a push queue
+     * To create a queue we need to pass array-list of subscribers, specify queue type, retries count and retries delay
+     * @throws IOException
+     */
+    @Test
+    public void testCreateQueueOverload2() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        ArrayList<Subscriber> subs = new ArrayList<Subscriber>(){{ add(new Subscriber("http://localhost:3000/", "test")); }};
+
+        QueueModel response = queue.create(subs, null, "multicast", 5, 3);
+        Assert.assertEquals(name, response.getName());
+        Assert.assertEquals(60, response.getMessageTimeout());
+        Assert.assertEquals("multicast", response.getType());
+        Assert.assertEquals(5, response.getPushInfo().getRetries().intValue());
+        Assert.assertEquals(3, response.getPushInfo().getRetriesDelay().intValue());
+        Assert.assertEquals(1, response.getPushInfo().getSubscribers().size());
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(name, info.getName());
+    }
+
+    /**
+     * This test shows how to create a push queue
+     * To create a queue we need to pass array-list of subscribers, specify queue type, name of error-queue,
+     * retries count and retries delay
+     * @throws IOException
+     */
+    @Test
+    public void testCreateQueueOverload3() throws IOException {
+        String name = "my_queue_" + ts();
+        Queue queue = new Queue(client, name);
+
+        ArrayList<Subscriber> subs = new ArrayList<Subscriber>(){{ add(new Subscriber("http://localhost:3000/", "test")); }};
+
+        QueueModel response = queue.create(subs, null, "multicast", "err_q", 5, 3);
+        Assert.assertEquals(name, response.getName());
+        Assert.assertEquals(60, response.getMessageTimeout());
+        Assert.assertEquals("multicast", response.getType());
+        Assert.assertEquals(5, response.getPushInfo().getRetries().intValue());
+        Assert.assertEquals(3, response.getPushInfo().getRetriesDelay().intValue());
+        Assert.assertEquals("err_q", response.getPushInfo().getErrorQueue());
+        Assert.assertEquals(1, response.getPushInfo().getSubscribers().size());
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(name, info.getName());
+    }
+
+    /**
+     * This test shows how to update a queue
+     * Feel free to use the QueueModel class to specify other parameters of queue
+     * @throws IOException
+     */
+    @Test
+    public void testUpdateQueue() throws IOException {
+        QueueModel payload = new QueueModel();
+        payload.setMessageTimeout(69);
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals(69, info.getMessageTimeout());
+    }
+
+    /**
+     * This test shows how to replace subscribers of a queue
+     * Expected:
+     * - old subscribers should be replaced by new subscribers
+     * @throws IOException
+     */
+    @Test
+    public void testReplaceQueueSubscribers() throws IOException {
+        QueueModel payload = new QueueModel();
+        payload.addSubscriber(new Subscriber("http://localhost:3000", "test01"));
+        payload.addSubscriber(new Subscriber("http://localhost:3030", "test02"));
+        payload.addSubscriber(new Subscriber("http://localhost:3333", "test03"));
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals(3, info.getPushInfo().getSubscribers().size());
+
+        ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>();
+        subscribers.add(new Subscriber("http://localhost:3000", "test04"));
+        subscribers.add(new Subscriber("http://localhost:3030", "test05"));
+        queue.replaceSubscribers(subscribers);
+
+        QueueModel info2 = queue.getInfoAboutQueue();
+        Assert.assertEquals(2, info2.getPushInfo().getSubscribers().size());
+    }
+
+    /**
+     * This test shows how to update subscribers of a queue
+     * Expected:
+     * - old subscribers should be updated
+     * - one of 3 subscribers not affected by update should stay the same
+     * @throws IOException
+     */
+    @Test
+    public void testUpdateQueueSubscribers() throws IOException {
+        QueueModel payload = new QueueModel();
+        payload.addSubscriber(new Subscriber("http://localhost:3000", "test01"));
+        payload.addSubscriber(new Subscriber("http://localhost:3030", "test02"));
+        payload.addSubscriber(new Subscriber("http://localhost:3333", "test03"));
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals(3, info.getPushInfo().getSubscribers().size());
+
+        ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>();
+        subscribers.add(new Subscriber("http://localhost:3030", "test01"));
+        subscribers.add(new Subscriber("http://localhost:3030", "test03"));
+        queue.updateSubscribers(subscribers);
+
+        QueueModel info2 = queue.getInfoAboutQueue();
+        Assert.assertEquals(3, info2.getPushInfo().getSubscribers().size());
+        for (int i = 0; i < info2.getSubscribers().size(); i++) {
+            Assert.assertEquals(info2.getSubscribers().get(i).getUrl(), "http://localhost:3030");
+        }
+    }
+
+    /**
+     * This test shows how to update parameters of a push queue
+     * @throws IOException
+     */
+    @Test
+    public void testUpdateQueuePushParameters() throws IOException {
+        final String url = "http://localhost:3000";
+
+        ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>() {{ add(new Subscriber(url, "test")); }};
+        QueueModel payload = new QueueModel(new QueuePushModel(subscribers, 4, 7, "test_err"));
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals("test_err", info.getPushInfo().getErrorQueue());
+        Assert.assertEquals("multicast", info.getType());
+        Assert.assertEquals(4, info.getPushInfo().getRetries().intValue());
+        Assert.assertEquals(7, info.getPushInfo().getRetriesDelay().intValue());
+
+        Assert.assertEquals(1, info.getPushInfo().getSubscribers().size());
+        Assert.assertEquals(url, info.getPushInfo().getSubscribers().get(0).getUrl());
+    }
+
+    /**
+     * This test shows how to update alerts of a queue
+     * Expected that:
+     * - new alert will be available after update
+     * @throws IOException
+     */
+    @Test
+    public void testUpdateQueueAlerts() throws IOException {
+        ArrayList<Alert> alerts = new ArrayList<Alert>();
+        alerts.add(new Alert(Alert.typeProgressive, Alert.directionAscending, 5, "some_q"));
+        QueueModel info = queue.updateAlerts(alerts);
+
+        Assert.assertEquals(5, info.getAlerts().get(0).getTrigger());
+        Assert.assertEquals(Alert.directionAscending, info.getAlerts().get(0).getDirection());
+        Assert.assertEquals(Alert.typeProgressive, info.getAlerts().get(0).getType());
+        Assert.assertEquals("some_q", info.getAlerts().get(0).getQueue());
+    }
+
+    /**
+     * This test shows how to delete a queue
+     * Expected:
+     * - HTTPException (404), because queue is no longer available after deleting, so, getInfoAboutQueue
+     *   should raise an exception
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Test(expected = HTTPException.class)
+    public void testDeleteQueue() throws IOException, InterruptedException {
+        queue.push("Some message");
+        queue.get(1,30);
+        queue.destroy();
+        Queue sameQueue = new Queue(client, queue.getName());
+
+        sameQueue.getInfoAboutQueue();
+    }
+
+    /**
+     * This test shows how to add subscribers to a queue.
+     * @throws IOException
+     */
+    @Test
+    public void testAddSubscribers() throws IOException {
+        QueueModel payload = new QueueModel();
+        payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
+        queue.update(payload);
+        queue.addSubscribers(new Subscriber[]{new Subscriber("http://localhost:3002", "test02")});
+
+        QueueModel info = queue.getInfoAboutQueue();
+
+        Assert.assertEquals(2, info.getSubscribers().size());
+        Subscriber subscriber = info.getSubscribers().get(1);
+        Assert.assertEquals("test02", subscriber.getName());
+        Assert.assertEquals("http://localhost:3002", subscriber.getUrl());
+    }
+
+    /**
+     * This test shows another way of replacing subscribers. First one is update() with setting new subscribers
+     * via new QueueModel(new QueuePushModel(subscribersArrayList))
+     * Expected:
+     * - old subscribers to be deleted
+     * - new subscribers to appear in the queue-info
+     * @throws IOException
+     */
+    @Test
+    public void testReplaceSubscribers() throws IOException {
+        QueueModel payload = new QueueModel();
+        payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
+        queue.update(payload);
+        queue.replaceSubscribers(new Subscriber[]{new Subscriber("http://localhost:3002", "test02")});
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(1, info.getSubscribers().size());
+        Subscriber subscriber = info.getSubscribers().get(0);
+        Assert.assertEquals("test02", subscriber.getName());
+        Assert.assertEquals("http://localhost:3002", subscriber.getUrl());
+    }
+
+    @Test
+    @Ignore // there is a bug in implementation of ironmq
+    public void testRemoveSubscribers() throws IOException {
+        QueueModel payload = new QueueModel();
+        Subscriber[] subscribers = new Subscriber[]{
+                new Subscriber("http://localhost:3001", "test01"),
+                new Subscriber("http://localhost:3002", "test02"),
+        };
+        payload.addSubscriber(subscribers[0]);
+        payload.addSubscriber(subscribers[1]);
+        queue.update(payload);
+        queue.removeSubscribers(new Subscriber[]{subscribers[0]});
+
+        QueueModel info = queue.getInfoAboutQueue();
+        Assert.assertEquals(1, info.getSubscribers().size());
+        Subscriber subscriber = info.getSubscribers().get(0);
+        Assert.assertEquals(subscribers[1].getName(), subscriber.getName());
+        Assert.assertEquals(subscribers[1].getUrl(), subscriber.getUrl());
+    }
+
+    private long ts() {
+        return new Date().getTime();
+    }
+
+    private Queue createQueueWithMessage(String queueName) throws IOException {
+        Queue queue = new Queue(client, queueName);
+        queue.push("Test message");
+        return queue;
+    }
+
+    private String repeatString(String s, int times) {
+        return new String(new char[times]).replace("\0", s);
     }
 }

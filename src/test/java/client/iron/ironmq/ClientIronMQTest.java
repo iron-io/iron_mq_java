@@ -3,6 +3,7 @@ package client.iron.ironmq;
 
 import io.iron.ironmq.*;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.FileInputStream;
@@ -16,11 +17,15 @@ public class ClientIronMQTest {
     private String queueName = "java-testing-queue";
     private String token = "";
     private String projectId = "";
+    private Client client;
+
+    @Before
+    public void setUp() throws Exception {
+        client = new Client();
+    }
 
     @Test
     public void testPostMultipleMessagesAndIdsShouldNotBeNull() throws IOException {
-        setCredentials();
-        Client client = new Client(projectId, token, Cloud.ironAWSUSEast);
         Queue queue = new Queue(client, queueName);
         String body = "Hello, IronMQ!";
         queue.push(body, 10);
@@ -39,18 +44,5 @@ public class ClientIronMQTest {
         infoAboutQueue = queue.getInfoAboutQueue();
         Assert.assertEquals(queueSize, infoAboutQueue.getSize());
         queue.destroy();
-    }
-    private void setCredentials() throws IOException {
-        Properties prop = new Properties();
-        InputStream input = null;
-        try {
-            input = new FileInputStream("config.properties");
-        } catch(FileNotFoundException fnfe) {
-            System.out.println("config.properties not found");
-            input = new FileInputStream("../../config.properties"); //maven release hack
-        }
-        prop.load(input);
-        token = prop.getProperty("token");
-        projectId = prop.getProperty("project_id");
     }
 }

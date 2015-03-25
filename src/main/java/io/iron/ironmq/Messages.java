@@ -29,4 +29,12 @@ public class Messages {
     public boolean add(Message m) {
         return messages.add(m);
     }
+
+    public MessageOptions[] toMessageOptions() {
+        int length = messages.size();
+        MessageOptions[] result = new MessageOptions[length];
+        for (int i = 0; i < length; i++)
+            result[i] = new MessageOptions(messages.get(i).getId(), messages.get(i).getReservationId());
+        return result;
+    }
 }
