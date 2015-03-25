@@ -172,27 +172,39 @@ public class Queue {
     /**
      * Touching a reserved message extends its timeout to the duration specified when the message was created.
      *
-     * @param id The ID of the message to delete.
-     *
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
-     * @deprecated It's not possible to touch a message without reservation id since v3 of IronMQ
-     */
-    @Deprecated
-    public void touchMessage(String id) throws IOException {
-        touchMessage(id, null);
-    }
-
-    /**
-     * Touching a reserved message extends its timeout to the duration specified when the message was created.
-     *
      * @param message The message to delete.
      *
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public MessageOptions touchMessage(Message message) throws IOException {
-        MessageOptions messageOptions = touchMessage(message.getId(), message.getReservationId());
+        return touchMessage(message, null);
+    }
+
+    /**
+     * Touching a reserved message extends its timeout to the specified duration.
+     *
+     * @param message The message to delete.
+     * @param timeout After timeout (in seconds), item will be placed back onto queue.
+     *
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public MessageOptions touchMessage(Message message, int timeout) throws IOException {
+        return touchMessage(message, (long) timeout);
+    }
+
+    /**
+     * Touching a reserved message extends its timeout to the duration specified when the message was created.
+     *
+     * @param message The message to delete.
+     * @param timeout After timeout (in seconds), item will be placed back onto queue.
+     *
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public MessageOptions touchMessage(Message message, Long timeout) throws IOException {
+        MessageOptions messageOptions = touchMessage(message.getId(), message.getReservationId(), timeout);
         message.setReservationId(messageOptions.getReservationId());
         return messageOptions;
     }
@@ -201,12 +213,41 @@ public class Queue {
      * Touching a reserved message extends its timeout to the duration specified when the message was created.
      *
      * @param id The ID of the message to delete.
+     * @param reservationId This id is returned when you reserve a message and must be provided to delete a message that is reserved.
      *
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public MessageOptions touchMessage(String id, String reservationId) throws IOException {
-        String payload = new Gson().toJson(new MessageOptions(reservationId));
+        return touchMessage(id, reservationId, null);
+    }
+
+    /**
+     * Touching a reserved message extends its timeout to the specified duration.
+     *
+     * @param id The ID of the message to delete.
+     * @param reservationId This id is returned when you reserve a message and must be provided to delete a message that is reserved.
+     * @param timeout After timeout (in seconds), item will be placed back onto queue.
+     *
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public MessageOptions touchMessage(String id, String reservationId, int timeout) throws IOException {
+        return touchMessage(id, reservationId, (long) timeout);
+    }
+
+    /**
+     * Touching a reserved message extends its timeout to the duration specified when the message was created.
+     *
+     * @param id The ID of the message to delete.
+     * @param reservationId This id is returned when you reserve a message and must be provided to delete a message that is reserved.
+     * @param timeout After timeout (in seconds), item will be placed back onto queue.
+     *
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public MessageOptions touchMessage(String id, String reservationId, Long timeout) throws IOException {
+        String payload = new Gson().toJson(new MessageOptions(null, reservationId, timeout));
         IronReader reader = client.post("queues/" + name + "/messages/" + id + "/touch", payload);
         try {
             return new Gson().fromJson(reader.reader, MessageOptions.class);
@@ -237,7 +278,20 @@ public class Queue {
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void deleteMessage(String id, String reservationId) throws IOException {
-        String payload = new Gson().toJson(new MessageOptions(reservationId));
+        deleteMessage(id, reservationId, null);
+    }
+
+    /**
+     * Deletes a Message from the queue.
+     *
+     * @param id The ID of the message to delete.
+     * @param reservationId Reservation Id of the message. Reserved message could not be deleted without reservation Id.
+     *
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public void deleteMessage(String id, String reservationId, String subscriberName) throws IOException {
+        String payload = new Gson().toJson(new SubscribedMessageOptions(reservationId, subscriberName));
         IronReader reader = client.delete("queues/" + name + "/messages/" + id, payload);
         reader.close();
     }
@@ -464,22 +518,6 @@ public class Queue {
      * Release reserved message after specified time. If there is no message with such id on the queue, an
      * EmptyQueueException is thrown.
      *
-     * @param id The ID of the message to release.
-     * @param delay The time after which the message will be released.
-     *
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
-     * @deprecated Reservation Id is required for message releasing since v3
-     */
-    @Deprecated
-    public void releaseMessage(String id, int delay) throws IOException {
-        releaseMessage(id, null, new Long(delay));
-    }
-
-    /**
-     * Release reserved message after specified time. If there is no message with such id on the queue, an
-     * EmptyQueueException is thrown.
-     *
      * @param message The message to release.
      *
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
@@ -525,18 +563,6 @@ public class Queue {
      * @param subscribersList The array list of subscribers.
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
-     * @deprecated Use updateSubscribers instead
-     */
-    @Deprecated
-    public void addSubscribersToQueue(ArrayList<Subscriber> subscribersList) throws IOException {
-        this.updateSubscribers(subscribersList);
-    }
-
-    /**
-     * Add subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
-     * @param subscribersList The array list of subscribers.
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
     public void addSubscribers(ArrayList<Subscriber> subscribersList) throws IOException {
         addSubscribers(new Subscribers(subscribersList));
@@ -565,14 +591,33 @@ public class Queue {
     }
 
     /**
-     * Add subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
+     * Update old or add new subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
      * @param subscribersList The array list of subscribers.
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
-    public QueueModel updateSubscribers(ArrayList<Subscriber> subscribersList) throws IOException {
-        QueueModel payload = new QueueModel(new QueuePushModel(subscribersList));
-        return this.update(payload);
+    public void updateSubscribers(ArrayList<Subscriber> subscribersList) throws IOException {
+        addSubscribers(subscribersList);
+    }
+
+    /**
+     * Update old or add new subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
+     * @param subscribers The array of subscribers.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public void updateSubscribers(Subscriber[] subscribers) throws IOException {
+        addSubscribers(subscribers);
+    }
+
+    /**
+     * Update old or add new subscribers to Queue. If there is no queue, an EmptyQueueException is thrown.
+     * @param subscribers The array of subscribers.
+     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
+     * @throws java.io.IOException If there is an error accessing the IronMQ server.
+     */
+    public void updateSubscribers(Subscribers subscribers) throws IOException {
+        addSubscribers(subscribers);
     }
 
     /**
@@ -607,22 +652,6 @@ public class Queue {
     public void replaceSubscribers(Subscribers subscribers) throws IOException {
         String payload = new Gson().toJson(subscribers);
         IronReader reader = client.put("queues/" + name + "/subscribers", payload);
-        reader.close();
-    }
-
-
-    /**
-     * Remove subscribers from Queue. If there is no queue, an EmptyQueueException is thrown.
-     * @param subscribersList The array list of subscribers.
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
-     */
-    public void removeSubscribersFromQueue(ArrayList<Subscriber> subscribersList) throws IOException {
-        String url = "queues/" + name + "/subscribers";
-        Subscribers subscribers = new Subscribers(subscribersList);
-        Gson gson = new Gson();
-        String jsonMessages = gson.toJson(subscribers);
-        IronReader reader = client.delete(url, jsonMessages);
         reader.close();
     }
 
@@ -677,14 +706,13 @@ public class Queue {
     /**
      * Delete push message for subscriber by subscriber ID and message ID. If there is no message or subscriber,
      * an EmptyQueueException is thrown.
-     * @param subscriberId The Subscriber ID.
+     * @param subscriberName The name of Subscriber.
      * @param messageId The Message ID.
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
-    public void deletePushMessageForSubscriber(String messageId, String subscriberId) throws  IOException {
-        IronReader reader = client.delete("queues/" + name + "/messages/" + messageId + "/subscribers/" + subscriberId);
-        reader.close();
+    public void deletePushMessageForSubscriber(String messageId, String reservationId, String subscriberName) throws  IOException {
+        deleteMessage(messageId, reservationId, subscriberName);
     }
 
     /**

@@ -17,10 +17,12 @@ import java.util.Properties;
 public class IronMQTest {
     private String queueName = "java-testing-queue";
     private Client client;
+    private Queue queue;
 
     @Before
     public void setUp() throws Exception {
         client = new Client(null, null, null, 3, 1);
+        queue = new Queue(client, "my_queue_" + ts());
     }
 
     /**
@@ -42,7 +44,6 @@ public class IronMQTest {
      */
     @Test
     public void testPostMessage() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         String messageId = queue.push("Test message");
         Assert.assertTrue(messageId.length() > 0);
     }
@@ -54,7 +55,6 @@ public class IronMQTest {
      */
     @Test
     public void testReserveMessageViaGet() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         String messageText = "Test message " + ts();
         String messageId = queue.push(messageText);
         Message message = queue.get();
@@ -72,7 +72,6 @@ public class IronMQTest {
      */
     @Test(expected = EmptyQueueException.class)
     public void testReserveMessageFromEmptyQueue() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         queue.push("");
         queue.clear();
         Message message = queue.reserve();
@@ -85,7 +84,6 @@ public class IronMQTest {
      */
     @Test
     public void testReserveMessagesFromEmptyQueue() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         queue.push("");
         queue.clear();
         Messages messages = queue.reserve(4);
@@ -102,7 +100,6 @@ public class IronMQTest {
      */
     @Test
     public void testReserveMessage() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         String messageText = "Test message " + ts();
         String messageId = queue.push(messageText);
         Message message = queue.reserve();
@@ -122,7 +119,6 @@ public class IronMQTest {
      */
     @Test
     public void testReserveMessages() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         String messageText = "Test message " + ts();
         Ids ids = queue.pushMessages(new String[]{messageText + "0", messageText + "1", messageText + "2"});
         Messages messages = queue.reserve(4);
@@ -153,7 +149,6 @@ public class IronMQTest {
      */
     @Test
     public void testReserveMessageWithWait() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         queue.push("test");
         queue.clear();
 
@@ -179,7 +174,6 @@ public class IronMQTest {
      */
     @Test
     public void testPeekMessage() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         String messageText = "Test message " + ts();
         String messageId = queue.push(messageText);
         Message message = queue.peek();
@@ -205,7 +199,6 @@ public class IronMQTest {
      */
     @Test
     public void testGetMessageById() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         String messageText = "Test message " + ts();
         String messageId = queue.push(messageText);
         Message message = queue.getMessageById(messageId);
@@ -250,7 +243,6 @@ public class IronMQTest {
      */
     @Test(expected = HTTPException.class)
     public void testDeleteReservedMessageWithoutReservationId() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         queue.clear();
         queue.push("Test message");
         Message message = queue.reserve();
@@ -316,7 +308,6 @@ public class IronMQTest {
      */
     @Test(expected = HTTPException.class)
     public void testDeleteReservedMessagesWithoutReservationId() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         queue.clear();
         queue.push("Test message 1");
         queue.push("Test message 2");
@@ -324,48 +315,6 @@ public class IronMQTest {
 
         messages.getMessage(0).setReservationId(null);
         queue.deleteMessages(messages);
-    }
-
-    /**
-     * Test shows how to increase time of message reservation
-     * Expected that:
-     * - message will be available after 5 seconds (initial timeout is 5 seconds)
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    @Test
-    public void testTouchMessage() throws IOException, InterruptedException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
-        queue.push("Test message");
-        Message message = queue.reserve(1, 5).getMessage(0);
-
-        Thread.sleep(3500);
-        queue.touchMessage(message);
-        Thread.sleep(3500);
-        Assert.assertEquals(0, queue.reserve(1).getSize());
-    }
-
-    /**
-     * Test shows how to touch a message multiple times.
-     * Expected that:
-     * - after second touch call message will have new reservation id
-     * - new reservation id will not equal to old one
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    @Test
-    public void testTouchMessageTwice() throws IOException, InterruptedException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
-        queue.push("Test message");
-        Message message = queue.reserve(1, 5).getMessage(0);
-
-        Thread.sleep(3500);
-        MessageOptions options1 = queue.touchMessage(message);
-        Thread.sleep(3500);
-        MessageOptions options2 = queue.touchMessage(message);
-
-        Assert.assertFalse(options1.getReservationId().equals(options2.getReservationId()));
-        Assert.assertEquals(message.getReservationId(), options2.getReservationId());
     }
 
     /**
@@ -377,35 +326,14 @@ public class IronMQTest {
      */
     @Test
     public void testReleaseMessage() throws IOException, InterruptedException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         queue.push("Test message");
-        Message message = queue.reserve(1, 5).getMessage(0);
+        Message message = queue.reserve(1).getMessage(0);
 
         Thread.sleep(500);
         queue.releaseMessage(message);
 
         Message sameMessage = queue.reserve();
         Assert.assertEquals(message.getId(), sameMessage.getId());
-    }
-
-    /**
-     * This test shows that a reserved message could not be released without a reservation id
-     * Note:
-     * - queue.releaseMessage(id, delay) has been deprecated
-     * - reserved message can't be touched without reservation id as well
-     * Expected:
-     * - HTTPException (403) Wrong reservation_id
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    @Test(expected = HTTPException.class)
-    public void testReleaseMessageWithoutReservationId() throws IOException, InterruptedException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
-        queue.push("Test message");
-        Message message = queue.reserve(1, 5).getMessage(0);
-
-        Thread.sleep(500);
-        queue.releaseMessage(message.getId(), 0);
     }
 
     /**
@@ -532,7 +460,6 @@ public class IronMQTest {
      */
     @Test
     public void testClearQueue() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
         queue.push("Some message");
         Assert.assertTrue(queue.getInfoAboutQueue().getSize() > 0);
         queue.clear();
@@ -547,8 +474,7 @@ public class IronMQTest {
      */
     @Test(expected = HTTPException.class)
     public void testGetInfoBeforeQueueCreated() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
-        QueueModel info = queue.getInfoAboutQueue();
+        queue.getInfoAboutQueue();
     }
 
     /**
@@ -646,9 +572,6 @@ public class IronMQTest {
      */
     @Test
     public void testUpdateQueue() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
         QueueModel payload = new QueueModel();
         payload.setMessageTimeout(69);
         QueueModel info = queue.update(payload);
@@ -657,16 +580,13 @@ public class IronMQTest {
     }
 
     /**
-     * This test shows how to update subscribers of a queue
+     * This test shows how to replace subscribers of a queue
      * Expected:
      * - old subscribers should be replaced by new subscribers
      * @throws IOException
      */
     @Test
-    public void testUpdateQueueSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
+    public void testReplaceQueueSubscribers() throws IOException {
         QueueModel payload = new QueueModel();
         payload.addSubscriber(new Subscriber("http://localhost:3000", "test01"));
         payload.addSubscriber(new Subscriber("http://localhost:3030", "test02"));
@@ -678,9 +598,39 @@ public class IronMQTest {
         ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>();
         subscribers.add(new Subscriber("http://localhost:3000", "test04"));
         subscribers.add(new Subscriber("http://localhost:3030", "test05"));
-        QueueModel info2 = queue.updateSubscribers(subscribers);
+        queue.replaceSubscribers(subscribers);
 
+        QueueModel info2 = queue.getInfoAboutQueue();
         Assert.assertEquals(2, info2.getPushInfo().getSubscribers().size());
+    }
+
+    /**
+     * This test shows how to update subscribers of a queue
+     * Expected:
+     * - old subscribers should be updated
+     * - one of 3 subscribers not affected by update should stay the same
+     * @throws IOException
+     */
+    @Test
+    public void testUpdateQueueSubscribers() throws IOException {
+        QueueModel payload = new QueueModel();
+        payload.addSubscriber(new Subscriber("http://localhost:3000", "test01"));
+        payload.addSubscriber(new Subscriber("http://localhost:3030", "test02"));
+        payload.addSubscriber(new Subscriber("http://localhost:3333", "test03"));
+        QueueModel info = queue.update(payload);
+
+        Assert.assertEquals(3, info.getPushInfo().getSubscribers().size());
+
+        ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>();
+        subscribers.add(new Subscriber("http://localhost:3030", "test01"));
+        subscribers.add(new Subscriber("http://localhost:3030", "test03"));
+        queue.updateSubscribers(subscribers);
+
+        QueueModel info2 = queue.getInfoAboutQueue();
+        Assert.assertEquals(3, info2.getPushInfo().getSubscribers().size());
+        for (int i = 0; i < info2.getSubscribers().size(); i++) {
+            Assert.assertEquals(info2.getSubscribers().get(i).getUrl(), "http://localhost:3030");
+        }
     }
 
     /**
@@ -689,9 +639,7 @@ public class IronMQTest {
      */
     @Test
     public void testUpdateQueuePushParameters() throws IOException {
-        String name = "my_queue_" + ts();
         final String url = "http://localhost:3000";
-        Queue queue = new Queue(client, name);
 
         ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>() {{ add(new Subscriber(url, "test")); }};
         QueueModel payload = new QueueModel(new QueuePushModel(subscribers, 4, 7, "test_err"));
@@ -714,8 +662,6 @@ public class IronMQTest {
      */
     @Test
     public void testUpdateQueueAlerts() throws IOException {
-        Queue queue = new Queue(client, "my_queue_" + ts());
-
         ArrayList<Alert> alerts = new ArrayList<Alert>();
         alerts.add(new Alert(Alert.typeProgressive, Alert.directionAscending, 5, "some_q"));
         QueueModel info = queue.updateAlerts(alerts);
@@ -736,11 +682,9 @@ public class IronMQTest {
      */
     @Test(expected = HTTPException.class)
     public void testDeleteQueue() throws IOException, InterruptedException {
-        String queueName = "my_queue_" + ts();
-        Queue queue = new Queue(client, queueName);
         queue.push("Some message");
         queue.destroy();
-        Queue sameQueue = new Queue(client, queueName);
+        Queue sameQueue = new Queue(client, queue.getName());
 
         sameQueue.getInfoAboutQueue();
     }
@@ -751,9 +695,6 @@ public class IronMQTest {
      */
     @Test
     public void testAddSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
         QueueModel payload = new QueueModel();
         payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
         queue.update(payload);
@@ -777,9 +718,6 @@ public class IronMQTest {
      */
     @Test
     public void testReplaceSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
         QueueModel payload = new QueueModel();
         payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
         queue.update(payload);
@@ -795,9 +733,6 @@ public class IronMQTest {
     @Test
     @Ignore // there is a bug in implementation of ironmq
     public void testRemoveSubscribers() throws IOException {
-        String name = "my_queue_" + ts();
-        Queue queue = new Queue(client, name);
-
         QueueModel payload = new QueueModel();
         Subscriber[] subscribers = new Subscriber[]{
                 new Subscriber("http://localhost:3001", "test01"),
