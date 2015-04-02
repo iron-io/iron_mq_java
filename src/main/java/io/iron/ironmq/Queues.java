@@ -53,7 +53,7 @@ public class Queues {
      * Retrieves queues in alphabetical order.
      *
      * @param previousQueueName this is the last queue on the previous page, it will start from the next one.
-     *                          If queue with specified name doesn’t exist result will contain first per_page queues
+     *                          If queue with specified name doesn't exist result will contain first per_page queues
      *                          that lexicographically greater than previous
      *
      * @throws HTTPException If the IronMQ service returns a status other than 200 OK.
@@ -67,7 +67,7 @@ public class Queues {
      * Retrieves queues in alphabetical order.
      *
      * @param previousQueueName this is the last queue on the previous page, it will start from the next one.
-     *                          If queue with specified name doesn’t exist result will contain first per_page queues
+     *                          If queue with specified name doesn't exist result will contain first per_page queues
      *                          that lexicographically greater than previous
      * @param perPage number of elements in response, default for IronMQ is 30
      *
