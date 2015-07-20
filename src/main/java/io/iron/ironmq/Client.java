@@ -11,6 +11,8 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.Proxy;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +48,7 @@ public class Client {
     private String[] optionsList;
     private Map<String, Object> options;
     private String env;
+    private Proxy httpProxy;
 
     static {
         System.setProperty("https.protocols", "TLSv1");
@@ -87,6 +90,32 @@ public class Client {
         if (cloud != null) {
             userOptions.put("cloud", cloud);
         }
+
+        loadConfiguration("iron", "mq", userOptions, new String[]{"project_id", "token", "cloud"});
+    }
+
+    /**
+     * Constructs a new Client using the specified project ID and token.
+     * A null projectId, token, or cloud will be filled in using the
+     * filesystem and environment for configuration as described
+     * <a href="http://dev.iron.io/worker/reference/configuration/">here</a>.
+     * The network is not accessed during construction and this call
+     * succeeds even if the credentials are invalid.
+     * proxy must not be null. there are other constructors for that kind of thing.
+     *
+     * @param projectId A 24-character project ID.
+     * @param token An OAuth token.
+     * @param cloud The cloud to use.
+     * @param proxy an address of an http proxy to use for each request
+     */
+    public Client(String projectId, String token, Cloud cloud, SocketAddress proxy) {
+        Map<String, Object> userOptions = new HashMap<String, Object>();
+        userOptions.put("project_id", projectId);
+        userOptions.put("token", token);
+        if (cloud != null) {
+            userOptions.put("cloud", cloud);
+        }
+        httpProxy = new Proxy(Proxy.Type.HTTP, proxy);
 
         loadConfiguration("iron", "mq", userOptions, new String[]{"project_id", "token", "cloud"});
     }
@@ -154,7 +183,12 @@ public class Client {
     }
 
     private IronReader singleRequest(String method, URL url, String body) throws IOException {
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        HttpURLConnection conn;
+        if (httpProxy != null) {
+          conn = (HttpURLConnection) url.openConnection(httpProxy);
+        } else {
+          conn = (HttpURLConnection) url.openConnection();
+        }
         conn.setRequestMethod(method);
         conn.setRequestProperty("Authorization", "OAuth " + token);
         conn.setRequestProperty("User-Agent", "IronMQ Java Client");
