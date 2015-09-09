@@ -29,7 +29,9 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class Client {
     static final private String defaultApiVersion = "3";
-    private String apiVersion;
+    static final private Gson gson = new Gson();
+
+    final private String apiVersion;
 
     static final Random rand = new Random();
 
@@ -228,7 +230,6 @@ public class Client {
                 InputStreamReader reader = null;
                 try {
                     reader = new InputStreamReader(conn.getErrorStream());
-                    Gson gson = new Gson();
                     Error error = gson.fromJson(reader, Error.class);
                     msg = error.msg;
                 } catch (JsonSyntaxException e) {
@@ -395,7 +396,6 @@ public class Client {
             return;
         }
         configReader = new BufferedReader(configReader);
-        Gson gson = new Gson();
 
         Map<String, Object> configHash;
         try {
