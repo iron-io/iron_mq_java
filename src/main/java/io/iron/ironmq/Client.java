@@ -22,6 +22,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.JsonWriter;
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -159,6 +160,10 @@ public class Client {
         return request("POST", endpoint, body);
     }
 
+    IronReader post(String endpoint, Object body) throws IOException {
+        return request("POST", endpoint, body);
+    }
+
     IronReader put(String endpoint, String body) throws IOException {
         return request("PUT", endpoint, body);
     }
@@ -167,7 +172,7 @@ public class Client {
         return request("PATCH", endpoint, body);
     }
 
-    private IronReader request(String method, String endpoint, String body) throws IOException {
+    private IronReader request(String method, String endpoint, Object body) throws IOException {
         String path = "/" + apiVersion + "/projects/" + projectId + "/" + endpoint;
         URL url = new URL(cloud.scheme, cloud.host, cloud.port, cloud.pathPrefix + path);
 
@@ -199,7 +204,7 @@ public class Client {
         String msg;
     }
 
-    private IronReader singleRequest(String method, URL url, String body) throws IOException {
+    private IronReader singleRequest(String method, URL url, Object body) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         if (method.equals("DELETE") || method.equals("PATCH")) {
             conn.setRequestMethod("POST");
@@ -219,8 +224,14 @@ public class Client {
 
         if (body != null) {
             OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream(), "UTF-8");
-            out.write(body);
-            out.close();
+            if (body instanceof String) {
+                out.write((String)body);
+                out.close();
+            } else {
+                JsonWriter jwriter = new JsonWriter(out);
+                gson.toJson(body, body.getClass(), jwriter);
+                jwriter.close();
+            }
         }
 
         int status = conn.getResponseCode();

@@ -422,9 +422,8 @@ public class Queue {
         message.setExpiresIn(expiresIn);
 
         Messages msgs = new Messages(message);
-        String body = gson.toJson(msgs);
 
-        IronReader reader = client.post("queues/" + name + "/messages", body);
+        IronReader reader = client.post("queues/" + name + "/messages", msgs);
         Ids ids = gson.fromJson(reader.reader, Ids.class);
         reader.close();
         return ids.getId(0);
@@ -452,9 +451,8 @@ public class Queue {
         }
 
         MessagesArrayList msgs = new MessagesArrayList(messages);
-        String jsonMessages = gson.toJson(msgs);
 
-        IronReader reader = client.post("queues/" + name + "/messages", jsonMessages);
+        IronReader reader = client.post("queues/" + name + "/messages", msgs);
         Ids ids = gson.fromJson(reader.reader, Ids.class);
         reader.close();
         return ids;
