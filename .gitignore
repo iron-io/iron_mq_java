@@ -9,4 +9,5 @@ config.properties
 /.idea
 *.iml
 /iron.json
-
+/.iron.json
+config/
