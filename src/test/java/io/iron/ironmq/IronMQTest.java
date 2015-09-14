@@ -509,7 +509,7 @@ public class IronMQTest {
         QueueModel payload = new QueueModel();
         payload.setMessageTimeout(69);
         payload.setMessageExpiration(404);
-        QueueModel info = queue.update(payload);
+        QueueModel info = queue.create(payload);
 
         Assert.assertEquals(69, info.getMessageTimeout());
         Assert.assertEquals(404, info.getMessageExpiration());
@@ -572,6 +572,7 @@ public class IronMQTest {
      */
     @Test
     public void testUpdateQueue() throws IOException {
+        queue.create();
         QueueModel payload = new QueueModel();
         payload.setMessageTimeout(69);
         QueueModel info = queue.update(payload);
@@ -591,7 +592,7 @@ public class IronMQTest {
         payload.addSubscriber(new Subscriber("http://localhost:3000", "test01"));
         payload.addSubscriber(new Subscriber("http://localhost:3030", "test02"));
         payload.addSubscriber(new Subscriber("http://localhost:3333", "test03"));
-        QueueModel info = queue.update(payload);
+        QueueModel info = queue.create(payload);
 
         Assert.assertEquals(3, info.getPushInfo().getSubscribers().size());
 
@@ -617,7 +618,7 @@ public class IronMQTest {
         payload.addSubscriber(new Subscriber("http://localhost:3000", "test01"));
         payload.addSubscriber(new Subscriber("http://localhost:3030", "test02"));
         payload.addSubscriber(new Subscriber("http://localhost:3333", "test03"));
-        QueueModel info = queue.update(payload);
+        QueueModel info = queue.create(payload);
 
         Assert.assertEquals(3, info.getPushInfo().getSubscribers().size());
 
@@ -639,11 +640,12 @@ public class IronMQTest {
      */
     @Test
     public void testUpdateQueuePushParameters() throws IOException {
+        // TODO: perform real udate
         final String url = "http://localhost:3000";
 
         ArrayList<Subscriber> subscribers = new ArrayList<Subscriber>() {{ add(new Subscriber(url, "test")); }};
         QueueModel payload = new QueueModel(new QueuePushModel(subscribers, 4, 7, "test_err"));
-        QueueModel info = queue.update(payload);
+        QueueModel info = queue.create(payload);
 
         Assert.assertEquals("test_err", info.getPushInfo().getErrorQueue());
         Assert.assertEquals("multicast", info.getType());
@@ -662,6 +664,7 @@ public class IronMQTest {
      */
     @Test
     public void testUpdateQueueAlerts() throws IOException {
+        queue.create();
         ArrayList<Alert> alerts = new ArrayList<Alert>();
         alerts.add(new Alert(Alert.typeProgressive, Alert.directionAscending, 5, "some_q"));
         QueueModel info = queue.updateAlerts(alerts);
@@ -697,7 +700,7 @@ public class IronMQTest {
     public void testAddSubscribers() throws IOException {
         QueueModel payload = new QueueModel();
         payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
-        queue.update(payload);
+        queue.create(payload);
         queue.addSubscribers(new Subscriber[]{new Subscriber("http://localhost:3002", "test02")});
 
         QueueModel info = queue.getInfoAboutQueue();
@@ -720,7 +723,7 @@ public class IronMQTest {
     public void testReplaceSubscribers() throws IOException {
         QueueModel payload = new QueueModel();
         payload.addSubscriber(new Subscriber("http://localhost:3001", "test01"));
-        queue.update(payload);
+        queue.create(payload);
         queue.replaceSubscribers(new Subscriber[]{new Subscriber("http://localhost:3002", "test02")});
 
         QueueModel info = queue.getInfoAboutQueue();
@@ -763,4 +766,6 @@ public class IronMQTest {
     private String repeatString(String s, int times) {
         return new String(new char[times]).replace("\0", s);
     }
+//
+//    private void createAQueue()
 }
