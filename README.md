@@ -168,10 +168,8 @@ More complex example:
 
 ```java
 String body = "Hello, IronMQ!";
-int timeout = 30; // this parameter is redundant and left only for backward compatibility
 int delay = 0;
-int expiresIn = 0;
-String messageId = queue.push(body, timeout, delay, expiresIn);
+String messageId = queue.push(body, delay);
 ```
 
 Post multiple messages in one API call:
@@ -286,15 +284,8 @@ Ids ids = queue.pushMessages(messages);
 
 **Optional parameters (3rd, `array` of key-value pairs):**
 
-* ~~`timeout`~~: **Deprecated**. After timeout (in seconds), item will be placed back onto queue.
-You must delete the message from the queue to ensure it does not go back onto the queue.
- Default is 60 seconds. Minimum is 30 seconds. Maximum is 86,400 seconds (24 hours).
-
 * `delay`: The item will not be available on the queue until this many seconds have passed.
 Default is 0 seconds. Maximum is 604,800 seconds (7 days).
-
-* `expires_in`: How long in seconds to keep the item on the queue before it is deleted.
-Default is 604,800 seconds (7 days). Maximum is 2,592,000 seconds (30 days).
 
 --
 
