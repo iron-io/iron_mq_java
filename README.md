@@ -19,7 +19,7 @@ There are three ways to get this package.
         <dependency>
             <groupId>io.iron.ironmq</groupId>
             <artifactId>ironmq</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.3</version>
         </dependency>
     </dependencies>
 ```
