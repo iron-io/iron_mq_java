@@ -1,9 +1,7 @@
-IronMQ On-Premise/V3 Java Client
+IronMQ Java Client
 ----------------
 
-**Note:** You are reading documentation of Iron.MQ v3. There are some differences from the previous version of IronMQ. For more information please go to [Iron.io Dev Center](http://dev.iron.io/mq-onpremise/).
-
-This version is for **IronMq Version 3** and **On-Premise**. If you are using the public version please use [version 0.0.17](http://github.com/iron-io/iron_mq_java)
+**Note:** There are some differences from the previous version of IronMQ. For more information please go to [Iron.io Dev Center](http://dev.iron.io/mq/3/reference/api/#basics).
 
 
 Getting Started
@@ -441,9 +439,9 @@ queue.deletePushMessageForSubscriber(ids.getId(0), subscribersInfo.getSubscriber
 
 ## Further Links
 
-* [IronMQ Overview](http://dev.iron.io/mq-onpremise/)
-* [IronMQ v3 REST/HTTP API](http://dev.iron.io/mq-onpremise/reference/api/)
-* [Other Client Libraries](http://dev.iron.io/mq-onpremise/reference/client_libraries/)
+* [IronMQ Overview](http://dev.iron.io/mq/3/)
+* [IronMQ v3 REST/HTTP API](http://dev.iron.io/mq/3/reference/api/)
+* [Other Client Libraries](http://dev.iron.io/mq/3/libraries/)
 * [Live Chat, Support & Fun](http://get.iron.io/chat)
 
 -------------
