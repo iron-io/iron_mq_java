@@ -2,7 +2,7 @@
     "token": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "project_id": "yyyyyyyyyyyyyyyyyyyyyyyy",
     "scheme": "https",
-    "host": "mq-v3-aws-us-east-1.iron.io",
+    "host": "mq-aws-us-east-1-1.iron.io",
     "port": 443,
     "keystone": {
         "server": "http://ec2-11-11-111-111.compute-1.amazonaws.com/v2.0/",

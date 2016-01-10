@@ -52,7 +52,7 @@ Put all settings in iron.json file. At least token and project_id. But `host`, `
   "token": "m6000000000000000000RJ",
   "project_id": "54000000000000000000000d",
   "scheme": "http",
-  "host": "mq-v3-aws-us-east-1.iron.io",
+  "host": "mq-aws-us-east-1-1.iron.io",
   "port": 80
 }
 ```
