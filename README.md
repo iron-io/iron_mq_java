@@ -430,7 +430,7 @@ Returns an array of subscribers with status.
 
 ```java
 String[] messages = {"test1", "test2"};
-Ids ids = queue.pushMssages(messages);
+Ids ids = queue.pushMessages(messages);
 SubscribersInfo subscribersInfo = queue.getPushStatusForMessage(ids.getId(0));
 queue.deletePushMessageForSubscriber(ids.getId(0), subscribersInfo.getSubscribers().get(0).id);
 ```
@@ -442,7 +442,6 @@ queue.deletePushMessageForSubscriber(ids.getId(0), subscribersInfo.getSubscriber
 * [IronMQ Overview](http://dev.iron.io/mq/3/)
 * [IronMQ v3 REST/HTTP API](http://dev.iron.io/mq/3/reference/api/)
 * [Other Client Libraries](http://dev.iron.io/mq/3/libraries/)
-* [Live Chat, Support & Fun](http://get.iron.io/chat)
 
 -------------
 В© 2011 - 2014 Iron.io Inc. All Rights Reserved.
