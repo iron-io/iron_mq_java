@@ -8,9 +8,9 @@ public class QueueModel {
     private String id;
     private String name;
     private String type;
-    private Integer size;
+    private Long size;
     private String project_id;
-    private Integer total_messages;
+    private Long total_messages;
     private QueuePushModel push;
     private ArrayList<Alert> alerts;
     @SerializedName("message_timeout") private Integer messageTimeout;
@@ -19,8 +19,8 @@ public class QueueModel {
     public QueueModel(String id, String name, Integer size, Integer total_messages, String project_id, Integer retries, String pushType, Integer retriesDelay, String errorQueue, ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts) {
         this.id = id;
         this.name = name;
-        this.size = size;
-        this.total_messages = total_messages;
+        this.size = (long)size;
+        this.total_messages = (long)total_messages;
         this.project_id = project_id;
         this.alerts = alerts;
     }
@@ -63,12 +63,25 @@ public class QueueModel {
         this.name = name;
     }
 
+    /**
+     * Returns the size of the queue.
+     *
+     * @deprecated Use getSizeLong() instead.
+     */
+    @Deprecated
     public int getSize() {
+        return (int)(long)size;
+    }
+
+    /**
+     * Returns the size of the queue.
+     */
+    public long getSizeLong() {
         return size;
     }
 
     public void setSize(int size) {
-        this.size = size;
+        this.size = (long)size;
     }
 
     /**
@@ -78,13 +91,23 @@ public class QueueModel {
      */
     @Deprecated
     public int getTotal_messages() {
-        return total_messages;
+        return (int)(long)total_messages;
+    }
+
+    /**
+     * Returns total count of messages ever placed to the queue.
+     *
+     * @deprecated Use getTotalMessagesLong() instead.
+     */
+    @Deprecated
+    public int getTotalMessages() {
+        return (int)(long)total_messages;
     }
 
     /**
      * Returns total count of messages ever placed to the queue.
      */
-    public int getTotalMessages() {
+    public long getTotalMessagesLong() {
         return total_messages;
     }
 
