@@ -221,6 +221,7 @@ public class Client {
         }
         
         conn.setConnectTimeout(60000);
+        conn.setReadTimeout(60000);
 
         conn.connect();
 
