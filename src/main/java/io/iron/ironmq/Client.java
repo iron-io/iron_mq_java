@@ -219,6 +219,9 @@ public class Client {
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
         }
+        
+        conn.setConnectTimeout(60000);
+        conn.setReadTimeout(60000);
 
         conn.connect();
 
