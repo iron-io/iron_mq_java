@@ -53,10 +53,6 @@ public class Client {
     private Map<String, Object> options;
     private String env;
 
-    static {
-        System.setProperty("https.protocols", "TLSv1");
-    }
-
     /**
      * This constructor is equivalent to {@link #Client(String, String, Cloud, Integer) Client(null, null, null, null)}.
      */
