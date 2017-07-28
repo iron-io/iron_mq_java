@@ -52,6 +52,8 @@ public class Client {
     private String[] optionsList;
     private Map<String, Object> options;
     private String env;
+    private int connectionTimeOutMs = 60000;
+    private int readTimeOutMs       = 60000;
 
     /**
      * This constructor is equivalent to {@link #Client(String, String, Cloud, Integer) Client(null, null, null, null)}.
@@ -216,8 +218,8 @@ public class Client {
             conn.setDoOutput(true);
         }
         
-        conn.setConnectTimeout(60000);
-        conn.setReadTimeout(60000);
+        conn.setConnectTimeout(connectionTimeOutMs);
+        conn.setReadTimeout(readTimeOutMs);
 
         conn.connect();
 
@@ -444,4 +446,20 @@ public class Client {
         }
     }
 
+    public int getConnectionTimeOutMs() {
+        return connectionTimeOutMs;
+    }
+
+    public void setConnectionTimeOutMs(final int connectionTimeOutMs) {
+        this.connectionTimeOutMs = connectionTimeOutMs;
+    }
+
+    public int getReadTimeOutMs() {
+        return readTimeOutMs;
+    }
+
+    public void setReadTimeOutMs(final int readTimeOutMs) {
+        this.readTimeOutMs = readTimeOutMs;
+    }
+    
 }
