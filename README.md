@@ -370,17 +370,6 @@ queue.clear();
 
 --
 
-### Add alerts to a queue. This is for Pull Queue only.
-
-```java
-ArrayList<Alert> alerts = new ArrayList<Alert>();
-alerts.add(new Alert(Alert.typeProgressive, Alert.directionAscending, 5, "some_q"));
-QueueModel info = queue.updateAlerts(alerts);
-```
-
---
-
-
 ## Push Queues
 
 IronMQ push queues allow you to setup a queue that will push to an endpoint, rather than having to poll the endpoint. 
