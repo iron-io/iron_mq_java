@@ -656,25 +656,6 @@ public class IronMQTest {
         Assert.assertEquals(url, info.getPushInfo().getSubscribers().get(0).getUrl());
     }
 
-    /**
-     * Expected that:
-     * @throws IOException
-     */
-    @Test
-    /**
-     * This test shows how to delete a queue
-     * Expected:
-     * - HTTPException (404), because queue is no longer available after deleting, so, getInfoAboutQueue
-     *   should raise an exception
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    @Test(expected = HTTPException.class)
-    public void testDeleteQueue() throws IOException, InterruptedException {
-        queue.push("Some message");
-        queue.destroy();
-        Queue sameQueue = new Queue(client, queue.getName());
-
         sameQueue.getInfoAboutQueue();
     }
 
