@@ -792,13 +792,6 @@ public class Queue {
      * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
      * @throws java.io.IOException If there is an error accessing the IronMQ server.
      */
-        
-
-    /**
-     * @throws io.iron.ironmq.HTTPException If the IronMQ service returns a status other than 200 OK.
-     * @throws java.io.IOException If there is an error accessing the IronMQ server.
-     */
-   
 
     /**
      
