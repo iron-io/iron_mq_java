@@ -660,9 +660,26 @@ public class IronMQTest {
     }
 
     /**
+     * This test shows how to delete a queue
+     * Expected:
+     * - HTTPException (404), because queue is no longer available after deleting, so, getInfoAboutQueue
+     *   should raise an exception
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Test(expected = HTTPException.class)
+    public void testDeleteQueue() throws IOException, InterruptedException {
+        queue.push("Some message");
+        queue.destroy();
+        Queue sameQueue = new Queue(client, queue.getName());
+
+        sameQueue.getInfoAboutQueue();
+    }
+    /**
      * This test shows how to add subscribers to a queue.
      * @throws IOException
      */
+
     @Test
     public void testAddSubscribers() throws IOException {
         QueueModel payload = new QueueModel();
