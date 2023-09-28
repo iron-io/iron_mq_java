@@ -656,23 +656,7 @@ public class IronMQTest {
         Assert.assertEquals(url, info.getPushInfo().getSubscribers().get(0).getUrl());
     }
 
-    /**
-     * This test shows how to update alerts of a queue
-     * Expected that:
-     * - new alert will be available after update
-     * @throws IOException
-     */
-    @Test
-    public void testUpdateQueueAlerts() throws IOException {
-        queue.create();
-        ArrayList<Alert> alerts = new ArrayList<Alert>();
-        alerts.add(new Alert(Alert.typeProgressive, Alert.directionAscending, 5, "some_q"));
-        QueueModel info = queue.updateAlerts(alerts);
-
-        Assert.assertEquals(5, info.getAlerts().get(0).getTrigger());
-        Assert.assertEquals(Alert.directionAscending, info.getAlerts().get(0).getDirection());
-        Assert.assertEquals(Alert.typeProgressive, info.getAlerts().get(0).getType());
-        Assert.assertEquals("some_q", info.getAlerts().get(0).getQueue());
+        sameQueue.getInfoAboutQueue();
     }
 
     /**
@@ -691,11 +675,11 @@ public class IronMQTest {
 
         sameQueue.getInfoAboutQueue();
     }
-
     /**
      * This test shows how to add subscribers to a queue.
      * @throws IOException
      */
+
     @Test
     public void testAddSubscribers() throws IOException {
         QueueModel payload = new QueueModel();

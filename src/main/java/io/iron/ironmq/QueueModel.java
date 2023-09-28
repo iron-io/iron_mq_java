@@ -12,32 +12,25 @@ public class QueueModel {
     private String project_id;
     private Long total_messages;
     private QueuePushModel push;
-    private ArrayList<Alert> alerts;
     @SerializedName("message_timeout") private Integer messageTimeout;
     @SerializedName("message_expiration") private Integer messageExpiration;
 
-    public QueueModel(String id, String name, Integer size, Integer total_messages, String project_id, Integer retries, String pushType, Integer retriesDelay, String errorQueue, ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts) {
+    public QueueModel(String id, String name, Integer size, Integer total_messages, String project_id, Integer retries, String pushType, Integer retriesDelay, String errorQueue, ArrayList<Subscriber> subscribers) {
         this.id = id;
         this.name = name;
         this.size = (long)size;
         this.total_messages = (long)total_messages;
         this.project_id = project_id;
-        this.alerts = alerts;
     }
 
     public QueueModel(int messageExpiration, int retries, String pushType, int retries_delay, String error_queue, ArrayList<Subscriber> subscribers, ArrayList<Alert> alerts, int messageTimeout) {
         this.messageExpiration = messageExpiration;
-        this.alerts = alerts;
         this.messageTimeout = messageTimeout;
     }
 
     public QueueModel(int messageTimeout, int messageExpiration) {
         this.messageTimeout = messageTimeout;
         this.messageExpiration = messageExpiration;
-    }
-
-    public QueueModel(ArrayList<Alert> alerts) {
-        this.alerts = alerts;
     }
 
     public QueueModel(QueuePushModel push) {
@@ -187,13 +180,9 @@ public class QueueModel {
         throw new UnsupportedOperationException();
     }
 
-    public ArrayList<Alert> getAlerts() {
-        return alerts;
-    }
+    
 
-    public void setAlerts(ArrayList<Alert> alerts) {
-        this.alerts = alerts;
-    }
+    
 
     public int getMessageTimeout() {
         return messageTimeout;
